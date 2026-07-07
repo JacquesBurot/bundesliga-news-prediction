@@ -11,6 +11,10 @@ from buli_news.openligadb import fetch_matchdata
 from buli_news.storage import write_text
 
 
+class NoMatchesError(Exception):
+    """Raised when OpenLigaDB returns an empty match list."""
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="buli-news")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -32,6 +36,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def fetch_openliga_command(league: str, season: int) -> None:
     match_data = fetch_matchdata(league=league, season=season)
+    if not match_data.matches:
+        msg = "No matches returned. Check league shortcut and season."
+        raise NoMatchesError(msg)
+
     output_path = Path("data") / "raw" / "openligadb" / f"{league}_{season}.json"
     write_text(match_data.raw_json, output_path)
     print(f"Saved {len(match_data.matches)} matches to {output_path}")
@@ -54,6 +62,8 @@ def main() -> None:
         )
     except httpx.HTTPError as exc:
         parser.exit(status=1, message=f"OpenLigaDB request failed: {exc}\n")
+    except NoMatchesError as exc:
+        parser.exit(status=1, message=f"{exc}\n")
     except ValueError as exc:
         parser.exit(status=1, message=f"Invalid OpenLigaDB response: {exc}\n")
 
