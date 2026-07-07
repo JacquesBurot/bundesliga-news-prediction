@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from buli-news!")
+"""Bundesliga match and pre-match news data pipeline."""

@@ -209,6 +209,17 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Project data
+data/raw/**
+data/interim/**
+data/processed/**
+!data/raw/**/
+!data/interim/**/
+!data/processed/**/
+!data/raw/**/.gitkeep
+!data/interim/**/.gitkeep
+!data/processed/**/.gitkeep
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
