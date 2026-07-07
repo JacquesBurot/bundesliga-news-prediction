@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -14,14 +14,21 @@ def normalize_openligadb_matches(
     timezone: str = "Europe/Berlin",
 ) -> list[dict[str, Any]]:
     """Normalize OpenLigaDB match objects into flat records."""
+    previous_match_dates = get_previous_match_dates(
+        raw_matches=raw_matches,
+        timezone=timezone,
+    )
+
     return [
         normalize_openligadb_match(
             raw_match=raw_match,
             league=league,
             season=season,
             timezone=timezone,
+            previous_home_match_date=previous_match_dates[index][0],
+            previous_away_match_date=previous_match_dates[index][1],
         )
-        for raw_match in raw_matches
+        for index, raw_match in enumerate(raw_matches)
     ]
 
 
@@ -30,12 +37,19 @@ def normalize_openligadb_match(
     league: str,
     season: int,
     timezone: str,
+    previous_home_match_date: date | None,
+    previous_away_match_date: date | None,
 ) -> dict[str, Any]:
     """Normalize one OpenLigaDB match object into a flat record."""
     match_id = raw_match.get("matchID")
     kickoff = parse_kickoff(raw_match, timezone=timezone)
     final_result = get_final_result(raw_match)
     home_goals, away_goals = get_goal_values(final_result)
+    window_start, window_end = get_pre_match_window(
+        kickoff_date=kickoff.date(),
+        previous_home_match_date=previous_home_match_date,
+        previous_away_match_date=previous_away_match_date,
+    )
 
     return {
         "match_id": match_id,
@@ -50,9 +64,99 @@ def normalize_openligadb_match(
         "home_goals": home_goals,
         "away_goals": away_goals,
         "result": get_match_result(home_goals, away_goals),
-        "window_start": (kickoff.date() - timedelta(days=5)).isoformat(),
-        "window_end": (kickoff.date() - timedelta(days=1)).isoformat(),
+        "previous_home_match_date": format_date(previous_home_match_date),
+        "previous_away_match_date": format_date(previous_away_match_date),
+        "window_start": format_date(window_start),
+        "window_end": window_end.isoformat(),
+        "window_days": get_window_days(window_start, window_end),
     }
+
+
+def get_previous_match_dates(
+    raw_matches: list[dict[str, Any]],
+    timezone: str,
+) -> dict[int, tuple[date | None, date | None]]:
+    """Find each team's previous match date before every fixture."""
+    matches_by_kickoff = sorted(
+        (
+            (index, raw_match, parse_kickoff(raw_match, timezone=timezone))
+            for index, raw_match in enumerate(raw_matches)
+        ),
+        key=lambda item: item[2],
+    )
+    previous_match_dates: dict[int, tuple[date | None, date | None]] = {}
+    last_match_date_by_team: dict[int, date] = {}
+
+    for index, raw_match, kickoff in matches_by_kickoff:
+        home_team_id = get_nested_value(raw_match, "team1", "teamId")
+        away_team_id = get_nested_value(raw_match, "team2", "teamId")
+
+        previous_home_match_date = get_previous_team_match_date(
+            team_id=home_team_id,
+            last_match_date_by_team=last_match_date_by_team,
+        )
+        previous_away_match_date = get_previous_team_match_date(
+            team_id=away_team_id,
+            last_match_date_by_team=last_match_date_by_team,
+        )
+        previous_match_dates[index] = (
+            previous_home_match_date,
+            previous_away_match_date,
+        )
+
+        match_date = kickoff.date()
+        if isinstance(home_team_id, int):
+            last_match_date_by_team[home_team_id] = match_date
+        if isinstance(away_team_id, int):
+            last_match_date_by_team[away_team_id] = match_date
+
+    return previous_match_dates
+
+
+def get_previous_team_match_date(
+    team_id: Any,
+    last_match_date_by_team: dict[int, date],
+) -> date | None:
+    """Return the previous match date for one team ID."""
+    if not isinstance(team_id, int):
+        return None
+    return last_match_date_by_team.get(team_id)
+
+
+def get_pre_match_window(
+    kickoff_date: date,
+    previous_home_match_date: date | None,
+    previous_away_match_date: date | None,
+    max_window_days: int = 5,
+) -> tuple[date | None, date]:
+    """Build a pre-match window after both teams' previous matches."""
+    window_end = kickoff_date - timedelta(days=1)
+    window_start_candidates = [kickoff_date - timedelta(days=max_window_days)]
+
+    if previous_home_match_date is not None:
+        window_start_candidates.append(previous_home_match_date + timedelta(days=1))
+    if previous_away_match_date is not None:
+        window_start_candidates.append(previous_away_match_date + timedelta(days=1))
+
+    window_start = max(window_start_candidates)
+    if window_start > window_end:
+        return None, window_end
+
+    return window_start, window_end
+
+
+def get_window_days(window_start: date | None, window_end: date) -> int:
+    """Return the inclusive number of days in a pre-match window."""
+    if window_start is None:
+        return 0
+    return (window_end - window_start).days + 1
+
+
+def format_date(value: date | None) -> str | None:
+    """Format an optional date value for JSON output."""
+    if value is None:
+        return None
+    return value.isoformat()
 
 
 def parse_kickoff(raw_match: dict[str, Any], timezone: str) -> datetime:
