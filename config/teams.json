@@ -24,7 +24,12 @@
     {
       "openligadb_team_id": 81,
       "name": "1. FSV Mainz 05",
-      "concept_uri": "http://en.wikipedia.org/wiki/1._FSV_Mainz_05"
+      "concept_uri": "http://en.wikipedia.org/wiki/1._FSV_Mainz_05",
+      "query_strategy": "keyword",
+      "query": {
+        "keyword": "mainz 05",
+        "keyword_loc": "body"
+      }
     },
     {
       "openligadb_team_id": 6,

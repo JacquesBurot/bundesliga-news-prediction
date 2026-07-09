@@ -140,6 +140,11 @@ For each match, the command creates two planned requests:
 - home team context
 - away team context
 
+Most teams use Event Registry concept URIs. `1. FSV Mainz 05` uses the
+`keyword` query strategy because Event Registry did not return articles for the
+Mainz concept URI in initial tests. The planned request searches for the Bundesliga concept
+URI and the keyword `mainz 05`.
+
 ### Fetch News Responses
 
 Fetch exactly one planned request:
@@ -224,3 +229,7 @@ The current article request payload has this structure:
 The `apiKey` is added only at request time from `NEWSAPI_KEY`.
 
 The pipeline intentionally fetches only page 1 with up to 100 articles per planned request to stay within the available API request budget.
+
+Team-specific exceptions can use a different `query_strategy`. This is currently
+used for `1. FSV Mainz 05`, where the team condition uses the keyword
+`mainz 05` instead of the Mainz concept URI.

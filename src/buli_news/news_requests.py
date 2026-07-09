@@ -20,7 +20,7 @@ def build_news_requests(
         raise ValueError(msg)
 
     league_concepts = get_league_concepts(config)
-    team_concepts = get_team_concepts(config)
+    team_queries = get_team_queries(config)
     requests = []
 
     for match in matches:
@@ -38,7 +38,7 @@ def build_news_requests(
                 team_field="home_team",
                 team_id_field="home_team_id",
                 league_concept_uri=league_concept_uri,
-                team_concepts=team_concepts,
+                team_queries=team_queries,
                 lang=lang,
             )
         )
@@ -49,7 +49,7 @@ def build_news_requests(
                 team_field="away_team",
                 team_id_field="away_team_id",
                 league_concept_uri=league_concept_uri,
-                team_concepts=team_concepts,
+                team_queries=team_queries,
                 lang=lang,
             )
         )
@@ -63,7 +63,7 @@ def build_team_context_request(
     team_field: str,
     team_id_field: str,
     league_concept_uri: str,
-    team_concepts: dict[int, str],
+    team_queries: dict[int, dict[str, Any]],
     lang: str,
 ) -> dict[str, Any]:
     """Build one planned team-context request for a match side."""
@@ -72,22 +72,33 @@ def build_team_context_request(
     league = get_required_str(match, "league")
     team = get_required_str(match, team_field)
     team_id = get_required_int(match, team_id_field)
-    team_concept_uri = team_concepts.get(team_id)
-    if team_concept_uri is None:
-        msg = f"No team concept URI configured for team ID {team_id} ({team})."
+    team_query = team_queries.get(team_id)
+    if team_query is None:
+        msg = f"No team query configured for team ID {team_id} ({team})."
         raise ValueError(msg)
 
-    concept_uris = [league_concept_uri, team_concept_uri]
+    team_condition = get_required_dict(team_query, "condition")
+    query_strategy = get_required_str(team_query, "query_strategy")
+    concept_uris = [league_concept_uri]
+    team_concept_uri = team_query.get("concept_uri")
+    if query_strategy != "keyword" and isinstance(team_concept_uri, str):
+        concept_uris.append(team_concept_uri)
     date_start = get_required_str(match, "window_start")
     date_end = get_required_str(match, "window_end")
 
     return {
-        "request_id": f"{league}_{season}_{match_id}_{side}_team_context",
+        "request_id": build_request_id(
+            league=league,
+            season=season,
+            match_id=match_id,
+            side=side,
+        ),
         "match_id": match_id,
         "season": season,
         "league": league,
         "side": side,
         "request_type": "team_context",
+        "query_strategy": query_strategy,
         "team": team,
         "team_id": team_id,
         "concept_uris": concept_uris,
@@ -96,7 +107,8 @@ def build_team_context_request(
         "lang": lang,
         "endpoint": EVENT_REGISTRY_ARTICLES_ENDPOINT,
         "payload": build_event_registry_payload(
-            concept_uris=concept_uris,
+            league_concept_uri=league_concept_uri,
+            team_condition=team_condition,
             date_start=date_start,
             date_end=date_end,
             lang=lang,
@@ -104,8 +116,19 @@ def build_team_context_request(
     }
 
 
+def build_request_id(
+    league: str,
+    season: int,
+    match_id: int,
+    side: str,
+) -> str:
+    """Build stable request IDs independent of the query strategy."""
+    return f"{league}_{season}_{match_id}_{side}_team_context"
+
+
 def build_event_registry_payload(
-    concept_uris: list[str],
+    league_concept_uri: str,
+    team_condition: dict[str, Any],
     date_start: str,
     date_end: str,
     lang: str,
@@ -115,7 +138,8 @@ def build_event_registry_payload(
         "query": {
             "$query": {
                 "$and": [
-                    *({"conceptUri": concept_uri} for concept_uri in concept_uris),
+                    {"conceptUri": league_concept_uri},
+                    team_condition,
                     {
                         "dateStart": date_start,
                         "dateEnd": date_end,
@@ -150,22 +174,68 @@ def get_league_concepts(config: dict[str, Any]) -> dict[str, str]:
     return concepts
 
 
-def get_team_concepts(config: dict[str, Any]) -> dict[int, str]:
-    """Extract team concept URIs keyed by OpenLigaDB team ID."""
+def get_team_queries(config: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """Extract team search conditions keyed by OpenLigaDB team ID."""
     teams = config.get("teams")
     if not isinstance(teams, list):
         msg = "Config must contain a 'teams' list."
         raise ValueError(msg)
 
-    concepts = {}
+    queries = {}
     for team in teams:
         if not isinstance(team, dict):
             continue
         team_id = team.get("openligadb_team_id")
+        if not isinstance(team_id, int):
+            continue
+
         concept_uri = team.get("concept_uri")
-        if isinstance(team_id, int) and isinstance(concept_uri, str):
-            concepts[team_id] = concept_uri
-    return concepts
+        team_query = team.get("query")
+        query_strategy = team.get("query_strategy")
+
+        if isinstance(team_query, dict):
+            keyword = team_query.get("keyword")
+            keyword_loc = team_query.get("keyword_loc", "body")
+            if isinstance(keyword, str) and isinstance(keyword_loc, str):
+                if isinstance(concept_uri, str) and query_strategy == "concept_or_keyword":
+                    queries[team_id] = {
+                        "query_strategy": "concept_or_keyword",
+                        "condition": {
+                            "$or": [
+                                {
+                                    "conceptUri": concept_uri,
+                                },
+                                {
+                                    "keyword": keyword,
+                                    "keywordLoc": keyword_loc,
+                                },
+                            ],
+                        },
+                        "concept_uri": concept_uri,
+                    }
+                    continue
+
+                if query_strategy in (None, "keyword"):
+                    queries[team_id] = {
+                        "query_strategy": "keyword",
+                        "condition": {
+                            "keyword": keyword,
+                            "keywordLoc": keyword_loc,
+                        },
+                        "concept_uri": concept_uri,
+                    }
+                    continue
+
+        if isinstance(concept_uri, str):
+            queries[team_id] = {
+                "query_strategy": "concept",
+                "condition": {
+                    "conceptUri": concept_uri,
+                },
+                "concept_uri": concept_uri,
+            }
+
+    return queries
 
 
 def validate_match_window(match: dict[str, Any]) -> None:
@@ -190,5 +260,14 @@ def get_required_str(data: dict[str, Any], key: str) -> str:
     value = data.get(key)
     if not isinstance(value, str) or not value:
         msg = f"Field {key!r} must be a non-empty string."
+        raise ValueError(msg)
+    return value
+
+
+def get_required_dict(data: dict[str, Any], key: str) -> dict[str, Any]:
+    """Read a required object field."""
+    value = data.get(key)
+    if not isinstance(value, dict):
+        msg = f"Field {key!r} must be an object."
         raise ValueError(msg)
     return value

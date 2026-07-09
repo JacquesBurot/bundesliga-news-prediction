@@ -152,6 +152,7 @@ def fetch_news_request(
         "league": planned_request.get("league"),
         "side": planned_request.get("side"),
         "request_type": planned_request.get("request_type"),
+        "query_strategy": planned_request.get("query_strategy"),
         "status_code": response.status_code,
         "article_count": get_article_count(response.text),
         "raw_response_path": str(raw_response_path),
