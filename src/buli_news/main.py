@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 
 from buli_news.matches import normalize_openligadb_matches
+from buli_news.newsapi import fetch_news_requests, get_api_key, select_requests
 from buli_news.news_requests import build_news_requests
 from buli_news.openligadb import fetch_matchdata
 from buli_news.storage import read_json, read_jsonl, write_jsonl, write_text
@@ -71,6 +72,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="Event Registry article language code.",
     )
 
+    fetch_news = subparsers.add_parser(
+        "fetch-news",
+        help="Fetch raw Event Registry article responses from planned requests.",
+    )
+    fetch_news.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    fetch_news.add_argument(
+        "--request-id",
+        help="Fetch only one planned request by request_id.",
+    )
+    fetch_news.add_argument(
+        "--limit",
+        type=int,
+        help="Maximum number of planned requests to fetch. Omit to fetch all.",
+    )
+    fetch_news.add_argument(
+        "--delay-seconds",
+        type=float,
+        default=1.0,
+        help="Pause between API calls to reduce rate-limit risk.",
+    )
+
     return parser
 
 
@@ -119,6 +146,39 @@ def build_news_requests_command(season: int, config_path: str, lang: str) -> Non
     print(f"Saved {len(requests)} planned news requests to {output_path}")
 
 
+def fetch_news_command(
+    season: int,
+    request_id: str | None,
+    limit: int | None,
+    delay_seconds: float,
+) -> None:
+    requests_path = Path("data") / "interim" / f"news_requests_{season}.jsonl"
+    planned_requests = read_jsonl(requests_path)
+    selected_requests = select_requests(
+        requests=planned_requests,
+        request_id=request_id,
+        limit=limit,
+    )
+    if not selected_requests:
+        msg = f"No planned requests found in {requests_path}."
+        raise ValueError(msg)
+
+    output_dir = Path("data") / "raw" / "newsapi" / str(season)
+    api_key = get_api_key()
+    results = fetch_news_requests(
+        requests=selected_requests,
+        output_dir=output_dir,
+        api_key=api_key,
+        delay_seconds=delay_seconds,
+    )
+
+    results_path = Path("data") / "interim" / f"news_fetch_results_{season}.jsonl"
+    write_jsonl(results, results_path)
+    print(f"Fetched {len(results)} news requests.")
+    print(f"Saved raw responses to {output_dir}")
+    print(f"Saved fetch results to {results_path}")
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -138,16 +198,25 @@ def main() -> None:
                 config_path=args.config,
                 lang=args.lang,
             )
+        elif args.command == "fetch-news":
+            fetch_news_command(
+                season=args.season,
+                request_id=args.request_id,
+                limit=args.limit,
+                delay_seconds=args.delay_seconds,
+            )
     except httpx.HTTPStatusError as exc:
+        response_text = exc.response.text.strip()
+        response_detail = f": {response_text[:500]}" if response_text else ""
         parser.exit(
             status=1,
             message=(
-                f"OpenLigaDB returned HTTP {exc.response.status_code} "
-                f"for {exc.request.url}\n"
+                f"HTTP request returned status {exc.response.status_code} "
+                f"for {exc.request.url}{response_detail}\n"
             ),
         )
     except httpx.HTTPError as exc:
-        parser.exit(status=1, message=f"OpenLigaDB request failed: {exc}\n")
+        parser.exit(status=1, message=f"HTTP request failed: {exc}\n")
     except FileNotFoundError as exc:
         parser.exit(
             status=1,

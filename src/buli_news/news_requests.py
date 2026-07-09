@@ -123,11 +123,13 @@ def build_event_registry_payload(
                     },
                 ]
             },
+            "$filter": {
+                "isDuplicate": "skipDuplicates",
+            },
         },
         "resultType": "articles",
         "articlesCount": 100,
         "articlesSortBy": "date",
-        "isDuplicateFilter": "skipDuplicates",
         "includeSourceDescription": True,
     }
 
