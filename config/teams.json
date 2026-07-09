@@ -1,0 +1,100 @@
+{
+  "leagues": {
+    "bl1": {
+      "name": "Bundesliga",
+      "concept_uri": "http://en.wikipedia.org/wiki/Bundesliga"
+    }
+  },
+  "teams": [
+    {
+      "openligadb_team_id": 199,
+      "name": "1. FC Heidenheim 1846",
+      "concept_uri": "http://en.wikipedia.org/wiki/1._FC_Heidenheim"
+    },
+    {
+      "openligadb_team_id": 65,
+      "name": "1. FC K\u00f6ln",
+      "concept_uri": "http://en.wikipedia.org/wiki/1._FC_K\u00f6ln"
+    },
+    {
+      "openligadb_team_id": 80,
+      "name": "1. FC Union Berlin",
+      "concept_uri": "http://en.wikipedia.org/wiki/1._FC_Union_Berlin"
+    },
+    {
+      "openligadb_team_id": 81,
+      "name": "1. FSV Mainz 05",
+      "concept_uri": "http://en.wikipedia.org/wiki/1._FSV_Mainz_05"
+    },
+    {
+      "openligadb_team_id": 6,
+      "name": "Bayer 04 Leverkusen",
+      "concept_uri": "http://en.wikipedia.org/wiki/Bayer_04_Leverkusen"
+    },
+    {
+      "openligadb_team_id": 7,
+      "name": "Borussia Dortmund",
+      "concept_uri": "http://en.wikipedia.org/wiki/Borussia_Dortmund"
+    },
+    {
+      "openligadb_team_id": 87,
+      "name": "Borussia M\u00f6nchengladbach",
+      "concept_uri": "http://en.wikipedia.org/wiki/Borussia_M\u00f6nchengladbach"
+    },
+    {
+      "openligadb_team_id": 91,
+      "name": "Eintracht Frankfurt",
+      "concept_uri": "http://en.wikipedia.org/wiki/Eintracht_Frankfurt"
+    },
+    {
+      "openligadb_team_id": 95,
+      "name": "FC Augsburg",
+      "concept_uri": "http://en.wikipedia.org/wiki/FC_Augsburg"
+    },
+    {
+      "openligadb_team_id": 40,
+      "name": "FC Bayern M\u00fcnchen",
+      "concept_uri": "http://en.wikipedia.org/wiki/FC_Bayern_Munich"
+    },
+    {
+      "openligadb_team_id": 98,
+      "name": "FC St. Pauli",
+      "concept_uri": "http://en.wikipedia.org/wiki/FC_St._Pauli"
+    },
+    {
+      "openligadb_team_id": 100,
+      "name": "Hamburger SV",
+      "concept_uri": "http://en.wikipedia.org/wiki/Hamburger_SV"
+    },
+    {
+      "openligadb_team_id": 1635,
+      "name": "RB Leipzig",
+      "concept_uri": "http://en.wikipedia.org/wiki/RB_Leipzig"
+    },
+    {
+      "openligadb_team_id": 112,
+      "name": "SC Freiburg",
+      "concept_uri": "http://en.wikipedia.org/wiki/SC_Freiburg"
+    },
+    {
+      "openligadb_team_id": 134,
+      "name": "SV Werder Bremen",
+      "concept_uri": "http://en.wikipedia.org/wiki/SV_Werder_Bremen"
+    },
+    {
+      "openligadb_team_id": 175,
+      "name": "TSG Hoffenheim",
+      "concept_uri": "http://en.wikipedia.org/wiki/TSG_1899_Hoffenheim"
+    },
+    {
+      "openligadb_team_id": 16,
+      "name": "VfB Stuttgart",
+      "concept_uri": "http://en.wikipedia.org/wiki/VfB_Stuttgart"
+    },
+    {
+      "openligadb_team_id": 131,
+      "name": "VfL Wolfsburg",
+      "concept_uri": "http://en.wikipedia.org/wiki/VfL_Wolfsburg"
+    }
+  ]
+}
