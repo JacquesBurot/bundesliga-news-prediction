@@ -8,10 +8,15 @@ from pathlib import Path
 import httpx
 
 from buli_news.matches import normalize_openligadb_matches
-from buli_news.newsapi import fetch_news_requests, get_api_key, select_requests
+from buli_news.newsapi import (
+    count_successful_existing_responses,
+    fetch_news_requests,
+    get_api_key,
+    select_requests,
+)
 from buli_news.news_requests import build_news_requests
 from buli_news.openligadb import fetch_matchdata
-from buli_news.storage import read_json, read_jsonl, write_jsonl, write_text
+from buli_news.storage import append_jsonl, read_json, read_jsonl, write_jsonl, write_text
 
 
 class NoMatchesError(Exception):
@@ -164,19 +169,36 @@ def fetch_news_command(
         raise ValueError(msg)
 
     output_dir = Path("data") / "raw" / "newsapi" / str(season)
-    api_key = get_api_key()
-    results = fetch_news_requests(
+    results_path = Path("data") / "interim" / f"news_fetch_results_{season}.jsonl"
+    existing_count = count_successful_existing_responses(
         requests=selected_requests,
         output_dir=output_dir,
+    )
+    if existing_count == len(selected_requests):
+        print(f"Skipped {existing_count} already fetched news requests.")
+        print("Fetched 0 news requests.")
+        print(f"Saved raw responses to {output_dir}")
+        print(f"No new fetch results appended to {results_path}")
+        return
+
+    api_key = get_api_key()
+    run_result = fetch_news_requests(
+        requests=selected_requests,
+        output_dir=output_dir,
+        results_path=results_path,
         api_key=api_key,
         delay_seconds=delay_seconds,
+        append_result=append_jsonl,
     )
 
-    results_path = Path("data") / "interim" / f"news_fetch_results_{season}.jsonl"
-    write_jsonl(results, results_path)
-    print(f"Fetched {len(results)} news requests.")
+    if run_result.skipped_count:
+        print(f"Skipped {run_result.skipped_count} already fetched news requests.")
+    print(f"Fetched {len(run_result.fetched_results)} news requests.")
     print(f"Saved raw responses to {output_dir}")
-    print(f"Saved fetch results to {results_path}")
+    if run_result.fetched_results:
+        print(f"Appended fetch results to {results_path}")
+    else:
+        print(f"No new fetch results appended to {results_path}")
 
 
 def main() -> None:

@@ -36,3 +36,10 @@ def write_jsonl(records: list[dict[str, Any]], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(record, ensure_ascii=False) for record in records]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def append_jsonl(record: dict[str, Any], path: Path) -> None:
+    """Append one record to a JSON Lines file, creating parent directories as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as file:
+        file.write(json.dumps(record, ensure_ascii=False) + "\n")

@@ -172,6 +172,13 @@ For a slower full run:
 uv run python -m buli_news.main fetch-news --season 2025 --delay-seconds 2
 ```
 
+Fetch behavior:
+
+- existing successful raw responses are skipped for resume-safe runs
+- failed raw responses are not treated as successful and can be retried
+- each successful request is appended immediately to the fetch result log
+- HTTP 429 responses are retried up to three times with a 10 second wait
+
 Outputs:
 
 ```text

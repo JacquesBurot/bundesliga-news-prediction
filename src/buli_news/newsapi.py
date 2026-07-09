@@ -6,8 +6,9 @@ import json
 import os
 import time
 from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
@@ -15,6 +16,15 @@ from buli_news.storage import write_text
 
 
 API_KEY_ENV_VAR = "NEWSAPI_KEY"
+RATE_LIMIT_STATUS_CODE = 429
+RATE_LIMIT_RETRY_SECONDS = 10.0
+RATE_LIMIT_MAX_RETRIES = 3
+
+
+@dataclass(frozen=True)
+class FetchNewsRunResult:
+    fetched_results: list[dict[str, Any]]
+    skipped_count: int
 
 
 def get_api_key(env_file: Path = Path(".env")) -> str:
@@ -73,13 +83,22 @@ def select_requests(
 def fetch_news_requests(
     requests: list[dict[str, Any]],
     output_dir: Path,
+    results_path: Path,
     api_key: str,
     delay_seconds: float,
-) -> list[dict[str, Any]]:
+    append_result: Callable[[dict[str, Any], Path], None],
+) -> FetchNewsRunResult:
     """Fetch selected planned requests and store raw responses."""
     results = []
+    skipped_count = 0
     with httpx.Client(timeout=60.0) as client:
         for index, planned_request in enumerate(requests):
+            request_id = get_required_str(planned_request, "request_id")
+            raw_response_path = output_dir / f"{request_id}.json"
+            if is_successful_raw_response(raw_response_path):
+                skipped_count += 1
+                continue
+
             if index > 0 and delay_seconds > 0:
                 time.sleep(delay_seconds)
 
@@ -90,8 +109,22 @@ def fetch_news_requests(
                 api_key=api_key,
             )
             results.append(result)
+            append_result(result, results_path)
 
-    return results
+    return FetchNewsRunResult(fetched_results=results, skipped_count=skipped_count)
+
+
+def count_successful_existing_responses(
+    requests: list[dict[str, Any]],
+    output_dir: Path,
+) -> int:
+    """Count planned requests with existing successful raw responses."""
+    count = 0
+    for planned_request in requests:
+        request_id = get_required_str(planned_request, "request_id")
+        if is_successful_raw_response(output_dir / f"{request_id}.json"):
+            count += 1
+    return count
 
 
 def fetch_news_request(
@@ -107,7 +140,7 @@ def fetch_news_request(
     payload_with_key = deepcopy(payload)
     payload_with_key["apiKey"] = api_key
 
-    response = client.post(endpoint, json=payload_with_key)
+    response = post_with_rate_limit_retries(client, endpoint, payload_with_key)
     raw_response_path = output_dir / f"{request_id}.json"
     write_text(response.text, raw_response_path)
     response.raise_for_status()
@@ -123,6 +156,24 @@ def fetch_news_request(
         "article_count": get_article_count(response.text),
         "raw_response_path": str(raw_response_path),
     }
+
+
+def post_with_rate_limit_retries(
+    client: httpx.Client,
+    endpoint: str,
+    payload: dict[str, Any],
+) -> httpx.Response:
+    """POST with limited retries for HTTP 429 responses."""
+    for attempt in range(RATE_LIMIT_MAX_RETRIES + 1):
+        response = client.post(endpoint, json=payload)
+        if response.status_code != RATE_LIMIT_STATUS_CODE:
+            return response
+        if attempt == RATE_LIMIT_MAX_RETRIES:
+            return response
+
+        time.sleep(RATE_LIMIT_RETRY_SECONDS)
+
+    return response
 
 
 def get_article_count(response_text: str) -> int | None:
@@ -141,6 +192,23 @@ def get_article_count(response_text: str) -> int | None:
         return len(results)
 
     return None
+
+
+def is_successful_raw_response(path: Path) -> bool:
+    """Return whether an existing raw response looks like a successful article response."""
+    if not path.exists():
+        return False
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return False
+
+    articles = data.get("articles")
+    if not isinstance(articles, dict):
+        return False
+
+    return isinstance(articles.get("results"), list)
 
 
 def get_required_str(data: dict[str, Any], key: str) -> str:
