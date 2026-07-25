@@ -13,6 +13,12 @@ def write_text(content: str, path: Path) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def write_bytes(content: bytes, path: Path) -> None:
+    """Write bytes to a file unchanged, creating parent directories as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+
+
 def read_json(path: Path) -> Any:
     """Read JSON data from a file."""
     return json.loads(path.read_text(encoding="utf-8"))

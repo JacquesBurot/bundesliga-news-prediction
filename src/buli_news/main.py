@@ -7,6 +7,7 @@ from pathlib import Path
 
 import httpx
 
+from buli_news.football_data import fetch_bundesliga_csv
 from buli_news.matches import normalize_openligadb_matches
 from buli_news.newsapi import (
     count_successful_existing_responses,
@@ -16,7 +17,14 @@ from buli_news.newsapi import (
 )
 from buli_news.news_requests import build_news_requests
 from buli_news.openligadb import fetch_matchdata
-from buli_news.storage import append_jsonl, read_json, read_jsonl, write_jsonl, write_text
+from buli_news.storage import (
+    append_jsonl,
+    read_json,
+    read_jsonl,
+    write_bytes,
+    write_jsonl,
+    write_text,
+)
 
 
 class NoMatchesError(Exception):
@@ -33,6 +41,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     fetch_openliga.add_argument("--league", required=True, help="League shortcut, e.g. bl1.")
     fetch_openliga.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    fetch_football_data = subparsers.add_parser(
+        "fetch-football-data",
+        help="Fetch raw Bundesliga match statistics from Football-Data.co.uk.",
+    )
+    fetch_football_data.add_argument(
         "--season",
         required=True,
         type=int,
@@ -115,6 +134,16 @@ def fetch_openliga_command(league: str, season: int) -> None:
     output_path = Path("data") / "raw" / "openligadb" / f"{league}_{season}.json"
     write_text(match_data.raw_json, output_path)
     print(f"Saved {len(match_data.matches)} matches to {output_path}")
+
+
+def fetch_football_data_command(season: int) -> None:
+    football_data = fetch_bundesliga_csv(season=season)
+    output_path = Path("data") / "raw" / "football_data" / football_data.filename
+    write_bytes(football_data.content, output_path)
+    print(
+        f"Saved {football_data.row_count} Football-Data match rows to {output_path}"
+    )
+    print(f"Source: {football_data.source_url}")
 
 
 def build_matches_command(league: str, season: int, timezone: str) -> None:
@@ -208,6 +237,8 @@ def main() -> None:
     try:
         if args.command == "fetch-openliga":
             fetch_openliga_command(league=args.league, season=args.season)
+        elif args.command == "fetch-football-data":
+            fetch_football_data_command(season=args.season)
         elif args.command == "build-matches":
             build_matches_command(
                 league=args.league,

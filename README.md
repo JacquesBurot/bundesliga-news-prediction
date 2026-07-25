@@ -9,9 +9,11 @@ The project investigates whether pre-match news before Bundesliga matches is rel
 The pipeline currently covers:
 
 1. Fetching raw Bundesliga match data from OpenLigaDB.
-2. Normalizing OpenLigaDB matches into a flat JSONL match table.
-3. Building planned Event Registry / NewsAPI.ai article requests.
-4. Fetching raw Event Registry article responses for selected planned requests.
+2. Fetching and validating raw Bundesliga match statistics from
+   Football-Data.co.uk.
+3. Normalizing OpenLigaDB matches into a flat JSONL match table.
+4. Building planned Event Registry / NewsAPI.ai article requests.
+5. Fetching raw Event Registry article responses for selected planned requests.
 
 Feature engineering, model training, LLM scoring, and prediction logic are not part of the current implementation.
 
@@ -23,6 +25,8 @@ bundesliga-news-prediction/
 │   └── teams.json
 ├── data/
 │   ├── raw/
+│   │   ├── football_data/
+│   │   │   └── .gitkeep
 │   │   ├── openligadb/
 │   │   │   └── .gitkeep
 │   │   └── newsapi/
@@ -31,9 +35,12 @@ bundesliga-news-prediction/
 │   │   └── .gitkeep
 │   └── processed/
 │       └── .gitkeep
+├── scripts/
+│   └── export_news_source_homepages.py
 ├── src/
 │   └── buli_news/
 │       ├── __init__.py
+│       ├── football_data.py
 │       ├── main.py
 │       ├── matches.py
 │       ├── news_requests.py
@@ -54,11 +61,12 @@ The data directory structure is tracked with `.gitkeep` files. Real data files u
 
 This project uses `uv`.
 
-```powershell
-uv sync
+```console
+uv sync --locked
 ```
 
-Run commands from the repository root.
+The repository's `.python-version` selects Python 3.13. Run commands from the
+repository root.
 
 ## Commands
 
@@ -94,6 +102,38 @@ If OpenLigaDB returns an empty match list, the command exits with:
 ```text
 No matches returned. Check league shortcut and season.
 ```
+
+### Fetch Football-Data Match Statistics
+
+```powershell
+uv run python -m buli_news.main fetch-football-data --season 2025
+```
+
+This calls
+`https://www.football-data.co.uk/mmz4281/2526/D1.csv` and writes the unchanged
+response bytes to:
+
+```text
+data/raw/football_data/D1_2526.csv
+```
+
+Before writing, the command performs structural validation:
+
+- the response is not empty and can be decoded as UTF-8 or Windows-1252
+- a header row exists and contains no empty or duplicate column names
+- at least one non-empty data row exists
+- the columns expected by the first numerical pipeline are present
+
+```text
+Div, Date, HomeTeam, AwayTeam, FTHG, FTAG, FTR, HS, AS, HST, AST
+```
+
+The raw source also contains betting-odds columns. They are retained unchanged
+in the raw file for provenance, but the later numerical processing stage must
+use an explicit non-odds column whitelist. Betting odds are not planned as model
+features. Individual cell values are not validated during the download. Data
+types, match results, team mappings, and agreement with OpenLigaDB are validated
+later during normalization.
 
 ### Build Normalized Matches
 
