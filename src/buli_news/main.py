@@ -7,7 +7,7 @@ from pathlib import Path
 
 import httpx
 
-from buli_news.football_data import fetch_bundesliga_csv
+from buli_news.football_data import build_bundesliga_filename, fetch_bundesliga_csv
 from buli_news.matches import normalize_openligadb_matches
 from buli_news.newsapi import (
     count_successful_existing_responses,
@@ -16,12 +16,15 @@ from buli_news.newsapi import (
     select_requests,
 )
 from buli_news.news_requests import build_news_requests
+from buli_news.numerical_matches import build_numerical_matches
 from buli_news.openligadb import fetch_matchdata
 from buli_news.storage import (
     append_jsonl,
+    read_bytes,
     read_json,
     read_jsonl,
     write_bytes,
+    write_json,
     write_jsonl,
     write_text,
 )
@@ -73,6 +76,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--timezone",
         default="Europe/Berlin",
         help="Timezone for local kickoff and pre-match windows.",
+    )
+
+    build_numerical_matches_parser = subparsers.add_parser(
+        "build-numerical-matches",
+        help="Join OpenLigaDB metadata with Football-Data match statistics.",
+    )
+    build_numerical_matches_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    build_numerical_matches_parser.add_argument(
+        "--config",
+        default="config/teams.json",
+        help="Path to the team mapping config.",
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -169,6 +188,45 @@ def build_matches_command(league: str, season: int, timezone: str) -> None:
     print(f"Saved {len(matches)} normalized matches to {output_path}")
 
 
+def build_numerical_matches_command(season: int, config_path: str) -> None:
+    matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
+    football_data_path = (
+        Path("data")
+        / "raw"
+        / "football_data"
+        / build_bundesliga_filename(season)
+    )
+    config = read_json(Path(config_path))
+    openliga_matches = read_jsonl(matches_path)
+    football_data_content = read_bytes(football_data_path)
+    if not isinstance(config, dict):
+        msg = f"{config_path} must contain a JSON object."
+        raise ValueError(msg)
+
+    build = build_numerical_matches(
+        openliga_matches=openliga_matches,
+        football_data_content=football_data_content,
+        config=config,
+        season=season,
+    )
+    output_path = (
+        Path("data") / "interim" / f"numerical_matches_{season}.jsonl"
+    )
+    quality_path = (
+        Path("data")
+        / "interim"
+        / f"numerical_matches_{season}_quality.json"
+    )
+    write_jsonl(build.matches, output_path)
+    write_json(build.quality_report, quality_path)
+    print(f"Saved {len(build.matches)} numerical matches to {output_path}")
+    print(f"Saved source quality report to {quality_path}")
+    print(
+        "Result mismatches between sources: "
+        f"{build.quality_report['result_mismatch_count']}"
+    )
+
+
 def build_news_requests_command(season: int, config_path: str, lang: str) -> None:
     matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
     config = read_json(Path(config_path))
@@ -245,6 +303,11 @@ def main() -> None:
                 season=args.season,
                 timezone=args.timezone,
             )
+        elif args.command == "build-numerical-matches":
+            build_numerical_matches_command(
+                season=args.season,
+                config_path=args.config,
+            )
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,
@@ -273,7 +336,7 @@ def main() -> None:
     except FileNotFoundError as exc:
         parser.exit(
             status=1,
-            message=f"Input file not found: {exc.filename}. Run fetch-openliga first.\n",
+            message=f"Input file not found: {exc.filename}.\n",
         )
     except NoMatchesError as exc:
         parser.exit(status=1, message=f"{exc}\n")

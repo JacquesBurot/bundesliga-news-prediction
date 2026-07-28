@@ -19,9 +19,21 @@ def write_bytes(content: bytes, path: Path) -> None:
     path.write_bytes(content)
 
 
+def read_bytes(path: Path) -> bytes:
+    """Read bytes from a file."""
+    return path.read_bytes()
+
+
 def read_json(path: Path) -> Any:
     """Read JSON data from a file."""
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def write_json(data: Any, path: Path) -> None:
+    """Write formatted JSON data, creating parent directories as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    path.write_text(content + "\n", encoding="utf-8")
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
