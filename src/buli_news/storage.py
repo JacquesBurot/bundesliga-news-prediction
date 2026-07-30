@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,19 @@ def write_jsonl(records: list[dict[str, Any]], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(record, ensure_ascii=False) for record in records]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_csv(
+    records: list[dict[str, Any]],
+    fieldnames: tuple[str, ...],
+    path: Path,
+) -> None:
+    """Write flat records to CSV with a fixed column order."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames, extrasaction="raise")
+        writer.writeheader()
+        writer.writerows(records)
 
 
 def append_jsonl(record: dict[str, Any], path: Path) -> None:

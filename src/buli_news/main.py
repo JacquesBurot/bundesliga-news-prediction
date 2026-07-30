@@ -16,6 +16,10 @@ from buli_news.newsapi import (
     select_requests,
 )
 from buli_news.news_requests import build_news_requests
+from buli_news.numerical_features import (
+    NUMERICAL_FEATURE_OUTPUT_COLUMNS,
+    build_numerical_features,
+)
 from buli_news.numerical_matches import build_numerical_matches
 from buli_news.openligadb import fetch_matchdata
 from buli_news.storage import (
@@ -24,6 +28,7 @@ from buli_news.storage import (
     read_json,
     read_jsonl,
     write_bytes,
+    write_csv,
     write_json,
     write_jsonl,
     write_text,
@@ -92,6 +97,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--config",
         default="config/teams.json",
         help="Path to the team mapping config.",
+    )
+
+    build_numerical_features_parser = subparsers.add_parser(
+        "build-numerical-features",
+        help="Build leakage-safe numerical pre-match features.",
+    )
+    build_numerical_features_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -227,6 +243,26 @@ def build_numerical_matches_command(season: int, config_path: str) -> None:
     )
 
 
+def build_numerical_features_command(season: int) -> None:
+    input_path = (
+        Path("data") / "interim" / f"numerical_matches_{season}.jsonl"
+    )
+    matches = read_jsonl(input_path)
+    build = build_numerical_features(matches=matches, season=season)
+
+    output_path = (
+        Path("data") / "processed" / f"numerical_features_{season}.csv"
+    )
+    write_csv(
+        records=build.rows,
+        fieldnames=NUMERICAL_FEATURE_OUTPUT_COLUMNS,
+        path=output_path,
+    )
+    print(f"Saved {len(build.rows)} numerical feature rows to {output_path}")
+    print(f"Training rows: {build.train_count}")
+    print(f"Test rows: {build.test_count}")
+
+
 def build_news_requests_command(season: int, config_path: str, lang: str) -> None:
     matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
     config = read_json(Path(config_path))
@@ -308,6 +344,8 @@ def main() -> None:
                 season=args.season,
                 config_path=args.config,
             )
+        elif args.command == "build-numerical-features":
+            build_numerical_features_command(season=args.season)
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,

@@ -209,6 +209,9 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# macOS Finder metadata
+.DS_Store
+
 # Project data
 data/raw/**
 data/interim/**
