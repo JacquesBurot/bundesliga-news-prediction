@@ -345,34 +345,49 @@ count is also `0`.
 
 ### Elo Calculation
 
-Every team starts the season with an Elo rating of 1500. The constants are fixed
-before model evaluation and are not tuned against the test set:
+The implementation uses the `ELO-Goals` variant evaluated by
+[Wunderlich and Memmert (2018)](https://doi.org/10.1371/journal.pone.0198668).
+It adopts their published update parameters and starting value. The project
+uses only Bundesliga matches from 2025/26, so unlike the study it has no
+multi-season rating warm-up or parameter-calibration period.
+
+Every team starts the season with the same Elo rating. The constants are fixed
+from the literature before model evaluation and are not tuned against the test
+set:
 
 ```text
-initial rating: 1500
-K-factor:       20
-home advantage: 100 rating points
-rating scale:   400
-actual score:   1.0 home win, 0.5 draw, 0.0 away win
+initial rating:            1000
+base K-factor:             4
+goal-difference exponent:  1.6
+home advantage:            80 rating points
+rating scale:              400
+actual score:              1.0 home win, 0.5 draw, 0.0 away win
 ```
 
 Before a match, the expected home-team score is:
 
 ```text
 expected_home =
-    1 / (1 + 10 ** (-((home_elo + 100 - away_elo) / 400)))
+    1 / (1 + 10 ** (-((home_elo + 80 - away_elo) / 400)))
 ```
 
-The home advantage of 100 rating points is used only in this expectation. The
+The home advantage of 80 rating points is used only in this expectation. The
 actual home-team score is `1.0` for a home win, `0.5` for a draw, and `0.0` for
-an away win. After the match:
+an away win. The absolute goal difference determines the match-specific
+K-factor:
 
 ```text
-rating_change = 20 * (actual_home - expected_home)
+goal_difference = abs(home_goals - away_goals)
+match_k_factor = 4 * (1 + goal_difference) ** 1.6
+rating_change = match_k_factor * (actual_home - expected_home)
 
 new_home_elo = home_elo + rating_change
 new_away_elo = away_elo - rating_change
 ```
+
+Consequently, a clear result changes the ratings more than a draw or a narrow
+win. The update remains zero-sum: one team gains exactly the rating points lost
+by the other.
 
 The feature row stores:
 
@@ -382,7 +397,7 @@ elo_difference_before = home_elo - away_elo
 
 This value is created before the current match update. A positive value means
 that the home team has the higher pre-match rating, while a negative value means
-that the away team has the higher rating. The 100-point home advantage is not
+that the away team has the higher rating. The 80-point home advantage is not
 added to the stored difference.
 
 Both team ratings are updated only after all current pre-match features have

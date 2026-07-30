@@ -13,9 +13,10 @@ FORM_WINDOW = 5
 TRAIN_END_MATCHDAY = 27
 TEST_START_MATCHDAY = 28
 LAST_MATCHDAY = 34
-ELO_INITIAL_RATING = 1500.0
-ELO_K_FACTOR = 20.0
-ELO_HOME_ADVANTAGE = 100.0
+ELO_INITIAL_RATING = 1000.0
+ELO_BASE_K_FACTOR = 4.0
+ELO_GOAL_DIFFERENCE_EXPONENT = 1.6
+ELO_HOME_ADVANTAGE = 80.0
 ELO_RATING_SCALE = 400.0
 
 NUMERICAL_FEATURE_COLUMNS = (
@@ -256,6 +257,8 @@ def build_numerical_features(
             home_elo=home_elo,
             away_elo=away_elo,
             result=parsed["result"],
+            home_goals=parsed["home_goals"],
+            away_goals=parsed["away_goals"],
         )
         elo_ratings[parsed["home_team_id"]] = updated_home_elo
         elo_ratings[parsed["away_team_id"]] = updated_away_elo
@@ -525,8 +528,10 @@ def update_elo_ratings(
     home_elo: float,
     away_elo: float,
     result: str,
+    home_goals: int,
+    away_goals: int,
 ) -> tuple[float, float]:
-    """Update both ratings after a completed match."""
+    """Update both ratings using the goal-based football Elo variant."""
     home_rating_with_advantage = home_elo + ELO_HOME_ADVANTAGE
     rating_difference = home_rating_with_advantage - away_elo
     expected_home = 1.0 / (
@@ -542,7 +547,11 @@ def update_elo_ratings(
         msg = f"Unknown match result {result!r}."
         raise ValueError(msg)
 
-    rating_change = ELO_K_FACTOR * (actual_home - expected_home)
+    goal_difference = abs(home_goals - away_goals)
+    match_k_factor = ELO_BASE_K_FACTOR * (
+        (1 + goal_difference) ** ELO_GOAL_DIFFERENCE_EXPONENT
+    )
+    rating_change = match_k_factor * (actual_home - expected_home)
     return home_elo + rating_change, away_elo - rating_change
 
 
