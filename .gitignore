@@ -218,6 +218,10 @@ data/interim/**
 data/processed/**
 !data/raw/**/
 !data/interim/**/
+
+# Generated model outputs
+outputs/**
+!outputs/.gitkeep
 !data/processed/**/
 !data/raw/**/.gitkeep
 !data/interim/**/.gitkeep

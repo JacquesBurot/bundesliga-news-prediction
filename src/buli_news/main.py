@@ -11,13 +11,13 @@ from buli_news.football_data import build_bundesliga_filename, fetch_bundesliga_
 from buli_news.matches import normalize_openligadb_matches
 from buli_news.model_selection import (
     MODEL_SELECTION_PREDICTION_OUTPUT_COLUMNS,
-    select_numerical_logistic,
+    select_numerical_logistic_configuration,
 )
 from buli_news.modeling import (
     CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
     evaluate_numerical_dummy,
-    evaluate_numerical_logistic,
-    evaluate_selected_numerical_logistic,
+    evaluate_numerical_logistic_final,
+    evaluate_numerical_logistic_reference,
 )
 from buli_news.newsapi import (
     count_successful_existing_responses,
@@ -47,6 +47,11 @@ from buli_news.storage import (
 
 class NoMatchesError(Exception):
     """Raised when OpenLigaDB returns an empty match list."""
+
+
+def numerical_model_output_path(season: int, *parts: str) -> Path:
+    """Return a path below the season-specific numerical model output root."""
+    return Path("outputs", "modeling", str(season), "numerical", *parts)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -131,39 +136,42 @@ def build_parser() -> argparse.ArgumentParser:
         help="Season start year, e.g. 2025 for 2025/26.",
     )
 
-    evaluate_numerical_logistic_parser = subparsers.add_parser(
-        "evaluate-numerical-logistic",
-        help="Evaluate multinomial logistic regression on the fixed split.",
-    )
-    evaluate_numerical_logistic_parser.add_argument(
-        "--season",
-        required=True,
-        type=int,
-        help="Season start year, e.g. 2025 for 2025/26.",
-    )
-
-    evaluate_selected_numerical_logistic_parser = subparsers.add_parser(
-        "evaluate-selected-numerical-logistic",
+    evaluate_numerical_logistic_reference_parser = subparsers.add_parser(
+        "evaluate-numerical-logistic-reference",
         help=(
-            "Evaluate the frozen training-selected numerical logistic model "
-            "on the fixed test split."
+            "Evaluate the fixed full-feature C=1 numerical logistic "
+            "reference on the test split."
         ),
     )
-    evaluate_selected_numerical_logistic_parser.add_argument(
+    evaluate_numerical_logistic_reference_parser.add_argument(
         "--season",
         required=True,
         type=int,
         help="Season start year, e.g. 2025 for 2025/26.",
     )
 
-    select_numerical_logistic_parser = subparsers.add_parser(
-        "select-numerical-logistic",
+    select_numerical_logistic_configuration_parser = subparsers.add_parser(
+        "select-numerical-logistic-configuration",
         help=(
             "Select numerical logistic features and C with training-only "
             "expanding-window validation."
         ),
     )
-    select_numerical_logistic_parser.add_argument(
+    select_numerical_logistic_configuration_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    evaluate_numerical_logistic_final_parser = subparsers.add_parser(
+        "evaluate-numerical-logistic-final",
+        help=(
+            "Evaluate the frozen training-selected numerical logistic model "
+            "on the fixed test split."
+        ),
+    )
+    evaluate_numerical_logistic_final_parser.add_argument(
         "--season",
         required=True,
         type=int,
@@ -331,15 +339,15 @@ def evaluate_numerical_dummy_command(season: int) -> None:
         features_path=input_path,
         season=season,
     )
-    result_path = (
-        Path("data")
-        / "processed"
-        / f"numerical_dummy_baseline_{season}.json"
+    result_path = numerical_model_output_path(
+        season,
+        "dummy",
+        "evaluation.json",
     )
-    predictions_path = (
-        Path("data")
-        / "processed"
-        / f"numerical_dummy_predictions_{season}.csv"
+    predictions_path = numerical_model_output_path(
+        season,
+        "dummy",
+        "test_predictions.csv",
     )
     write_json(evaluation.report, result_path)
     write_csv(
@@ -362,23 +370,25 @@ def evaluate_numerical_dummy_command(season: int) -> None:
     )
 
 
-def evaluate_numerical_logistic_command(season: int) -> None:
+def evaluate_numerical_logistic_reference_command(season: int) -> None:
     input_path = (
         Path("data") / "processed" / f"numerical_features_{season}.csv"
     )
-    evaluation = evaluate_numerical_logistic(
+    evaluation = evaluate_numerical_logistic_reference(
         features_path=input_path,
         season=season,
     )
-    result_path = (
-        Path("data")
-        / "processed"
-        / f"numerical_logistic_regression_{season}.json"
+    result_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "reference",
+        "evaluation.json",
     )
-    predictions_path = (
-        Path("data")
-        / "processed"
-        / f"numerical_logistic_predictions_{season}.csv"
+    predictions_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "reference",
+        "test_predictions.csv",
     )
     write_json(evaluation.report, result_path)
     write_csv(
@@ -390,8 +400,11 @@ def evaluate_numerical_logistic_command(season: int) -> None:
     result = evaluation.report
     metrics = result["metrics"]
     iterations = result["model"]["logistic_regression"]["iterations"]
-    print(f"Saved numerical logistic regression results to {result_path}")
-    print(f"Saved numerical logistic predictions to {predictions_path}")
+    print(f"Saved numerical logistic reference results to {result_path}")
+    print(
+        "Saved numerical logistic reference predictions to "
+        f"{predictions_path}"
+    )
     print(f"Solver iterations: {iterations}")
     print(f"Log Loss: {metrics['log_loss']:.6f}")
     print(f"Accuracy: {metrics['accuracy']:.6f}")
@@ -402,23 +415,32 @@ def evaluate_numerical_logistic_command(season: int) -> None:
     )
 
 
-def evaluate_selected_numerical_logistic_command(season: int) -> None:
+def evaluate_numerical_logistic_final_command(season: int) -> None:
     input_path = (
         Path("data") / "processed" / f"numerical_features_{season}.csv"
     )
-    evaluation = evaluate_selected_numerical_logistic(
+    selection_report_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "selection",
+        "report.json",
+    )
+    evaluation = evaluate_numerical_logistic_final(
         features_path=input_path,
         season=season,
+        selection_report_path=selection_report_path,
     )
-    result_path = (
-        Path("data")
-        / "processed"
-        / f"selected_numerical_logistic_regression_{season}.json"
+    result_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "final",
+        "evaluation.json",
     )
-    predictions_path = (
-        Path("data")
-        / "processed"
-        / f"selected_numerical_logistic_predictions_{season}.csv"
+    predictions_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "final",
+        "test_predictions.csv",
     )
     write_json(evaluation.report, result_path)
     write_csv(
@@ -431,8 +453,8 @@ def evaluate_selected_numerical_logistic_command(season: int) -> None:
     metrics = result["metrics"]
     logistic = result["model"]["logistic_regression"]
     provenance = result["selection_provenance"]
-    print(f"Saved selected numerical logistic results to {result_path}")
-    print(f"Saved selected numerical logistic predictions to {predictions_path}")
+    print(f"Saved final numerical logistic results to {result_path}")
+    print(f"Saved final numerical logistic predictions to {predictions_path}")
     print(
         "Frozen configuration: "
         f"feature_set={provenance['feature_set']}, C={logistic['C']:g}"
@@ -448,23 +470,25 @@ def evaluate_selected_numerical_logistic_command(season: int) -> None:
     )
 
 
-def select_numerical_logistic_command(season: int) -> None:
+def select_numerical_logistic_configuration_command(season: int) -> None:
     input_path = (
         Path("data") / "processed" / f"numerical_features_{season}.csv"
     )
-    selection = select_numerical_logistic(
+    selection = select_numerical_logistic_configuration(
         features_path=input_path,
         season=season,
     )
-    result_path = (
-        Path("data")
-        / "processed"
-        / f"numerical_logistic_model_selection_{season}.json"
+    result_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "selection",
+        "report.json",
     )
-    predictions_path = (
-        Path("data")
-        / "processed"
-        / f"numerical_logistic_validation_predictions_{season}.csv"
+    predictions_path = numerical_model_output_path(
+        season,
+        "logistic_regression",
+        "selection",
+        "validation_predictions.csv",
     )
     write_json(selection.report, result_path)
     write_csv(
@@ -576,12 +600,12 @@ def main() -> None:
             build_numerical_features_command(season=args.season)
         elif args.command == "evaluate-numerical-dummy":
             evaluate_numerical_dummy_command(season=args.season)
-        elif args.command == "evaluate-numerical-logistic":
-            evaluate_numerical_logistic_command(season=args.season)
-        elif args.command == "evaluate-selected-numerical-logistic":
-            evaluate_selected_numerical_logistic_command(season=args.season)
-        elif args.command == "select-numerical-logistic":
-            select_numerical_logistic_command(season=args.season)
+        elif args.command == "evaluate-numerical-logistic-reference":
+            evaluate_numerical_logistic_reference_command(season=args.season)
+        elif args.command == "select-numerical-logistic-configuration":
+            select_numerical_logistic_configuration_command(season=args.season)
+        elif args.command == "evaluate-numerical-logistic-final":
+            evaluate_numerical_logistic_final_command(season=args.season)
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,

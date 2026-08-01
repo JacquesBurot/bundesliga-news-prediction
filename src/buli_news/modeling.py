@@ -161,29 +161,30 @@ def evaluate_numerical_dummy(
     )
 
 
-def evaluate_numerical_logistic(
+def evaluate_numerical_logistic_reference(
     features_path: Path,
     season: int,
 ) -> ModelEvaluationArtifacts:
-    """Evaluate the original fixed C=1 numerical logistic baseline."""
+    """Evaluate the fixed full-feature C=1 numerical logistic reference."""
     return evaluate_numerical_logistic_configuration(
         features_path=features_path,
         season=season,
-        experiment="numerical_logistic_regression",
+        experiment="numerical_logistic_reference",
         feature_columns=NUMERICAL_FEATURE_COLUMNS,
         C=ORIGINAL_BASELINE_LOGISTIC_C,
     )
 
 
-def evaluate_selected_numerical_logistic(
+def evaluate_numerical_logistic_final(
     features_path: Path,
     season: int,
+    selection_report_path: Path,
 ) -> ModelEvaluationArtifacts:
     """Evaluate the frozen training-selected numerical logistic model."""
     return evaluate_numerical_logistic_configuration(
         features_path=features_path,
         season=season,
-        experiment="selected_numerical_logistic_regression",
+        experiment="numerical_logistic_final",
         feature_columns=SELECTED_NUMERICAL_FEATURE_COLUMNS,
         C=SELECTED_LOGISTIC_C,
         selection_provenance={
@@ -192,11 +193,7 @@ def evaluate_selected_numerical_logistic(
             "excluded_feature_columns": list(
                 SELECTED_NUMERICAL_EXCLUDED_FEATURE_COLUMNS
             ),
-            "selection_report_path": str(
-                Path("data")
-                / "processed"
-                / f"numerical_logistic_model_selection_{season}.json"
-            ),
+            "selection_report_path": str(selection_report_path),
             "outer_test_used_for_selection": False,
         },
     )

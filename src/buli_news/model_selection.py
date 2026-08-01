@@ -109,7 +109,7 @@ FEATURE_SETS = (
 )
 
 
-def select_numerical_logistic(
+def select_numerical_logistic_configuration(
     features_path: Path,
     season: int,
 ) -> ModelSelectionArtifacts:
@@ -210,7 +210,7 @@ def select_numerical_logistic(
         }
     )
     report = {
-        "experiment": "numerical_logistic_model_selection",
+        "experiment": "numerical_logistic_configuration_selection",
         "season": season,
         "input_path": str(features_path),
         "scikit_learn_version": sklearn.__version__,

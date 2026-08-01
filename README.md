@@ -85,9 +85,10 @@ The data directories represent processing stages:
 - `data/raw`: unchanged responses from external sources
 - `data/interim`: normalized, joined, or annotated source data
 - `data/processed`: model-ready pre-match feature tables
+- `outputs/modeling`: generated model reports and prediction tables
 
-Real data files are ignored by Git. Only `.gitkeep` files preserve the directory
-structure in the repository.
+Real data files and generated model outputs are ignored by Git. Only `.gitkeep`
+files preserve the directory structure in the repository.
 
 ## Leakage Rules
 
@@ -126,6 +127,8 @@ bundesliga-news-prediction/
 │   │   └── newsapi/
 │   ├── interim/
 │   └── processed/
+├── outputs/
+│   └── modeling/
 ├── scripts/
 │   └── export_news_source_homepages.py
 ├── src/
@@ -444,8 +447,8 @@ data/processed/numerical_features_2025.csv
 Outputs:
 
 ```text
-data/processed/numerical_dummy_baseline_2025.json
-data/processed/numerical_dummy_predictions_2025.csv
+outputs/modeling/2025/numerical/dummy/evaluation.json
+outputs/modeling/2025/numerical/dummy/test_predictions.csv
 ```
 
 The command validates the exact feature schema, all 306 unique match IDs, nine
@@ -495,16 +498,16 @@ mean over matches(
 Its range is 0 to 2, and lower values are better. This definition will be
 reused unchanged for the logistic-regression and news-extended models.
 
-## Numerical Logistic Regression
+## Numerical Logistic Reference
 
 ```console
-uv run python -m buli_news.main evaluate-numerical-logistic --season 2025
+uv run python -m buli_news.main evaluate-numerical-logistic-reference --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news evaluate-numerical-logistic --season 2025
+uv run buli-news evaluate-numerical-logistic-reference --season 2025
 ```
 
 Input:
@@ -516,8 +519,8 @@ data/processed/numerical_features_2025.csv
 Outputs:
 
 ```text
-data/processed/numerical_logistic_regression_2025.json
-data/processed/numerical_logistic_predictions_2025.csv
+outputs/modeling/2025/numerical/logistic_regression/reference/evaluation.json
+outputs/modeling/2025/numerical/logistic_regression/reference/test_predictions.csv
 ```
 
 The numerical model is a scikit-learn pipeline:
@@ -555,16 +558,16 @@ This fixed `C=1.0` evaluation remains the original numerical test baseline. The
 separate training-only model-selection stage below does not overwrite its
 report or predictions.
 
-## Training-Only Numerical Logistic Model Selection
+## Training-Only Numerical Logistic Configuration Selection
 
 ```console
-uv run python -m buli_news.main select-numerical-logistic --season 2025
+uv run python -m buli_news.main select-numerical-logistic-configuration --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news select-numerical-logistic --season 2025
+uv run buli-news select-numerical-logistic-configuration --season 2025
 ```
 
 Input:
@@ -576,8 +579,8 @@ data/processed/numerical_features_2025.csv
 Outputs:
 
 ```text
-data/processed/numerical_logistic_model_selection_2025.json
-data/processed/numerical_logistic_validation_predictions_2025.csv
+outputs/modeling/2025/numerical/logistic_regression/selection/report.json
+outputs/modeling/2025/numerical/logistic_regression/selection/validation_predictions.csv
 ```
 
 The command evaluates two predefined numerical feature sets:
@@ -642,16 +645,16 @@ errors, strict Log-Loss ranks, selection ranks, the eligibility threshold, and
 the selected configuration. This command does not refit the selected model and
 does not evaluate matchdays 28-34.
 
-## Selected Numerical Logistic Regression
+## Final Numerical Logistic Regression
 
 ```console
-uv run python -m buli_news.main evaluate-selected-numerical-logistic --season 2025
+uv run python -m buli_news.main evaluate-numerical-logistic-final --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news evaluate-selected-numerical-logistic --season 2025
+uv run buli-news evaluate-numerical-logistic-final --season 2025
 ```
 
 Input:
@@ -663,8 +666,8 @@ data/processed/numerical_features_2025.csv
 Outputs:
 
 ```text
-data/processed/selected_numerical_logistic_regression_2025.json
-data/processed/selected_numerical_logistic_predictions_2025.csv
+outputs/modeling/2025/numerical/logistic_regression/final/evaluation.json
+outputs/modeling/2025/numerical/logistic_regression/final/test_predictions.csv
 ```
 
 This command freezes the result of the training-only model-selection stage:
@@ -698,9 +701,9 @@ logistic baseline and the prior dummy. It predicts 46 home wins, no draws, and
 Confusion Matrix and must be considered when interpreting the aggregate
 metrics.
 
-The original `evaluate-numerical-logistic` command remains fixed at the full
+The `evaluate-numerical-logistic-reference` command remains fixed at the full
 35-feature schema and `C=1.0`. Its reports are retained as an auditable original
-baseline and are not overwritten by the selected-model command.
+reference and are not overwritten by the final-model command.
 
 ## News Pipeline
 
