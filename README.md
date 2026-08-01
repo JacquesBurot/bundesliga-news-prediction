@@ -433,10 +433,11 @@ Input:
 data/processed/numerical_features_2025.csv
 ```
 
-Output:
+Outputs:
 
 ```text
 data/processed/numerical_dummy_baseline_2025.json
+data/processed/numerical_dummy_predictions_2025.csv
 ```
 
 The command validates the exact feature schema, all 306 unique match IDs, nine
@@ -460,6 +461,18 @@ The result JSON records the input, explicit feature list, model configuration,
 class counts, learned class probabilities, Log Loss, Accuracy, Macro-F1,
 multiclass Brier Score, and the Confusion Matrix. Reports use the fixed class
 order `H`, `D`, `A`.
+
+The prediction CSV retains one row per test match with match metadata, the
+actual and predicted result, and the predicted H/D/A probabilities. This makes
+later model comparisons auditable per `match_id`, while the test labels remain
+excluded from model fitting and are attached only for evaluation.
+
+Classifier-independent evaluation code fits an estimator, validates and
+reorders its probability columns, calculates the fixed metrics and Confusion
+Matrix, and builds the per-match prediction rows. The dummy-specific wrapper
+only configures `DummyClassifier(strategy="prior")` and adds its model metadata
+to the shared report structure. The same evaluation path will be reused for
+logistic regression and the news-extended model.
 
 The multiclass Brier Score uses its original unscaled definition:
 

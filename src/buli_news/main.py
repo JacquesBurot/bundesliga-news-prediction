@@ -9,7 +9,10 @@ import httpx
 
 from buli_news.football_data import build_bundesliga_filename, fetch_bundesliga_csv
 from buli_news.matches import normalize_openligadb_matches
-from buli_news.modeling import evaluate_numerical_dummy
+from buli_news.modeling import (
+    CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
+    evaluate_numerical_dummy,
+)
 from buli_news.newsapi import (
     count_successful_existing_responses,
     fetch_news_requests,
@@ -279,19 +282,31 @@ def evaluate_numerical_dummy_command(season: int) -> None:
     input_path = (
         Path("data") / "processed" / f"numerical_features_{season}.csv"
     )
-    result = evaluate_numerical_dummy(
+    evaluation = evaluate_numerical_dummy(
         features_path=input_path,
         season=season,
     )
-    output_path = (
+    result_path = (
         Path("data")
         / "processed"
         / f"numerical_dummy_baseline_{season}.json"
     )
-    write_json(result, output_path)
+    predictions_path = (
+        Path("data")
+        / "processed"
+        / f"numerical_dummy_predictions_{season}.csv"
+    )
+    write_json(evaluation.report, result_path)
+    write_csv(
+        records=evaluation.prediction_rows,
+        fieldnames=CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
+        path=predictions_path,
+    )
 
+    result = evaluation.report
     metrics = result["metrics"]
-    print(f"Saved numerical dummy baseline results to {output_path}")
+    print(f"Saved numerical dummy baseline results to {result_path}")
+    print(f"Saved numerical dummy predictions to {predictions_path}")
     print(f"Predicted class: {result['model']['predicted_class']}")
     print(f"Log Loss: {metrics['log_loss']:.6f}")
     print(f"Accuracy: {metrics['accuracy']:.6f}")

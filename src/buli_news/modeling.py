@@ -35,6 +35,26 @@ EXPECTED_TRAIN_COUNT = TRAIN_END_MATCHDAY * EXPECTED_MATCHES_PER_MATCHDAY
 EXPECTED_TEST_COUNT = (
     LAST_MATCHDAY - TEST_START_MATCHDAY + 1
 ) * EXPECTED_MATCHES_PER_MATCHDAY
+PREDICTION_METADATA_COLUMNS = (
+    "match_id",
+    "season",
+    "league",
+    "matchday",
+    "kickoff",
+    "home_team_id",
+    "home_team",
+    "away_team_id",
+    "away_team",
+    "dataset_split",
+)
+CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS = (
+    *PREDICTION_METADATA_COLUMNS,
+    "actual_result",
+    "predicted_result",
+    "probability_H",
+    "probability_D",
+    "probability_A",
+)
 
 
 @dataclass(frozen=True)
@@ -46,44 +66,41 @@ class ClassificationData:
     X_test: pd.DataFrame
     y_train: pd.Series
     y_test: pd.Series
+    test_metadata: pd.DataFrame
+
+
+@dataclass(frozen=True)
+class ClassifierEvaluation:
+    """Shared predictions, metrics, and audit rows for one fitted classifier."""
+
+    predictions: tuple[str, ...]
+    probabilities: Any
+    metrics: dict[str, float]
+    confusion_values: list[list[int]]
+    prediction_rows: list[dict[str, Any]]
+
+
+@dataclass(frozen=True)
+class ModelEvaluationArtifacts:
+    """Serializable report and per-match predictions for one model run."""
+
+    report: dict[str, Any]
+    prediction_rows: list[dict[str, Any]]
 
 
 def evaluate_numerical_dummy(
     features_path: Path,
     season: int,
-) -> dict[str, Any]:
+) -> ModelEvaluationArtifacts:
     """Fit and evaluate a prior-based dummy classifier on the fixed split."""
     data = load_numerical_classification_data(
         features_path=features_path,
         season=season,
     )
     classifier = DummyClassifier(strategy="prior")
-    classifier.fit(data.X_train, data.y_train)
+    evaluation = evaluate_classifier(classifier=classifier, data=data)
 
-    predictions = classifier.predict(data.X_test)
-    raw_probabilities = classifier.predict_proba(data.X_test)
-    probabilities = reorder_probabilities(
-        probabilities=raw_probabilities,
-        source_classes=classifier.classes_,
-        target_classes=TARGET_CLASSES,
-    )
-    metric_probabilities = reorder_probabilities(
-        probabilities=raw_probabilities,
-        source_classes=classifier.classes_,
-        target_classes=METRIC_PROBABILITY_CLASSES,
-    )
-    validate_probabilities(
-        probabilities=probabilities,
-        expected_row_count=len(data.y_test),
-        expected_class_count=len(TARGET_CLASSES),
-    )
-
-    confusion = confusion_matrix(
-        data.y_test,
-        predictions,
-        labels=list(TARGET_CLASSES),
-    )
-    predicted_classes = {str(value) for value in predictions}
+    predicted_classes = set(evaluation.predictions)
     if len(predicted_classes) != 1:
         msg = (
             "DummyClassifier(strategy='prior') must predict one majority class, "
@@ -95,39 +112,11 @@ def evaluate_numerical_dummy(
         target_class: float(probability)
         for target_class, probability in zip(
             TARGET_CLASSES,
-            probabilities[0],
+            evaluation.probabilities[0],
             strict=True,
         )
     }
-    metrics = {
-        "log_loss": float(
-            log_loss(
-                data.y_test,
-                metric_probabilities,
-                labels=list(METRIC_PROBABILITY_CLASSES),
-            )
-        ),
-        "accuracy": float(accuracy_score(data.y_test, predictions)),
-        "macro_f1": float(
-            f1_score(
-                data.y_test,
-                predictions,
-                labels=list(TARGET_CLASSES),
-                average="macro",
-                zero_division=0,
-            )
-        ),
-        "multiclass_brier_score": float(
-            brier_score_loss(
-                data.y_test,
-                metric_probabilities,
-                labels=list(METRIC_PROBABILITY_CLASSES),
-                scale_by_half=False,
-            )
-        ),
-    }
-
-    return {
+    report = {
         "experiment": "numerical_dummy_baseline",
         "season": season,
         "input_path": str(features_path),
@@ -150,11 +139,11 @@ def evaluate_numerical_dummy(
             "train_class_counts": count_classes(data.y_train),
             "test_class_counts": count_classes(data.y_test),
         },
-        "metrics": metrics,
+        "metrics": evaluation.metrics,
         "confusion_matrix": {
             "labels": list(TARGET_CLASSES),
             "orientation": "rows=true classes, columns=predicted classes",
-            "values": confusion.tolist(),
+            "values": evaluation.confusion_values,
         },
         "metric_definitions": {
             "multiclass_brier_score": (
@@ -164,6 +153,124 @@ def evaluate_numerical_dummy(
             ),
         },
     }
+    return ModelEvaluationArtifacts(
+        report=report,
+        prediction_rows=evaluation.prediction_rows,
+    )
+
+
+def evaluate_classifier(
+    classifier: Any,
+    data: ClassificationData,
+) -> ClassifierEvaluation:
+    """Fit one classifier and evaluate it through the shared model interface."""
+    classifier.fit(data.X_train, data.y_train)
+
+    predictions = tuple(str(value) for value in classifier.predict(data.X_test))
+    validate_predictions(predictions, expected_row_count=len(data.y_test))
+
+    raw_probabilities = classifier.predict_proba(data.X_test)
+    probabilities = reorder_probabilities(
+        probabilities=raw_probabilities,
+        source_classes=classifier.classes_,
+        target_classes=TARGET_CLASSES,
+    )
+    metric_probabilities = reorder_probabilities(
+        probabilities=raw_probabilities,
+        source_classes=classifier.classes_,
+        target_classes=METRIC_PROBABILITY_CLASSES,
+    )
+    validate_probabilities(
+        probabilities=probabilities,
+        expected_row_count=len(data.y_test),
+        expected_class_count=len(TARGET_CLASSES),
+    )
+
+    metrics = calculate_classification_metrics(
+        targets=data.y_test,
+        predictions=predictions,
+        metric_probabilities=metric_probabilities,
+    )
+    confusion = confusion_matrix(
+        data.y_test,
+        predictions,
+        labels=list(TARGET_CLASSES),
+    )
+    prediction_rows = build_prediction_rows(
+        data=data,
+        predictions=predictions,
+        probabilities=probabilities,
+    )
+    return ClassifierEvaluation(
+        predictions=predictions,
+        probabilities=probabilities,
+        metrics=metrics,
+        confusion_values=confusion.tolist(),
+        prediction_rows=prediction_rows,
+    )
+
+
+def calculate_classification_metrics(
+    targets: pd.Series,
+    predictions: Sequence[str],
+    metric_probabilities: Any,
+) -> dict[str, float]:
+    """Calculate the fixed metrics shared by all experiment classifiers."""
+    return {
+        "log_loss": float(
+            log_loss(
+                targets,
+                metric_probabilities,
+                labels=list(METRIC_PROBABILITY_CLASSES),
+            )
+        ),
+        "accuracy": float(accuracy_score(targets, predictions)),
+        "macro_f1": float(
+            f1_score(
+                targets,
+                predictions,
+                labels=list(TARGET_CLASSES),
+                average="macro",
+                zero_division=0,
+            )
+        ),
+        "multiclass_brier_score": float(
+            brier_score_loss(
+                targets,
+                metric_probabilities,
+                labels=list(METRIC_PROBABILITY_CLASSES),
+                scale_by_half=False,
+            )
+        ),
+    }
+
+
+def build_prediction_rows(
+    data: ClassificationData,
+    predictions: Sequence[str],
+    probabilities: Any,
+) -> list[dict[str, Any]]:
+    """Combine test metadata, targets, predictions, and H/D/A probabilities."""
+    metadata_rows = data.test_metadata.to_dict(orient="records")
+    rows = []
+    for metadata, actual, predicted, probability_row in zip(
+        metadata_rows,
+        data.y_test,
+        predictions,
+        probabilities,
+        strict=True,
+    ):
+        rows.append(
+            {
+                **metadata,
+                "actual_result": str(actual),
+                "predicted_result": str(predicted),
+                "probability_H": float(probability_row[0]),
+                "probability_D": float(probability_row[1]),
+                "probability_A": float(probability_row[2]),
+            }
+        )
+    return rows
 
 
 def load_numerical_classification_data(
@@ -224,6 +331,10 @@ def load_numerical_classification_data(
     X_test = numeric_features.loc[test_mask].copy()
     y_train = frame.loc[train_mask, "result"].copy()
     y_test = frame.loc[test_mask, "result"].copy()
+    test_metadata = frame.loc[
+        test_mask,
+        list(PREDICTION_METADATA_COLUMNS),
+    ].copy()
 
     if len(X_train) != EXPECTED_TRAIN_COUNT:
         msg = (
@@ -246,6 +357,7 @@ def load_numerical_classification_data(
         X_test=X_test,
         y_train=y_train,
         y_test=y_test,
+        test_metadata=test_metadata,
     )
 
 
@@ -371,6 +483,24 @@ def reorder_probabilities(
         :,
         [source_indices[target_class] for target_class in target_classes],
     ]
+
+
+def validate_predictions(
+    predictions: Sequence[str],
+    expected_row_count: int,
+) -> None:
+    """Reject predictions with an invalid count or unknown target classes."""
+    if len(predictions) != expected_row_count:
+        msg = (
+            f"Classifier returned {len(predictions)} predictions, "
+            f"expected {expected_row_count}."
+        )
+        raise ValueError(msg)
+
+    unknown_classes = sorted(set(predictions).difference(TARGET_CLASSES))
+    if unknown_classes:
+        msg = f"Classifier returned unknown target classes: {unknown_classes}."
+        raise ValueError(msg)
 
 
 def validate_probabilities(
