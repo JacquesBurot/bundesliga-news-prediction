@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from math import isclose, isfinite
@@ -11,6 +12,8 @@ from typing import Any, Sequence
 import pandas as pd
 import sklearn
 from sklearn.dummy import DummyClassifier
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     brier_score_loss,
@@ -18,6 +21,8 @@ from sklearn.metrics import (
     f1_score,
     log_loss,
 )
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from buli_news.numerical_features import (
     LAST_MATCHDAY,
@@ -55,6 +60,24 @@ CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS = (
     "probability_D",
     "probability_A",
 )
+LOGISTIC_SOLVER = "lbfgs"
+ORIGINAL_BASELINE_LOGISTIC_C = 1.0
+SELECTED_LOGISTIC_C = 0.01
+LOGISTIC_L1_RATIO = 0.0
+LOGISTIC_MAX_ITER = 1000
+LOGISTIC_TOLERANCE = 1e-4
+SELECTED_NUMERICAL_FEATURE_SET = "without_match_counts"
+SELECTED_NUMERICAL_EXCLUDED_FEATURE_COLUMNS = (
+    "home_matches_played",
+    "away_matches_played",
+    "home_venue_matches_played",
+    "away_venue_matches_played",
+)
+SELECTED_NUMERICAL_FEATURE_COLUMNS = tuple(
+    column
+    for column in NUMERICAL_FEATURE_COLUMNS
+    if column not in SELECTED_NUMERICAL_EXCLUDED_FEATURE_COLUMNS
+)
 
 
 @dataclass(frozen=True)
@@ -66,6 +89,7 @@ class ClassificationData:
     X_test: pd.DataFrame
     y_train: pd.Series
     y_test: pd.Series
+    train_metadata: pd.DataFrame
     test_metadata: pd.DataFrame
 
 
@@ -116,11 +140,11 @@ def evaluate_numerical_dummy(
             strict=True,
         )
     }
-    report = {
-        "experiment": "numerical_dummy_baseline",
-        "season": season,
-        "input_path": str(features_path),
-        "model": {
+    report = build_classification_report(
+        experiment="numerical_dummy_baseline",
+        season=season,
+        features_path=features_path,
+        model={
             "estimator": "sklearn.dummy.DummyClassifier",
             "scikit_learn_version": sklearn.__version__,
             "strategy": "prior",
@@ -128,6 +152,233 @@ def evaluate_numerical_dummy(
             "predicted_class": next(iter(predicted_classes)),
             "training_class_prior": class_prior,
         },
+        data=data,
+        evaluation=evaluation,
+    )
+    return ModelEvaluationArtifacts(
+        report=report,
+        prediction_rows=evaluation.prediction_rows,
+    )
+
+
+def evaluate_numerical_logistic(
+    features_path: Path,
+    season: int,
+) -> ModelEvaluationArtifacts:
+    """Evaluate the original fixed C=1 numerical logistic baseline."""
+    return evaluate_numerical_logistic_configuration(
+        features_path=features_path,
+        season=season,
+        experiment="numerical_logistic_regression",
+        feature_columns=NUMERICAL_FEATURE_COLUMNS,
+        C=ORIGINAL_BASELINE_LOGISTIC_C,
+    )
+
+
+def evaluate_selected_numerical_logistic(
+    features_path: Path,
+    season: int,
+) -> ModelEvaluationArtifacts:
+    """Evaluate the frozen training-selected numerical logistic model."""
+    return evaluate_numerical_logistic_configuration(
+        features_path=features_path,
+        season=season,
+        experiment="selected_numerical_logistic_regression",
+        feature_columns=SELECTED_NUMERICAL_FEATURE_COLUMNS,
+        C=SELECTED_LOGISTIC_C,
+        selection_provenance={
+            "method": "training_only_one_standard_error_with_parsimony",
+            "feature_set": SELECTED_NUMERICAL_FEATURE_SET,
+            "excluded_feature_columns": list(
+                SELECTED_NUMERICAL_EXCLUDED_FEATURE_COLUMNS
+            ),
+            "selection_report_path": str(
+                Path("data")
+                / "processed"
+                / f"numerical_logistic_model_selection_{season}.json"
+            ),
+            "outer_test_used_for_selection": False,
+        },
+    )
+
+
+def evaluate_numerical_logistic_configuration(
+    features_path: Path,
+    season: int,
+    experiment: str,
+    feature_columns: tuple[str, ...],
+    C: float,
+    selection_provenance: dict[str, Any] | None = None,
+) -> ModelEvaluationArtifacts:
+    """Fit and evaluate one explicit numerical logistic configuration."""
+    data = load_numerical_classification_data(
+        features_path=features_path,
+        season=season,
+    )
+    data = select_classification_features(
+        data=data,
+        feature_columns=feature_columns,
+    )
+    classifier = build_logistic_pipeline(C=C)
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", category=ConvergenceWarning)
+            evaluation = evaluate_classifier(classifier=classifier, data=data)
+    except ConvergenceWarning as exc:
+        msg = (
+            "Numerical logistic regression did not converge within "
+            f"{LOGISTIC_MAX_ITER} iterations."
+        )
+        raise ValueError(msg) from exc
+
+    scaler = classifier.named_steps["scaler"]
+    logistic = classifier.named_steps["classifier"]
+    training_sample_count = int(scaler.n_samples_seen_)
+    if training_sample_count != len(data.X_train):
+        msg = (
+            "StandardScaler was not fitted on exactly the training rows: "
+            f"saw {training_sample_count}, expected {len(data.X_train)}."
+        )
+        raise ValueError(msg)
+
+    class_indices = {
+        str(target_class): index
+        for index, target_class in enumerate(logistic.classes_)
+    }
+    ordered_coefficients = [
+        [
+            float(value)
+            for value in logistic.coef_[class_indices[target_class]]
+        ]
+        for target_class in TARGET_CLASSES
+    ]
+    ordered_intercepts = {
+        target_class: float(logistic.intercept_[class_indices[target_class]])
+        for target_class in TARGET_CLASSES
+    }
+    model = {
+        "estimator": "sklearn.pipeline.Pipeline",
+        "scikit_learn_version": sklearn.__version__,
+        "uses_feature_values": True,
+        "steps": [
+            "sklearn.preprocessing.StandardScaler",
+            "sklearn.linear_model.LogisticRegression",
+        ],
+        "standard_scaler": {
+            "with_mean": bool(scaler.with_mean),
+            "with_std": bool(scaler.with_std),
+            "training_sample_count": training_sample_count,
+        },
+        "logistic_regression": {
+            "loss": "multinomial",
+            "solver": logistic.solver,
+            "C": float(logistic.C),
+            "l1_ratio": float(logistic.l1_ratio),
+            "class_weight": logistic.class_weight,
+            "fit_intercept": bool(logistic.fit_intercept),
+            "max_iter": int(logistic.max_iter),
+            "tol": float(logistic.tol),
+            "iterations": [int(value) for value in logistic.n_iter_],
+        },
+    }
+    extra_sections: dict[str, Any] = {
+        "coefficients": {
+            "class_order": list(TARGET_CLASSES),
+            "feature_columns": list(data.feature_columns),
+            "orientation": (
+                "rows=target classes, columns=standardized feature columns"
+            ),
+            "values": ordered_coefficients,
+            "intercepts": ordered_intercepts,
+        }
+    }
+    if selection_provenance is not None:
+        extra_sections["selection_provenance"] = selection_provenance
+
+    report = build_classification_report(
+        experiment=experiment,
+        season=season,
+        features_path=features_path,
+        model=model,
+        data=data,
+        evaluation=evaluation,
+        extra_sections=extra_sections,
+    )
+    return ModelEvaluationArtifacts(
+        report=report,
+        prediction_rows=evaluation.prediction_rows,
+    )
+
+
+def build_logistic_pipeline(C: float) -> Pipeline:
+    """Build the shared standardized multinomial logistic pipeline."""
+    if not isfinite(C) or C <= 0.0:
+        msg = f"Logistic-regression C must be positive and finite, got {C}."
+        raise ValueError(msg)
+    return Pipeline(
+        steps=[
+            ("scaler", StandardScaler()),
+            (
+                "classifier",
+                LogisticRegression(
+                    solver=LOGISTIC_SOLVER,
+                    C=C,
+                    l1_ratio=LOGISTIC_L1_RATIO,
+                    class_weight=None,
+                    max_iter=LOGISTIC_MAX_ITER,
+                    tol=LOGISTIC_TOLERANCE,
+                ),
+            ),
+        ]
+    )
+
+
+def select_classification_features(
+    data: ClassificationData,
+    feature_columns: tuple[str, ...],
+) -> ClassificationData:
+    """Return one validated feature-column view of classification data."""
+    if not feature_columns:
+        msg = "Classification feature selection must not be empty."
+        raise ValueError(msg)
+    if len(set(feature_columns)) != len(feature_columns):
+        msg = "Classification feature selection contains duplicate columns."
+        raise ValueError(msg)
+    unknown_columns = [
+        column
+        for column in feature_columns
+        if column not in data.feature_columns
+    ]
+    if unknown_columns:
+        msg = f"Classification feature selection is unknown: {unknown_columns}."
+        raise ValueError(msg)
+
+    return ClassificationData(
+        feature_columns=feature_columns,
+        X_train=data.X_train.loc[:, list(feature_columns)].copy(),
+        X_test=data.X_test.loc[:, list(feature_columns)].copy(),
+        y_train=data.y_train.copy(),
+        y_test=data.y_test.copy(),
+        train_metadata=data.train_metadata.copy(),
+        test_metadata=data.test_metadata.copy(),
+    )
+
+
+def build_classification_report(
+    experiment: str,
+    season: int,
+    features_path: Path,
+    model: dict[str, Any],
+    data: ClassificationData,
+    evaluation: ClassifierEvaluation,
+    extra_sections: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build the shared serializable report structure for one classifier."""
+    report = {
+        "experiment": experiment,
+        "season": season,
+        "input_path": str(features_path),
+        "model": model,
         "target_classes": list(TARGET_CLASSES),
         "feature_columns": list(data.feature_columns),
         "split": {
@@ -145,18 +396,17 @@ def evaluate_numerical_dummy(
             "orientation": "rows=true classes, columns=predicted classes",
             "values": evaluation.confusion_values,
         },
-        "metric_definitions": {
-            "multiclass_brier_score": (
-                "Mean over test matches of the sum across H, D, and A of "
-                "(observed_one_hot - predicted_probability) squared; "
-                "unscaled range 0 to 2, lower is better."
-            ),
-        },
     }
-    return ModelEvaluationArtifacts(
-        report=report,
-        prediction_rows=evaluation.prediction_rows,
-    )
+    if extra_sections is not None:
+        report.update(extra_sections)
+    report["metric_definitions"] = {
+        "multiclass_brier_score": (
+            "Mean over test matches of the sum across H, D, and A of "
+            "(observed_one_hot - predicted_probability) squared; "
+            "unscaled range 0 to 2, lower is better."
+        ),
+    }
+    return report
 
 
 def evaluate_classifier(
@@ -331,6 +581,10 @@ def load_numerical_classification_data(
     X_test = numeric_features.loc[test_mask].copy()
     y_train = frame.loc[train_mask, "result"].copy()
     y_test = frame.loc[test_mask, "result"].copy()
+    train_metadata = frame.loc[
+        train_mask,
+        list(PREDICTION_METADATA_COLUMNS),
+    ].copy()
     test_metadata = frame.loc[
         test_mask,
         list(PREDICTION_METADATA_COLUMNS),
@@ -357,6 +611,7 @@ def load_numerical_classification_data(
         X_test=X_test,
         y_train=y_train,
         y_test=y_test,
+        train_metadata=train_metadata,
         test_metadata=test_metadata,
     )
 

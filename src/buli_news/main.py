@@ -9,9 +9,15 @@ import httpx
 
 from buli_news.football_data import build_bundesliga_filename, fetch_bundesliga_csv
 from buli_news.matches import normalize_openligadb_matches
+from buli_news.model_selection import (
+    MODEL_SELECTION_PREDICTION_OUTPUT_COLUMNS,
+    select_numerical_logistic,
+)
 from buli_news.modeling import (
     CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
     evaluate_numerical_dummy,
+    evaluate_numerical_logistic,
+    evaluate_selected_numerical_logistic,
 )
 from buli_news.newsapi import (
     count_successful_existing_responses,
@@ -119,6 +125,45 @@ def build_parser() -> argparse.ArgumentParser:
         help="Evaluate a prior-based dummy classifier on the fixed split.",
     )
     evaluate_numerical_dummy_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    evaluate_numerical_logistic_parser = subparsers.add_parser(
+        "evaluate-numerical-logistic",
+        help="Evaluate multinomial logistic regression on the fixed split.",
+    )
+    evaluate_numerical_logistic_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    evaluate_selected_numerical_logistic_parser = subparsers.add_parser(
+        "evaluate-selected-numerical-logistic",
+        help=(
+            "Evaluate the frozen training-selected numerical logistic model "
+            "on the fixed test split."
+        ),
+    )
+    evaluate_selected_numerical_logistic_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    select_numerical_logistic_parser = subparsers.add_parser(
+        "select-numerical-logistic",
+        help=(
+            "Select numerical logistic features and C with training-only "
+            "expanding-window validation."
+        ),
+    )
+    select_numerical_logistic_parser.add_argument(
         "--season",
         required=True,
         type=int,
@@ -317,6 +362,135 @@ def evaluate_numerical_dummy_command(season: int) -> None:
     )
 
 
+def evaluate_numerical_logistic_command(season: int) -> None:
+    input_path = (
+        Path("data") / "processed" / f"numerical_features_{season}.csv"
+    )
+    evaluation = evaluate_numerical_logistic(
+        features_path=input_path,
+        season=season,
+    )
+    result_path = (
+        Path("data")
+        / "processed"
+        / f"numerical_logistic_regression_{season}.json"
+    )
+    predictions_path = (
+        Path("data")
+        / "processed"
+        / f"numerical_logistic_predictions_{season}.csv"
+    )
+    write_json(evaluation.report, result_path)
+    write_csv(
+        records=evaluation.prediction_rows,
+        fieldnames=CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
+        path=predictions_path,
+    )
+
+    result = evaluation.report
+    metrics = result["metrics"]
+    iterations = result["model"]["logistic_regression"]["iterations"]
+    print(f"Saved numerical logistic regression results to {result_path}")
+    print(f"Saved numerical logistic predictions to {predictions_path}")
+    print(f"Solver iterations: {iterations}")
+    print(f"Log Loss: {metrics['log_loss']:.6f}")
+    print(f"Accuracy: {metrics['accuracy']:.6f}")
+    print(f"Macro-F1: {metrics['macro_f1']:.6f}")
+    print(
+        "Multiclass Brier Score: "
+        f"{metrics['multiclass_brier_score']:.6f}"
+    )
+
+
+def evaluate_selected_numerical_logistic_command(season: int) -> None:
+    input_path = (
+        Path("data") / "processed" / f"numerical_features_{season}.csv"
+    )
+    evaluation = evaluate_selected_numerical_logistic(
+        features_path=input_path,
+        season=season,
+    )
+    result_path = (
+        Path("data")
+        / "processed"
+        / f"selected_numerical_logistic_regression_{season}.json"
+    )
+    predictions_path = (
+        Path("data")
+        / "processed"
+        / f"selected_numerical_logistic_predictions_{season}.csv"
+    )
+    write_json(evaluation.report, result_path)
+    write_csv(
+        records=evaluation.prediction_rows,
+        fieldnames=CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
+        path=predictions_path,
+    )
+
+    result = evaluation.report
+    metrics = result["metrics"]
+    logistic = result["model"]["logistic_regression"]
+    provenance = result["selection_provenance"]
+    print(f"Saved selected numerical logistic results to {result_path}")
+    print(f"Saved selected numerical logistic predictions to {predictions_path}")
+    print(
+        "Frozen configuration: "
+        f"feature_set={provenance['feature_set']}, C={logistic['C']:g}"
+    )
+    print(f"Feature count: {len(result['feature_columns'])}")
+    print(f"Solver iterations: {logistic['iterations']}")
+    print(f"Log Loss: {metrics['log_loss']:.6f}")
+    print(f"Accuracy: {metrics['accuracy']:.6f}")
+    print(f"Macro-F1: {metrics['macro_f1']:.6f}")
+    print(
+        "Multiclass Brier Score: "
+        f"{metrics['multiclass_brier_score']:.6f}"
+    )
+
+
+def select_numerical_logistic_command(season: int) -> None:
+    input_path = (
+        Path("data") / "processed" / f"numerical_features_{season}.csv"
+    )
+    selection = select_numerical_logistic(
+        features_path=input_path,
+        season=season,
+    )
+    result_path = (
+        Path("data")
+        / "processed"
+        / f"numerical_logistic_model_selection_{season}.json"
+    )
+    predictions_path = (
+        Path("data")
+        / "processed"
+        / f"numerical_logistic_validation_predictions_{season}.csv"
+    )
+    write_json(selection.report, result_path)
+    write_csv(
+        records=selection.prediction_rows,
+        fieldnames=MODEL_SELECTION_PREDICTION_OUTPUT_COLUMNS,
+        path=predictions_path,
+    )
+
+    selected = selection.report["selected_configuration"]
+    metrics = selected["pooled_metrics"]
+    print(f"Saved numerical logistic model selection to {result_path}")
+    print(f"Saved chronological validation predictions to {predictions_path}")
+    print(
+        "Selected configuration: "
+        f"feature_set={selected['feature_set']}, C={selected['C']:g}"
+    )
+    print(f"Pooled validation Log Loss: {metrics['log_loss']:.6f}")
+    print(
+        "Pooled validation Multiclass Brier Score: "
+        f"{metrics['multiclass_brier_score']:.6f}"
+    )
+    print(f"Pooled validation Accuracy: {metrics['accuracy']:.6f}")
+    print(f"Pooled validation Macro-F1: {metrics['macro_f1']:.6f}")
+    print("Outer test matches used for model selection: 0")
+
+
 def build_news_requests_command(season: int, config_path: str, lang: str) -> None:
     matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
     config = read_json(Path(config_path))
@@ -402,6 +576,12 @@ def main() -> None:
             build_numerical_features_command(season=args.season)
         elif args.command == "evaluate-numerical-dummy":
             evaluate_numerical_dummy_command(season=args.season)
+        elif args.command == "evaluate-numerical-logistic":
+            evaluate_numerical_logistic_command(season=args.season)
+        elif args.command == "evaluate-selected-numerical-logistic":
+            evaluate_selected_numerical_logistic_command(season=args.season)
+        elif args.command == "select-numerical-logistic":
+            select_numerical_logistic_command(season=args.season)
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,
