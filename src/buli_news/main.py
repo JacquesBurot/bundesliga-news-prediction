@@ -9,6 +9,7 @@ import httpx
 
 from buli_news.football_data import build_bundesliga_filename, fetch_bundesliga_csv
 from buli_news.matches import normalize_openligadb_matches
+from buli_news.modeling import evaluate_numerical_dummy
 from buli_news.newsapi import (
     count_successful_existing_responses,
     fetch_news_requests,
@@ -104,6 +105,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Build leakage-safe numerical pre-match features.",
     )
     build_numerical_features_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    evaluate_numerical_dummy_parser = subparsers.add_parser(
+        "evaluate-numerical-dummy",
+        help="Evaluate a prior-based dummy classifier on the fixed split.",
+    )
+    evaluate_numerical_dummy_parser.add_argument(
         "--season",
         required=True,
         type=int,
@@ -263,6 +275,33 @@ def build_numerical_features_command(season: int) -> None:
     print(f"Test rows: {build.test_count}")
 
 
+def evaluate_numerical_dummy_command(season: int) -> None:
+    input_path = (
+        Path("data") / "processed" / f"numerical_features_{season}.csv"
+    )
+    result = evaluate_numerical_dummy(
+        features_path=input_path,
+        season=season,
+    )
+    output_path = (
+        Path("data")
+        / "processed"
+        / f"numerical_dummy_baseline_{season}.json"
+    )
+    write_json(result, output_path)
+
+    metrics = result["metrics"]
+    print(f"Saved numerical dummy baseline results to {output_path}")
+    print(f"Predicted class: {result['model']['predicted_class']}")
+    print(f"Log Loss: {metrics['log_loss']:.6f}")
+    print(f"Accuracy: {metrics['accuracy']:.6f}")
+    print(f"Macro-F1: {metrics['macro_f1']:.6f}")
+    print(
+        "Multiclass Brier Score: "
+        f"{metrics['multiclass_brier_score']:.6f}"
+    )
+
+
 def build_news_requests_command(season: int, config_path: str, lang: str) -> None:
     matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
     config = read_json(Path(config_path))
@@ -346,6 +385,8 @@ def main() -> None:
             )
         elif args.command == "build-numerical-features":
             build_numerical_features_command(season=args.season)
+        elif args.command == "evaluate-numerical-dummy":
+            evaluate_numerical_dummy_command(season=args.season)
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,

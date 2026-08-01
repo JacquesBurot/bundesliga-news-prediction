@@ -14,9 +14,10 @@ The implemented pipeline currently supports:
 4. joining both match sources into a canonical numerical match history
 5. calculating leakage-safe numerical pre-match features
 6. planning and fetching German pre-match news from Event Registry / NewsAPI.ai
+7. evaluating a prior-based numerical `DummyClassifier` reference
 
-Numerical model training, local LLM annotation, news-feature aggregation, and
-the final model comparison are the next planned stages.
+Multinomial logistic regression, local LLM annotation, news-feature aggregation,
+and the final model comparison are the next planned stages.
 
 ## Experiment Design
 
@@ -41,9 +42,9 @@ Training: matchdays 1-27 (243 matches)
 Test:     matchdays 28-34 (63 matches)
 ```
 
-No random split is used. Planned models are a `DummyClassifier` reference and
-multinomial logistic regression. Evaluation uses Log Loss, Accuracy, Macro-F1,
-multiclass Brier Score, and a Confusion Matrix.
+No random split is used. A `DummyClassifier` reference is implemented;
+multinomial logistic regression is the next planned model. Evaluation uses Log
+Loss, Accuracy, Macro-F1, multiclass Brier Score, and a Confusion Matrix.
 
 The local LLM will act as a feature extractor, not as the match predictor:
 
@@ -125,6 +126,7 @@ bundesliga-news-prediction/
 │       ├── football_data.py
 │       ├── main.py
 │       ├── matches.py
+│       ├── modeling.py
 │       ├── news_requests.py
 │       ├── newsapi.py
 │       ├── numerical_features.py
@@ -385,9 +387,10 @@ new_home_elo = home_elo + rating_change
 new_away_elo = away_elo - rating_change
 ```
 
-Consequently, a clear result changes the ratings more than a draw or a narrow
-win. The update remains zero-sum: one team gains exactly the rating points lost
-by the other.
+A larger goal difference increases the match-specific K-factor. The final
+rating change also depends on how strongly the actual result differs from the
+expected result. The update remains zero-sum: one team gains exactly the rating
+points lost by the other.
 
 The feature row stores:
 
@@ -411,6 +414,65 @@ explicit without learning an imputation value from future matches.
 
 The current implementation uses Bundesliga fixtures only. Therefore
 `days_since_last_match` does not yet account for cup or international matches.
+
+## Numerical Dummy Baseline
+
+```console
+uv run python -m buli_news.main evaluate-numerical-dummy --season 2025
+```
+
+The console-script equivalent is:
+
+```console
+uv run buli-news evaluate-numerical-dummy --season 2025
+```
+
+Input:
+
+```text
+data/processed/numerical_features_2025.csv
+```
+
+Output:
+
+```text
+data/processed/numerical_dummy_baseline_2025.json
+```
+
+The command validates the exact feature schema, all 306 unique match IDs, nine
+matches per matchday, the fixed 243/63 chronological split, finite numerical
+values, and the presence of all three target classes in both splits.
+
+The reference model is:
+
+```text
+DummyClassifier(strategy="prior")
+```
+
+It learns only the H/D/A class proportions from matchdays 1-27. It always
+predicts the most frequent training class, while its predicted probabilities
+equal the training class proportions. The numerical feature values are passed
+through the common model-data interface but deliberately ignored by the dummy
+estimator. Standardization is therefore neither needed nor applied at this
+stage.
+
+The result JSON records the input, explicit feature list, model configuration,
+class counts, learned class probabilities, Log Loss, Accuracy, Macro-F1,
+multiclass Brier Score, and the Confusion Matrix. Reports use the fixed class
+order `H`, `D`, `A`.
+
+The multiclass Brier Score uses its original unscaled definition:
+
+```text
+mean over matches(
+    sum over H, D, A(
+        observed_one_hot - predicted_probability
+    ) ** 2
+)
+```
+
+Its range is 0 to 2, and lower values are better. This definition will be
+reused unchanged for the logistic-regression and news-extended models.
 
 ## News Pipeline
 
@@ -484,7 +546,8 @@ never be hardcoded, logged, or committed.
 
 ## Planned Next Stages
 
-1. verify the numerical feature table and train the numerical baseline
+1. train and evaluate multinomial logistic regression with the validated
+   numerical split and shared evaluation code
 2. normalize and deduplicate raw articles
 3. define a versioned structured local-LLM annotation schema
 4. annotate only pre-match article text and persist the responses
