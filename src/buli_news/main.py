@@ -25,9 +25,11 @@ from buli_news.news_annotations import (
     DEFAULT_OLLAMA_BASE_URL,
     DEFAULT_OLLAMA_MODEL,
     DEFAULT_OLLAMA_NUM_CTX,
+    NEWS_ANNOTATION_PILOT_SELECTION_VERSION,
     annotate_news_tasks,
     build_news_annotation_tasks,
     load_annotation_config,
+    select_stratified_annotation_tasks,
 )
 from buli_news.news_contents import build_news_contents
 from buli_news.newsapi import (
@@ -361,6 +363,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum number of not-yet-annotated tasks for this run.",
     )
     annotate_news_parser.add_argument(
+        "--pilot-size",
+        type=int,
+        default=None,
+        help=(
+            "Select a deterministic stratified pilot across matchdays, teams, "
+            "sides, sources, and article lengths."
+        ),
+    )
+    annotate_news_parser.add_argument(
+        "--pilot-seed",
+        type=int,
+        default=42,
+        help="Deterministic seed for --pilot-size selection.",
+    )
+    annotate_news_parser.add_argument(
         "--retry-failures-only",
         action="store_true",
         help="Retry only unresolved failures for the same config and model.",
@@ -376,6 +393,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=DEFAULT_OLLAMA_NUM_CTX,
         help="Ollama context-window size used for every article.",
+    )
+    annotate_news_parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Concurrent Ollama requests. Use 1 for serial execution; benchmark "
+            "2 before using higher values."
+        ),
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -828,13 +854,48 @@ def annotate_news_command(
     failure_output_path: str | None,
     task_id: str | None,
     limit: int | None,
+    pilot_size: int | None,
+    pilot_seed: int,
     retry_failures_only: bool,
     timeout_seconds: float,
     num_ctx: int,
+    workers: int,
 ) -> None:
     paths = SeasonPaths(season)
     config = load_annotation_config(Path(config_path))
     tasks = read_jsonl(paths.news_annotation_tasks)
+    if pilot_size is not None:
+        if task_id is not None or limit is not None or retry_failures_only:
+            msg = (
+                "--pilot-size cannot be combined with --task-id, --limit, or "
+                "--retry-failures-only."
+            )
+            raise ValueError(msg)
+        tasks = select_stratified_annotation_tasks(
+            tasks=tasks,
+            size=pilot_size,
+            seed=pilot_seed,
+        )
+        pilot_path = (
+            paths.news_annotations_dir
+            / (
+                "pilot_tasks_"
+                f"v{NEWS_ANNOTATION_PILOT_SELECTION_VERSION}_"
+                f"{pilot_size}_seed_{pilot_seed}.jsonl"
+            )
+        )
+        write_jsonl(tasks, pilot_path)
+        print(
+            f"Saved deterministic stratified pilot with {len(tasks)} tasks to "
+            f"{pilot_path}"
+        )
+        print(
+            "Pilot coverage: "
+            f"{len({task['matchday'] for task in tasks})} matchdays, "
+            f"{len({task['target_team_id'] for task in tasks})} target teams, "
+            f"{len({task['source_host'] for task in tasks})} source hosts, "
+            f"{len({task['content_id'] for task in tasks})} unique contents."
+        )
     destination = (
         Path(output_path) if output_path is not None else paths.news_annotations
     )
@@ -855,6 +916,7 @@ def annotate_news_command(
         retry_failures_only=retry_failures_only,
         timeout_seconds=timeout_seconds,
         num_ctx=num_ctx,
+        workers=workers,
         append_annotation=append_jsonl,
         append_failure=append_jsonl,
     )
@@ -1035,9 +1097,12 @@ def main() -> None:
                 failure_output_path=args.failure_output,
                 task_id=args.task_id,
                 limit=args.limit,
+                pilot_size=args.pilot_size,
+                pilot_seed=args.pilot_seed,
                 retry_failures_only=args.retry_failures_only,
                 timeout_seconds=args.timeout_seconds,
                 num_ctx=args.num_ctx,
+                workers=args.workers,
             )
         elif args.command == "build-news-requests":
             build_news_requests_command(

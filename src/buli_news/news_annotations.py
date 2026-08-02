@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from bisect import bisect_right
 from collections import Counter
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,13 +27,16 @@ from buli_news.news_contents import (
 
 
 NEWS_ANNOTATION_TASK_SCHEMA_VERSION = 1
-NEWS_ANNOTATION_OUTPUT_SCHEMA_VERSION = 1
+NEWS_ANNOTATION_OUTPUT_SCHEMA_VERSION = 2
 NEWS_ANNOTATION_FAILURE_SCHEMA_VERSION = 1
+NEWS_ANNOTATION_PILOT_SELECTION_VERSION = 1
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
 DEFAULT_OLLAMA_MODEL = "gemma4:12b-it-qat"
 DEFAULT_OLLAMA_NUM_CTX = 32768
 OLLAMA_NUM_PREDICT = 2048
-DEFAULT_ANNOTATION_CONFIG_PATH = Path("config/news_annotation_schema_v1.json")
+DEFAULT_ANNOTATION_CONFIG_PATH = Path("config/news_annotation_schema_v2.json")
+RELEVANCE_FIELD = "target_team_relevance"
+RELEVANCE_EVIDENCE_FIELD = "target_team_relevance_evidence"
 INDICATORS = (
     "overall_match_outlook",
     "sporting_form",
@@ -75,6 +80,33 @@ NEWS_ANNOTATION_TASK_COLUMNS = (
     "linked_article_count",
     "linked_source_host_count",
 )
+NEWS_ANNOTATION_OUTPUT_COLUMNS_V1 = (
+    "annotation_id",
+    "output_schema_version",
+    "task_id",
+    "annotation_schema_id",
+    "annotation_schema_version",
+    "prompt_version",
+    "annotation_config_sha256",
+    "model",
+    "model_digest",
+    "request_id",
+    "content_id",
+    "match_id",
+    "side",
+    "target_team_id",
+    "target_team",
+    "selected_article_id",
+    *INDICATORS,
+    "evidence",
+    "ollama_created_at",
+    "total_duration_ns",
+    "load_duration_ns",
+    "prompt_eval_count",
+    "prompt_eval_duration_ns",
+    "eval_count",
+    "eval_duration_ns",
+)
 NEWS_ANNOTATION_OUTPUT_COLUMNS = (
     "annotation_id",
     "output_schema_version",
@@ -92,6 +124,8 @@ NEWS_ANNOTATION_OUTPUT_COLUMNS = (
     "target_team_id",
     "target_team",
     "selected_article_id",
+    RELEVANCE_FIELD,
+    RELEVANCE_EVIDENCE_FIELD,
     *INDICATORS,
     "evidence",
     "ollama_created_at",
@@ -394,6 +428,92 @@ def build_news_annotation_tasks(
     return NewsAnnotationTasksBuild(tasks=tasks, quality_report=quality_report)
 
 
+def select_stratified_annotation_tasks(
+    tasks: list[dict[str, Any]],
+    size: int,
+    seed: int = 42,
+) -> list[dict[str, Any]]:
+    """Select a deterministic pilot balanced across context and text length."""
+    validate_tasks(tasks)
+    if isinstance(size, bool) or not isinstance(size, int) or size <= 0:
+        msg = "Pilot size must be a positive integer."
+        raise ValueError(msg)
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        msg = "Pilot seed must be an integer."
+        raise ValueError(msg)
+    if size >= len(tasks):
+        return list(tasks)
+
+    lengths = sorted(len(task["body"]) for task in tasks)
+    boundaries = tuple(
+        lengths[round((len(lengths) - 1) * quantile)]
+        for quantile in (0.25, 0.5, 0.75)
+    )
+
+    task_metadata = {
+        task["task_id"]: (
+            bisect_right(boundaries, len(task["body"])),
+            hashlib.sha256(
+                f"{seed}:{task['task_id']}".encode("utf-8")
+            ).hexdigest(),
+        )
+        for task in tasks
+    }
+
+    team_counts: Counter[int] = Counter()
+    side_counts: Counter[str] = Counter()
+    length_counts: Counter[int] = Counter()
+    source_counts: Counter[str] = Counter()
+    content_counts: Counter[str] = Counter()
+    matchday_tasks: dict[int, dict[str, dict[str, Any]]] = {}
+    for task in tasks:
+        matchday_tasks.setdefault(task["matchday"], {})[task["task_id"]] = task
+    matchdays = sorted(matchday_tasks)
+    quotas: Counter[int] = Counter()
+    if size < len(matchdays):
+        if size == 1:
+            quotas[matchdays[seed % len(matchdays)]] = 1
+        else:
+            for index in range(size):
+                position = round(index * (len(matchdays) - 1) / (size - 1))
+                quotas[matchdays[position]] += 1
+    else:
+        base, remainder = divmod(size, len(matchdays))
+        for matchday in matchdays:
+            quotas[matchday] = base
+        offset = seed % len(matchdays)
+        for index in range(remainder):
+            quotas[matchdays[(offset + index) % len(matchdays)]] += 1
+
+    selected = []
+    while any(quotas.values()):
+        for matchday in matchdays:
+            if quotas[matchday] <= 0:
+                continue
+            candidates = matchday_tasks[matchday]
+            task = min(
+                candidates.values(),
+                key=lambda candidate: (
+                    team_counts[candidate["target_team_id"]],
+                    content_counts[candidate["content_id"]],
+                    length_counts[task_metadata[candidate["task_id"]][0]],
+                    side_counts[candidate["side"]],
+                    source_counts[candidate["source_host"]],
+                    task_metadata[candidate["task_id"]][1],
+                ),
+            )
+            selected.append(task)
+            candidates.pop(task["task_id"])
+            quotas[matchday] -= 1
+            team_counts[task["target_team_id"]] += 1
+            side_counts[task["side"]] += 1
+            length_counts[task_metadata[task["task_id"]][0]] += 1
+            source_counts[task["source_host"]] += 1
+            content_counts[task["content_id"]] += 1
+
+    return selected
+
+
 def annotate_news_tasks(
     tasks: list[dict[str, Any]],
     config: AnnotationConfig,
@@ -406,6 +526,7 @@ def annotate_news_tasks(
     retry_failures_only: bool = False,
     timeout_seconds: float = 300.0,
     num_ctx: int = DEFAULT_OLLAMA_NUM_CTX,
+    workers: int = 1,
     append_annotation: Callable[[dict[str, Any], Path], None] | None = None,
     append_failure: Callable[[dict[str, Any], Path], None] | None = None,
 ) -> OllamaAnnotationRun:
@@ -435,6 +556,9 @@ def annotate_news_tasks(
     if isinstance(num_ctx, bool) or not isinstance(num_ctx, int) or num_ctx <= 0:
         msg = "Ollama context size must be a positive integer."
         raise ValueError(msg)
+    if isinstance(workers, bool) or not isinstance(workers, int) or workers <= 0:
+        msg = "Annotation worker count must be a positive integer."
+        raise ValueError(msg)
     if task_id is not None:
         selected = [task for task in tasks if task["task_id"] == task_id]
         if not selected:
@@ -455,67 +579,119 @@ def annotate_news_tasks(
     client_base_url = base_url.rstrip("/")
     with httpx.Client(base_url=client_base_url, timeout=timeout_seconds) as client:
         model_digest = get_ollama_model_digest(client=client, model=model)
-        pending = []
-        skipped_count = 0
-        deferred_failure_count = 0
-        for task in selected:
-            annotation_id = build_annotation_id(
-                task_id=task["task_id"],
-                config_sha256=config.sha256,
-                model_digest=model_digest,
-            )
-            if annotation_id in existing_ids:
-                skipped_count += 1
-                continue
-            is_deferred_failure = annotation_id in deferred_annotation_ids
-            if retry_failures_only:
-                if not is_deferred_failure:
-                    continue
-            elif is_deferred_failure:
-                deferred_failure_count += 1
-                continue
-            pending.append((task, annotation_id))
-            if limit is not None and len(pending) >= limit:
-                break
 
-        annotated_count = 0
-        failed_count = 0
-        for task, annotation_id in pending:
-            try:
-                response, metadata = request_ollama_annotation(
-                    client=client,
-                    task=task,
-                    config=config,
-                    model=model,
-                    num_ctx=num_ctx,
-                )
-            except InvalidOllamaAnnotationError as exc:
-                failure_sequences[annotation_id] += 1
-                failure_row = build_annotation_failure_row(
-                    task=task,
-                    error=exc,
-                    config=config,
-                    model=model,
-                    model_digest=model_digest,
-                    annotation_id=annotation_id,
-                    failure_sequence=failure_sequences[annotation_id],
-                )
-                append_failure_record(failure_row, failure_output_path)
-                deferred_annotation_ids.add(annotation_id)
-                failed_count += 1
+    pending = []
+    skipped_count = 0
+    deferred_failure_count = 0
+    for task in selected:
+        annotation_id = build_annotation_id(
+            task_id=task["task_id"],
+            config_sha256=config.sha256,
+            model_digest=model_digest,
+        )
+        if annotation_id in existing_ids:
+            skipped_count += 1
+            continue
+        is_deferred_failure = annotation_id in deferred_annotation_ids
+        if retry_failures_only:
+            if not is_deferred_failure:
                 continue
-            row = build_annotation_row(
+        elif is_deferred_failure:
+            deferred_failure_count += 1
+            continue
+        pending.append((task, annotation_id))
+        if limit is not None and len(pending) >= limit:
+            break
+
+    annotated_count = 0
+    failed_count = 0
+
+    def persist_outcome(
+        task: dict[str, Any],
+        annotation_id: str,
+        outcome: tuple[dict[str, Any], dict[str, Any]] | InvalidOllamaAnnotationError,
+    ) -> None:
+        nonlocal annotated_count, failed_count
+        if isinstance(outcome, InvalidOllamaAnnotationError):
+            failure_sequences[annotation_id] += 1
+            failure_row = build_annotation_failure_row(
                 task=task,
-                response=response,
-                metadata=metadata,
+                error=outcome,
                 config=config,
                 model=model,
                 model_digest=model_digest,
                 annotation_id=annotation_id,
+                failure_sequence=failure_sequences[annotation_id],
             )
-            append_record(row, output_path)
-            existing_ids.add(annotation_id)
-            annotated_count += 1
+            append_failure_record(failure_row, failure_output_path)
+            deferred_annotation_ids.add(annotation_id)
+            failed_count += 1
+            return
+        response, metadata = outcome
+        row = build_annotation_row(
+            task=task,
+            response=response,
+            metadata=metadata,
+            config=config,
+            model=model,
+            model_digest=model_digest,
+            annotation_id=annotation_id,
+        )
+        append_record(row, output_path)
+        existing_ids.add(annotation_id)
+        annotated_count += 1
+
+    if workers == 1:
+        with httpx.Client(base_url=client_base_url, timeout=timeout_seconds) as client:
+            for task, annotation_id in pending:
+                try:
+                    outcome = request_ollama_annotation(
+                        client=client,
+                        task=task,
+                        config=config,
+                        model=model,
+                        num_ctx=num_ctx,
+                    )
+                except InvalidOllamaAnnotationError as exc:
+                    outcome = exc
+                persist_outcome(task, annotation_id, outcome)
+    else:
+        def request_with_own_client(
+            task: dict[str, Any],
+        ) -> tuple[dict[str, Any], dict[str, Any]] | InvalidOllamaAnnotationError:
+            with httpx.Client(
+                base_url=client_base_url,
+                timeout=timeout_seconds,
+            ) as client:
+                try:
+                    return request_ollama_annotation(
+                        client=client,
+                        task=task,
+                        config=config,
+                        model=model,
+                        num_ctx=num_ctx,
+                    )
+                except InvalidOllamaAnnotationError as exc:
+                    return exc
+
+        pending_iterator = iter(pending)
+        in_flight: dict[Future[Any], tuple[dict[str, Any], str]] = {}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            for _ in range(min(workers, len(pending))):
+                task, annotation_id = next(pending_iterator)
+                future = executor.submit(request_with_own_client, task)
+                in_flight[future] = (task, annotation_id)
+            while in_flight:
+                completed, _ = wait(in_flight, return_when=FIRST_COMPLETED)
+                for future in completed:
+                    task, annotation_id = in_flight.pop(future)
+                    persist_outcome(task, annotation_id, future.result())
+                    try:
+                        next_task, next_annotation_id = next(pending_iterator)
+                    except StopIteration:
+                        continue
+                    next_future = executor.submit(request_with_own_client, next_task)
+                    in_flight[next_future] = (next_task, next_annotation_id)
 
     return OllamaAnnotationRun(
         selected_count=len(pending),
@@ -571,6 +747,7 @@ def request_ollama_annotation(
             if not isinstance(parsed, dict):
                 msg = "Ollama structured response must be a JSON object."
                 raise ValueError(msg)
+            parsed = canonicalize_annotation_response(parsed, config)
             validate_annotation_response(parsed, task, config)
             return parsed, envelope
         except (json.JSONDecodeError, ValueError) as exc:
@@ -586,8 +763,15 @@ def request_ollama_annotation(
                     "role": "user",
                     "content": (
                         "Die vorherige Antwort war ungültig: "
-                        f"{str(exc)[:500]} Korrigiere die Antwort und gib nur "
-                        "das geforderte JSON-Objekt zurück."
+                        f"{str(exc)[:500]} Prüfe erneut, dass ausschließlich "
+                        f"{task['target_team']} bewertet wird. Informationen "
+                        f"über {task['opponent_team']} oder andere Teams dürfen "
+                        "nicht als Signal für das Zielteam gelten. Jeder "
+                        "bewertete Indikator braucht ein wortgleiches, "
+                        "zielteambezogenes Zitat. Wenn das nicht möglich ist, "
+                        "verwende not_mentioned beziehungsweise not_assessable. "
+                        "Korrigiere die Antwort und gib nur das geforderte "
+                        "JSON-Objekt zurück."
                     ),
                 }
             )
@@ -623,19 +807,84 @@ def build_user_prompt(task: dict[str, Any]) -> str:
     )
 
 
+def canonicalize_annotation_response(
+    response: dict[str, Any],
+    config: AnnotationConfig,
+) -> dict[str, Any]:
+    """Canonicalize a feature-inert v2 response to not relevant."""
+    properties = config.response_json_schema.get("properties", {})
+    if RELEVANCE_FIELD not in properties:
+        return response
+    if not all(indicator in response for indicator in INDICATORS):
+        return response
+    has_assessed_indicator = any(
+        response[indicator] != UNASSESSED_RATINGS[indicator]
+        for indicator in INDICATORS
+    )
+    if has_assessed_indicator or response.get("evidence"):
+        return response
+    canonical = dict(response)
+    canonical[RELEVANCE_FIELD] = "not_relevant"
+    canonical[RELEVANCE_EVIDENCE_FIELD] = []
+    return canonical
+
+
 def validate_annotation_response(
     response: dict[str, Any],
     task: dict[str, Any],
     config: AnnotationConfig,
 ) -> None:
     """Validate exact response fields, enums, and verbatim evidence coverage."""
+    properties = config.response_json_schema["properties"]
+    uses_relevance_gate = RELEVANCE_FIELD in properties
     expected_response_keys = {*INDICATORS, "evidence"}
+    if uses_relevance_gate:
+        expected_response_keys.update({RELEVANCE_FIELD, RELEVANCE_EVIDENCE_FIELD})
     if set(response) != expected_response_keys or len(response) != len(
         expected_response_keys
     ):
         msg = f"Annotation response fields do not match: {list(response)}."
         raise ValueError(msg)
-    properties = config.response_json_schema["properties"]
+
+    normalized_article = normalize_evidence_text(
+        f"{task['title'] or ''}\n{task['body']}"
+    )
+    if uses_relevance_gate:
+        relevance = response[RELEVANCE_FIELD]
+        if relevance not in properties[RELEVANCE_FIELD]["enum"]:
+            msg = f"Unsupported target-team relevance {relevance!r}."
+            raise ValueError(msg)
+        relevance_evidence = response[RELEVANCE_EVIDENCE_FIELD]
+        if not isinstance(relevance_evidence, list) or len(relevance_evidence) > 2:
+            msg = "Target-team relevance evidence must contain at most two quotes."
+            raise ValueError(msg)
+        for quote in relevance_evidence:
+            require_non_empty_text(quote, "Target-team relevance evidence quote")
+            if normalize_evidence_text(quote) not in normalized_article:
+                msg = "Target-team relevance evidence is not present in the article."
+                raise ValueError(msg)
+        if relevance == "relevant" and not relevance_evidence:
+            msg = "A relevant article requires target-team relevance evidence."
+            raise ValueError(msg)
+        if relevance == "not_relevant":
+            if relevance_evidence:
+                msg = "A not-relevant article must not have relevance evidence."
+                raise ValueError(msg)
+            incorrect_ratings = {
+                indicator: response[indicator]
+                for indicator in INDICATORS
+                if response[indicator] != UNASSESSED_RATINGS[indicator]
+            }
+            if incorrect_ratings:
+                msg = (
+                    "A not-relevant article must leave every indicator unassessed: "
+                    f"{incorrect_ratings}."
+                )
+                raise ValueError(msg)
+            if response["evidence"]:
+                msg = "A not-relevant article must not contain indicator evidence."
+                raise ValueError(msg)
+
     for indicator in INDICATORS:
         allowed = properties[indicator]["enum"]
         if response[indicator] not in allowed:
@@ -650,9 +899,6 @@ def validate_annotation_response(
         msg = "Annotation evidence must be an array with at most 12 items."
         raise ValueError(msg)
     supported_indicators: set[str] = set()
-    normalized_article = normalize_evidence_text(
-        f"{task['title'] or ''}\n{task['body']}"
-    )
     for item in evidence:
         if (
             not isinstance(item, dict)
@@ -680,6 +926,13 @@ def validate_annotation_response(
         for indicator in INDICATORS
         if response[indicator] != UNASSESSED_RATINGS[indicator]
     }
+    if (
+        uses_relevance_gate
+        and response[RELEVANCE_FIELD] == "relevant"
+        and not assessed_indicators
+    ):
+        msg = "A relevant article must support at least one assessed indicator."
+        raise ValueError(msg)
     missing_evidence = sorted(assessed_indicators - supported_indicators)
     if missing_evidence:
         msg = f"Assessed indicators are missing evidence: {missing_evidence}."
@@ -696,9 +949,12 @@ def build_annotation_row(
     annotation_id: str,
 ) -> dict[str, Any]:
     """Combine the validated response with stable provenance and timings."""
+    uses_relevance_gate = RELEVANCE_FIELD in config.response_json_schema["properties"]
     row = {
         "annotation_id": annotation_id,
-        "output_schema_version": NEWS_ANNOTATION_OUTPUT_SCHEMA_VERSION,
+        "output_schema_version": (
+            NEWS_ANNOTATION_OUTPUT_SCHEMA_VERSION if uses_relevance_gate else 1
+        ),
         "task_id": task["task_id"],
         "annotation_schema_id": config.schema_id,
         "annotation_schema_version": config.schema_version,
@@ -713,6 +969,14 @@ def build_annotation_row(
         "target_team_id": task["target_team_id"],
         "target_team": task["target_team"],
         "selected_article_id": task["selected_article_id"],
+        **(
+            {
+                RELEVANCE_FIELD: response[RELEVANCE_FIELD],
+                RELEVANCE_EVIDENCE_FIELD: response[RELEVANCE_EVIDENCE_FIELD],
+            }
+            if uses_relevance_gate
+            else {}
+        ),
         **{indicator: response[indicator] for indicator in INDICATORS},
         "evidence": response["evidence"],
         "ollama_created_at": metadata.get("created_at"),
@@ -723,7 +987,12 @@ def build_annotation_row(
         "eval_count": metadata.get("eval_count"),
         "eval_duration_ns": metadata.get("eval_duration"),
     }
-    if tuple(row) != NEWS_ANNOTATION_OUTPUT_COLUMNS:
+    expected_columns = (
+        NEWS_ANNOTATION_OUTPUT_COLUMNS
+        if uses_relevance_gate
+        else NEWS_ANNOTATION_OUTPUT_COLUMNS_V1
+    )
+    if tuple(row) != expected_columns:
         msg = "Internal annotation output schema does not match."
         raise ValueError(msg)
     return row
@@ -842,7 +1111,14 @@ def read_existing_annotations(path: Path) -> list[dict[str, Any]]:
         except json.JSONDecodeError as exc:
             msg = f"Invalid JSON in {path} at line {line_number}: {exc}."
             raise ValueError(msg) from exc
-        if not isinstance(row, dict) or tuple(row) != NEWS_ANNOTATION_OUTPUT_COLUMNS:
+        schema_version = (
+            row.get("output_schema_version") if isinstance(row, dict) else None
+        )
+        expected_columns = {
+            1: NEWS_ANNOTATION_OUTPUT_COLUMNS_V1,
+            NEWS_ANNOTATION_OUTPUT_SCHEMA_VERSION: NEWS_ANNOTATION_OUTPUT_COLUMNS,
+        }.get(schema_version)
+        if not isinstance(row, dict) or tuple(row) != expected_columns:
             msg = f"Annotation schema does not match in {path} at line {line_number}."
             raise ValueError(msg)
         annotation_id = require_text(row, "annotation_id", "Stored annotation")
@@ -919,15 +1195,35 @@ def validate_response_json_schema(
         msg = "Response JSON schema must be a closed object."
         raise ValueError(msg)
     properties = schema.get("properties")
-    if not isinstance(properties, dict) or tuple(properties) != (
+    version_1_properties = (*INDICATORS, "evidence")
+    version_2_properties = (
+        RELEVANCE_FIELD,
+        RELEVANCE_EVIDENCE_FIELD,
         *INDICATORS,
         "evidence",
-    ):
+    )
+    if not isinstance(properties, dict) or tuple(properties) not in {
+        version_1_properties,
+        version_2_properties,
+    }:
         msg = "Response JSON schema properties do not match the six indicators."
         raise ValueError(msg)
     if schema.get("required") != list(properties):
         msg = "Every response JSON schema property must be required in order."
         raise ValueError(msg)
+    if tuple(properties) == version_2_properties:
+        relevance_enum = properties[RELEVANCE_FIELD].get("enum")
+        if relevance_enum != ["relevant", "not_relevant"]:
+            msg = "Target-team relevance enum is invalid."
+            raise ValueError(msg)
+        relevance_evidence = properties[RELEVANCE_EVIDENCE_FIELD]
+        if (
+            relevance_evidence.get("type") != "array"
+            or relevance_evidence.get("maxItems") != 2
+            or relevance_evidence.get("items", {}).get("type") != "string"
+        ):
+            msg = "Target-team relevance evidence schema is invalid."
+            raise ValueError(msg)
     for indicator in INDICATORS:
         indicator_schema = properties[indicator]
         if not isinstance(indicator_schema, dict):

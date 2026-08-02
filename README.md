@@ -146,6 +146,7 @@ never be passed to the local LLM or the prediction model.
 bundesliga-news-prediction/
 ├── config/
 │   ├── news_annotation_schema_v1.json
+│   ├── news_annotation_schema_v2.json
 │   ├── news_source_policy.json
 │   └── teams.json
 ├── data/
@@ -1000,7 +1001,7 @@ data/interim/2025/news/articles/articles.jsonl
 data/interim/2025/news/articles/request_links.jsonl
 data/interim/2025/news/contents/contents.jsonl
 data/interim/2025/news/contents/article_links.jsonl
-config/news_annotation_schema_v1.json
+config/news_annotation_schema_v2.json
 ```
 
 Outputs:
@@ -1044,15 +1045,27 @@ Run a small pilot before processing the complete task file:
 uv run python -m buli_news.main annotate-news \
   --season 2025 \
   --model gemma4:12b-it-qat \
-  --limit 200
+  --pilot-size 200 \
+  --pilot-seed 42 \
+  --workers 2
 ```
 
 The default server is `http://localhost:11434`. `--base-url`, `--model`,
-`--num-ctx`, `--timeout-seconds`, `--output`, and `--failure-output` can be set
-explicitly. Use `--task-id` for one exact task. Successful annotations are
-appended immediately to `data/interim/2025/news/annotations/results.jsonl`; a rerun
-skips only annotations with the same task, annotation configuration, and local
-Ollama model digest.
+`--num-ctx`, `--timeout-seconds`, `--workers`, `--output`, and
+`--failure-output` can be set explicitly. Use `--task-id` for one exact task.
+`--pilot-size` selects a deterministic pilot balanced across matchdays, target
+teams, home/away sides, source hosts, unique contents, and article-length
+quartiles. The selected task manifest is stored beside the annotation outputs
+as `pilot_tasks_v{selection_version}_{size}_seed_{seed}.jsonl`. `--limit`
+remains available for a
+simple prefix of untouched tasks but is not a stratified pilot. Successful
+annotations are appended immediately to
+`data/interim/2025/news/annotations/results.jsonl`; a rerun skips only
+annotations with the same task, annotation configuration, and local Ollama
+model digest. Concurrent requests are processed by worker threads, but all
+successful and failed JSONL rows are appended by the main thread so writes
+cannot interleave. Use one worker unless the local Ollama hardware has been
+benchmarked; two workers improved throughput on the development machine.
 The default context size is 32,768 tokens because the current collection also
 contains a small number of unusually long article bodies. Each response may use
 up to 2,048 generated tokens, leaving enough room for all six ratings and as
@@ -1079,9 +1092,10 @@ remain as an auditable history. HTTP and Ollama-server failures still stop the
 command because they indicate an infrastructure problem rather than one bad
 article response.
 
-The committed `config/news_annotation_schema_v1.json` versions the system
-prompt, JSON Schema, and numeric rating mapping. Each request sends two chat
-messages:
+The default `config/news_annotation_schema_v2.json` versions the system prompt,
+JSON Schema, target-team relevance gate, and numeric rating mapping. The v1
+configuration remains committed so earlier pilot rows stay reproducible. Each
+request sends two chat messages:
 
 1. a fixed system prompt defining the extraction task, all indicator meanings,
    the evidence rules, and the prohibition on external knowledge
@@ -1090,9 +1104,15 @@ messages:
 
 Ollama receives the full response JSON Schema through its structured-output
 `format` field, with temperature `0` and a fixed seed. Python then validates the
-response again. Every assessed indicator must have at least one short verbatim
-quote found in the title or body; unmentioned indicators must not receive
-invented evidence.
+response again. The model must first classify the article as `relevant` or
+`not_relevant` for the exact target team. A relevant row requires one or two
+verbatim relevance quotes and at least one assessed indicator. A feature-inert
+response is canonicalized to not relevant. A not-relevant row is forced to
+leave every rating missing and both evidence collections empty. Every assessed
+indicator must have at least one short verbatim, target-team-specific quote
+found in the title or body; unmentioned indicators must not receive invented
+evidence. Facts about the opponent or another club must never be assigned to
+the target team.
 
 The six extracted indicators are:
 
