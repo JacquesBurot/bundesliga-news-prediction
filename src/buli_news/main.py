@@ -20,6 +20,7 @@ from buli_news.modeling import (
     evaluate_numerical_logistic_reference,
 )
 from buli_news.news_articles import build_news_articles
+from buli_news.news_contents import build_news_contents
 from buli_news.newsapi import (
     count_successful_existing_responses,
     fetch_news_requests,
@@ -269,6 +270,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--timezone",
         default="Europe/Berlin",
         help="Timezone used to check publication timestamps against windows.",
+    )
+
+    build_news_contents_parser = subparsers.add_parser(
+        "build-news-contents",
+        help="Group canonical articles by deterministic normalized text content.",
+    )
+    build_news_contents_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -657,6 +669,28 @@ def build_news_articles_command(
     )
 
 
+def build_news_contents_command(season: int) -> None:
+    paths = SeasonPaths(season)
+    articles = read_jsonl(paths.news_articles)
+    build = build_news_contents(articles=articles, season=season)
+
+    write_jsonl(build.contents, paths.news_contents)
+    write_jsonl(
+        build.article_content_links,
+        paths.news_article_content_links,
+    )
+    write_json(build.quality_report, paths.news_contents_quality)
+
+    summary = build.quality_report["summary"]
+    print(f"Saved {len(build.contents)} canonical contents to {paths.news_contents}")
+    print(
+        f"Saved {len(build.article_content_links)} article-content links to "
+        f"{paths.news_article_content_links}"
+    )
+    print(f"Saved news content quality report to {paths.news_contents_quality}")
+    print(f"Collapsed duplicate article rows: {summary['collapsed_article_count']}")
+
+
 def export_news_source_review_command(
     season: int,
     raw_dir: str | None,
@@ -801,6 +835,8 @@ def main() -> None:
                 raw_dir=args.raw_dir,
                 timezone=args.timezone,
             )
+        elif args.command == "build-news-contents":
+            build_news_contents_command(season=args.season)
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,

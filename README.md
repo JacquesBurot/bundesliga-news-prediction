@@ -18,12 +18,14 @@ The implemented pipeline currently supports:
 8. converting the reviewed news-source XLSX into a versioned JSON policy
 9. applying the source policy and building canonical articles with
    request-bound match and team-side links
-10. evaluating a prior-based numerical `DummyClassifier` reference
-11. evaluating standardized multinomial logistic regression on the numerical
+10. grouping text-identical publications under stable content IDs while
+    retaining every article and request association
+11. evaluating a prior-based numerical `DummyClassifier` reference
+12. evaluating standardized multinomial logistic regression on the numerical
    features
-12. selecting numerical logistic-regression regularization and one of two fixed
+13. selecting numerical logistic-regression regularization and one of two fixed
    feature sets with training-only expanding-window validation
-13. evaluating the frozen training-selected numerical logistic model on the
+14. evaluating the frozen training-selected numerical logistic model on the
     fixed test split without overwriting the original baseline
 
 Local LLM annotation, news-feature aggregation, and the final model comparison
@@ -81,10 +83,11 @@ NewsAPI.ai raw -----> source-review XLSX -----> source policy
        |                                          |
        +------------------------------------------+
                                                   v
-                          canonical articles + request-bound links
+                      canonical articles + request-bound links
                                                   |
                                                   v
-                                          local LLM -> news features
+                                     content IDs -> local LLM
+                                                   -> news features
 
 numerical features -------------------------> model A
 numerical features + news features ---------> model B
@@ -160,6 +163,7 @@ bundesliga-news-prediction/
 │       ├── model_selection.py
 │       ├── modeling.py
 │       ├── news_articles.py
+│       ├── news_contents.py
 │       ├── news_requests.py
 │       ├── news_source_policy.py
 │       ├── news_source_review.py
@@ -925,6 +929,47 @@ articles and 49,286 request-bound links. It excludes 10,907 occurrences by
 policy and rejects another 338 included-source occurrences whose publication
 timestamp lies outside the associated request window. All 612 requests and all
 306 matches retain at least one valid link.
+
+### Build Stable News Content IDs
+
+Group publications with identical normalized article bodies without changing
+their source or request provenance:
+
+```console
+uv run python -m buli_news.main build-news-contents --season 2025
+```
+
+Input:
+
+```text
+data/interim/2025/news/articles.jsonl
+```
+
+Outputs:
+
+```text
+data/interim/2025/news/contents.jsonl
+data/interim/2025/news/article_content_links.jsonl
+data/interim/2025/news/contents_quality.json
+```
+
+The stage normalizes each article body with Unicode NFKC normalization, Unicode
+case folding, collapsed whitespace, and stripped outer whitespace. It hashes
+that normalized UTF-8 text with SHA-256 to form a stable `content_id`. It does
+not group similar or semantically related text.
+
+`contents.jsonl` stores one representative original body for every distinct
+normalized text. `article_content_links.jsonl` maps every `article_id` to
+exactly one `content_id`. The original article rows, titles, URLs, sources, and
+request-bound match and side links remain unchanged. Content grouping therefore
+cannot assign an article to another request, match, side, or team.
+
+For the current collection, 24,509 canonical publications map to 23,738
+contents. The 771 collapsed publication rows belong to 543 duplicate groups;
+443 of those groups contain publications from more than one source host. The
+largest group contains 30 publications. These groups are descriptive inputs
+for the later LLM design and do not yet determine whether annotation happens
+once per content or once per content-and-team combination.
 
 ## Planned Next Stages
 

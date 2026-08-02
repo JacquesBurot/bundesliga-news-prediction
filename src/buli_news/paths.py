@@ -65,6 +65,18 @@ class SeasonPaths:
         return self.news_interim_dir / "articles_quality.json"
 
     @property
+    def news_contents(self) -> Path:
+        return self.news_interim_dir / "contents.jsonl"
+
+    @property
+    def news_article_content_links(self) -> Path:
+        return self.news_interim_dir / "article_content_links.jsonl"
+
+    @property
+    def news_contents_quality(self) -> Path:
+        return self.news_interim_dir / "contents_quality.json"
+
+    @property
     def news_source_review(self) -> Path:
         return REVIEW_ROOT / str(self.season) / "news_sources.xlsx"
 
