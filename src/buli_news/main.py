@@ -34,6 +34,7 @@ from buli_news.numerical_features import (
 )
 from buli_news.numerical_matches import build_numerical_matches
 from buli_news.openligadb import fetch_matchdata
+from buli_news.paths import SeasonPaths
 from buli_news.storage import (
     append_jsonl,
     read_bytes,
@@ -49,11 +50,6 @@ from buli_news.storage import (
 
 class NoMatchesError(Exception):
     """Raised when OpenLigaDB returns an empty match list."""
-
-
-def numerical_model_output_path(season: int, *parts: str) -> Path:
-    """Return a path below the season-specific numerical model output root."""
-    return Path("outputs", "modeling", str(season), "numerical", *parts)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -203,7 +199,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Output XLSX. Defaults to "
-            "data/interim/news_source_homepages_{season}.xlsx."
+            "data/review/{season}/news_sources.xlsx."
         ),
     )
     export_news_source_review_parser.add_argument(
@@ -227,7 +223,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Reviewed XLSX input. Defaults to "
-            "data/interim/news_source_homepages_{season}.xlsx."
+            "data/review/{season}/news_sources.xlsx."
         ),
     )
     build_news_source_policy_parser.add_argument(
@@ -298,14 +294,14 @@ def fetch_openliga_command(league: str, season: int) -> None:
         msg = "No matches returned. Check league shortcut and season."
         raise NoMatchesError(msg)
 
-    output_path = Path("data") / "raw" / "openligadb" / f"{league}_{season}.json"
+    output_path = SeasonPaths(season).openligadb_raw(league)
     write_text(match_data.raw_json, output_path)
     print(f"Saved {len(match_data.matches)} matches to {output_path}")
 
 
 def fetch_football_data_command(season: int) -> None:
     football_data = fetch_bundesliga_csv(season=season)
-    output_path = Path("data") / "raw" / "football_data" / football_data.filename
+    output_path = SeasonPaths(season).football_data_raw(football_data.filename)
     write_bytes(football_data.content, output_path)
     print(
         f"Saved {football_data.row_count} Football-Data match rows to {output_path}"
@@ -314,7 +310,8 @@ def fetch_football_data_command(season: int) -> None:
 
 
 def build_matches_command(league: str, season: int, timezone: str) -> None:
-    input_path = Path("data") / "raw" / "openligadb" / f"{league}_{season}.json"
+    paths = SeasonPaths(season)
+    input_path = paths.openligadb_raw(league)
     raw_matches = read_json(input_path)
     if not isinstance(raw_matches, list) or not all(
         isinstance(item, dict) for item in raw_matches
@@ -331,19 +328,15 @@ def build_matches_command(league: str, season: int, timezone: str) -> None:
         season=season,
         timezone=timezone,
     )
-    output_path = Path("data") / "interim" / f"matches_{season}.jsonl"
+    output_path = paths.normalized_matches
     write_jsonl(matches, output_path)
     print(f"Saved {len(matches)} normalized matches to {output_path}")
 
 
 def build_numerical_matches_command(season: int, config_path: str) -> None:
-    matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
-    football_data_path = (
-        Path("data")
-        / "raw"
-        / "football_data"
-        / build_bundesliga_filename(season)
-    )
+    paths = SeasonPaths(season)
+    matches_path = paths.normalized_matches
+    football_data_path = paths.football_data_raw(build_bundesliga_filename(season))
     config = read_json(Path(config_path))
     openliga_matches = read_jsonl(matches_path)
     football_data_content = read_bytes(football_data_path)
@@ -357,14 +350,8 @@ def build_numerical_matches_command(season: int, config_path: str) -> None:
         config=config,
         season=season,
     )
-    output_path = (
-        Path("data") / "interim" / f"numerical_matches_{season}.jsonl"
-    )
-    quality_path = (
-        Path("data")
-        / "interim"
-        / f"numerical_matches_{season}_quality.json"
-    )
+    output_path = paths.numerical_matches
+    quality_path = paths.numerical_matches_quality
     write_jsonl(build.matches, output_path)
     write_json(build.quality_report, quality_path)
     print(f"Saved {len(build.matches)} numerical matches to {output_path}")
@@ -376,15 +363,12 @@ def build_numerical_matches_command(season: int, config_path: str) -> None:
 
 
 def build_numerical_features_command(season: int) -> None:
-    input_path = (
-        Path("data") / "interim" / f"numerical_matches_{season}.jsonl"
-    )
+    paths = SeasonPaths(season)
+    input_path = paths.numerical_matches
     matches = read_jsonl(input_path)
     build = build_numerical_features(matches=matches, season=season)
 
-    output_path = (
-        Path("data") / "processed" / f"numerical_features_{season}.csv"
-    )
+    output_path = paths.numerical_features
     write_csv(
         records=build.rows,
         fieldnames=NUMERICAL_FEATURE_OUTPUT_COLUMNS,
@@ -396,20 +380,17 @@ def build_numerical_features_command(season: int) -> None:
 
 
 def evaluate_numerical_dummy_command(season: int) -> None:
-    input_path = (
-        Path("data") / "processed" / f"numerical_features_{season}.csv"
-    )
+    paths = SeasonPaths(season)
+    input_path = paths.numerical_features
     evaluation = evaluate_numerical_dummy(
         features_path=input_path,
         season=season,
     )
-    result_path = numerical_model_output_path(
-        season,
+    result_path = paths.numerical_model_output(
         "dummy",
         "evaluation.json",
     )
-    predictions_path = numerical_model_output_path(
-        season,
+    predictions_path = paths.numerical_model_output(
         "dummy",
         "test_predictions.csv",
     )
@@ -435,21 +416,18 @@ def evaluate_numerical_dummy_command(season: int) -> None:
 
 
 def evaluate_numerical_logistic_reference_command(season: int) -> None:
-    input_path = (
-        Path("data") / "processed" / f"numerical_features_{season}.csv"
-    )
+    paths = SeasonPaths(season)
+    input_path = paths.numerical_features
     evaluation = evaluate_numerical_logistic_reference(
         features_path=input_path,
         season=season,
     )
-    result_path = numerical_model_output_path(
-        season,
+    result_path = paths.numerical_model_output(
         "logistic_regression",
         "reference",
         "evaluation.json",
     )
-    predictions_path = numerical_model_output_path(
-        season,
+    predictions_path = paths.numerical_model_output(
         "logistic_regression",
         "reference",
         "test_predictions.csv",
@@ -480,11 +458,9 @@ def evaluate_numerical_logistic_reference_command(season: int) -> None:
 
 
 def evaluate_numerical_logistic_final_command(season: int) -> None:
-    input_path = (
-        Path("data") / "processed" / f"numerical_features_{season}.csv"
-    )
-    selection_report_path = numerical_model_output_path(
-        season,
+    paths = SeasonPaths(season)
+    input_path = paths.numerical_features
+    selection_report_path = paths.numerical_model_output(
         "logistic_regression",
         "selection",
         "report.json",
@@ -494,14 +470,12 @@ def evaluate_numerical_logistic_final_command(season: int) -> None:
         season=season,
         selection_report_path=selection_report_path,
     )
-    result_path = numerical_model_output_path(
-        season,
+    result_path = paths.numerical_model_output(
         "logistic_regression",
         "final",
         "evaluation.json",
     )
-    predictions_path = numerical_model_output_path(
-        season,
+    predictions_path = paths.numerical_model_output(
         "logistic_regression",
         "final",
         "test_predictions.csv",
@@ -535,21 +509,18 @@ def evaluate_numerical_logistic_final_command(season: int) -> None:
 
 
 def select_numerical_logistic_configuration_command(season: int) -> None:
-    input_path = (
-        Path("data") / "processed" / f"numerical_features_{season}.csv"
-    )
+    paths = SeasonPaths(season)
+    input_path = paths.numerical_features
     selection = select_numerical_logistic_configuration(
         features_path=input_path,
         season=season,
     )
-    result_path = numerical_model_output_path(
-        season,
+    result_path = paths.numerical_model_output(
         "logistic_regression",
         "selection",
         "report.json",
     )
-    predictions_path = numerical_model_output_path(
-        season,
+    predictions_path = paths.numerical_model_output(
         "logistic_regression",
         "selection",
         "validation_predictions.csv",
@@ -585,12 +556,11 @@ def build_news_source_policy_command(
     output_path: str,
     policy_version: int,
 ) -> None:
+    paths = SeasonPaths(season)
     workbook_path = (
         Path(input_path)
         if input_path is not None
-        else Path("data")
-        / "interim"
-        / f"news_source_homepages_{season}.xlsx"
+        else paths.news_source_review
     )
     policy = build_news_source_policy(
         workbook_path=workbook_path,
@@ -614,17 +584,16 @@ def export_news_source_review_command(
     output_path: str | None,
     overwrite: bool,
 ) -> None:
+    paths = SeasonPaths(season)
     source_dir = (
         Path(raw_dir)
         if raw_dir is not None
-        else Path("data") / "raw" / "newsapi" / str(season)
+        else paths.news_raw_dir
     )
     destination = (
         Path(output_path)
         if output_path is not None
-        else Path("data")
-        / "interim"
-        / f"news_source_homepages_{season}.xlsx"
+        else paths.news_source_review
     )
     homepage_counts = export_news_source_review(
         raw_dir=source_dir,
@@ -640,12 +609,13 @@ def export_news_source_review_command(
 
 
 def build_news_requests_command(season: int, config_path: str, lang: str) -> None:
-    matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
+    paths = SeasonPaths(season)
+    matches_path = paths.normalized_matches
     config = read_json(Path(config_path))
     matches = read_jsonl(matches_path)
     requests = build_news_requests(matches=matches, config=config, lang=lang)
 
-    output_path = Path("data") / "interim" / f"news_requests_{season}.jsonl"
+    output_path = paths.news_requests
     write_jsonl(requests, output_path)
     print(f"Saved {len(requests)} planned news requests to {output_path}")
 
@@ -656,7 +626,8 @@ def fetch_news_command(
     limit: int | None,
     delay_seconds: float,
 ) -> None:
-    requests_path = Path("data") / "interim" / f"news_requests_{season}.jsonl"
+    paths = SeasonPaths(season)
+    requests_path = paths.news_requests
     planned_requests = read_jsonl(requests_path)
     selected_requests = select_requests(
         requests=planned_requests,
@@ -667,8 +638,8 @@ def fetch_news_command(
         msg = f"No planned requests found in {requests_path}."
         raise ValueError(msg)
 
-    output_dir = Path("data") / "raw" / "newsapi" / str(season)
-    results_path = Path("data") / "interim" / f"news_fetch_results_{season}.jsonl"
+    output_dir = paths.news_raw_dir
+    results_path = paths.news_fetch_results
     existing_count = count_successful_existing_responses(
         requests=selected_requests,
         output_dir=output_dir,

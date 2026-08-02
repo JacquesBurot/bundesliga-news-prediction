@@ -215,9 +215,11 @@ tempCodeRunnerFile.py
 # Project data
 data/raw/**
 data/interim/**
+data/review/**
 data/processed/**
 !data/raw/**/
 !data/interim/**/
+!data/review/**/
 
 # Generated model outputs
 outputs/**
@@ -225,6 +227,7 @@ outputs/**
 !data/processed/**/
 !data/raw/**/.gitkeep
 !data/interim/**/.gitkeep
+!data/review/**/.gitkeep
 !data/processed/**/.gitkeep
 
 # Marimo

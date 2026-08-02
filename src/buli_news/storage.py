@@ -38,9 +38,9 @@ def write_json(data: Any, path: Path) -> None:
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
-    """Read records from a JSON Lines file."""
+    """Read records from a JSON Lines file, tolerating an optional UTF-8 BOM."""
     records = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         if line.strip():
             record = json.loads(line)
             if not isinstance(record, dict):

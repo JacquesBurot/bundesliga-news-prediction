@@ -89,12 +89,18 @@ numerical features + news features ---------> model B
 The data directories represent processing stages:
 
 - `data/raw`: unchanged responses from external sources
-- `data/interim`: normalized, joined, or annotated source data
+- `data/interim/{season}/matches`: normalized and joined match data
+- `data/interim/{season}/news`: planned requests, fetch logs, and later news data
+- `data/review/{season}`: manually maintained review workbooks
 - `data/processed`: model-ready pre-match feature tables
 - `outputs/modeling`: generated model reports and prediction tables
 
 Real data files and generated model outputs are ignored by Git. Only `.gitkeep`
 files preserve the directory structure in the repository.
+
+All standard season-specific locations are defined centrally in
+`buli_news.paths.SeasonPaths`. Pipeline commands must use these path definitions
+instead of reconstructing interim, review, processed, or modeling paths locally.
 
 ## Leakage Rules
 
@@ -133,6 +139,11 @@ bundesliga-news-prediction/
 │   │   ├── openligadb/
 │   │   └── newsapi/
 │   ├── interim/
+│   │   └── {season}/
+│   │       ├── matches/
+│   │       └── news/
+│   ├── review/
+│   │   └── {season}/
 │   └── processed/
 ├── outputs/
 │   └── modeling/
@@ -151,6 +162,7 @@ bundesliga-news-prediction/
 │       ├── numerical_features.py
 │       ├── numerical_matches.py
 │       ├── openligadb.py
+│       ├── paths.py
 │       └── storage.py
 ├── .env.example
 ├── .gitignore
@@ -249,7 +261,7 @@ data/raw/openligadb/bl1_2025.json
 Output:
 
 ```text
-data/interim/matches_2025.jsonl
+data/interim/2025/matches/normalized.jsonl
 ```
 
 This table contains match IDs, matchdays, local kickoff timestamps, canonical
@@ -275,7 +287,7 @@ uv run python -m buli_news.main build-numerical-matches --season 2025
 Inputs:
 
 ```text
-data/interim/matches_2025.jsonl
+data/interim/2025/matches/normalized.jsonl
 data/raw/football_data/D1_2526.csv
 config/teams.json
 ```
@@ -283,8 +295,8 @@ config/teams.json
 Outputs:
 
 ```text
-data/interim/numerical_matches_2025.jsonl
-data/interim/numerical_matches_2025_quality.json
+data/interim/2025/matches/numerical.jsonl
+data/interim/2025/matches/numerical_quality.json
 ```
 
 Team mappings connect exact Football-Data names to OpenLigaDB team IDs. The
@@ -315,7 +327,7 @@ uv run python -m buli_news.main build-numerical-features --season 2025
 Input:
 
 ```text
-data/interim/numerical_matches_2025.jsonl
+data/interim/2025/matches/numerical.jsonl
 ```
 
 Output:
@@ -728,14 +740,14 @@ uv run python -m buli_news.main build-news-requests --season 2025
 Inputs:
 
 ```text
-data/interim/matches_2025.jsonl
+data/interim/2025/matches/normalized.jsonl
 config/teams.json
 ```
 
 Output:
 
 ```text
-data/interim/news_requests_2025.jsonl
+data/interim/2025/news/requests.jsonl
 ```
 
 For every match, the command creates separate home-team and away-team requests.
@@ -773,7 +785,7 @@ Outputs:
 
 ```text
 data/raw/newsapi/2025/{request_id}.json
-data/interim/news_fetch_results_2025.jsonl
+data/interim/2025/news/fetch_results.jsonl
 ```
 
 Fetch behavior:
@@ -804,7 +816,7 @@ data/raw/newsapi/2025/*.json
 Output:
 
 ```text
-data/interim/news_source_homepages_2025.xlsx
+data/review/2025/news_sources.xlsx
 ```
 
 The command normalizes every article or source URI to an HTTPS homepage,
@@ -834,7 +846,7 @@ uv run python -m buli_news.main build-news-source-policy --season 2025
 Input:
 
 ```text
-data/interim/news_source_homepages_2025.xlsx
+data/review/2025/news_sources.xlsx
 ```
 
 Output:
