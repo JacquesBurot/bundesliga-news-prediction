@@ -16,12 +16,14 @@ The implemented pipeline currently supports:
 6. planning and fetching German pre-match news from Event Registry / NewsAPI.ai
 7. exporting collected source homepages into a workbook for manual legal review
 8. converting the reviewed news-source XLSX into a versioned JSON policy
-9. evaluating a prior-based numerical `DummyClassifier` reference
-10. evaluating standardized multinomial logistic regression on the numerical
+9. applying the source policy and building canonical articles with
+   request-bound match and team-side links
+10. evaluating a prior-based numerical `DummyClassifier` reference
+11. evaluating standardized multinomial logistic regression on the numerical
    features
-11. selecting numerical logistic-regression regularization and one of two fixed
+12. selecting numerical logistic-regression regularization and one of two fixed
    feature sets with training-only expanding-window validation
-12. evaluating the frozen training-selected numerical logistic model on the
+13. evaluating the frozen training-selected numerical logistic model on the
     fixed test split without overwriting the original baseline
 
 Local LLM annotation, news-feature aggregation, and the final model comparison
@@ -79,8 +81,10 @@ NewsAPI.ai raw -----> source-review XLSX -----> source policy
        |                                          |
        +------------------------------------------+
                                                   v
-                               normalized articles -> local LLM
-                                                   -> news features
+                          canonical articles + request-bound links
+                                                  |
+                                                  v
+                                          local LLM -> news features
 
 numerical features -------------------------> model A
 numerical features + news features ---------> model B
@@ -155,6 +159,7 @@ bundesliga-news-prediction/
 │       ├── matches.py
 │       ├── model_selection.py
 │       ├── modeling.py
+│       ├── news_articles.py
 │       ├── news_requests.py
 │       ├── news_source_policy.py
 │       ├── news_source_review.py
@@ -869,14 +874,62 @@ unknown hosts are excluded by default. The generated policy records the source
 workbook's SHA-256 and is sorted by host for deterministic diffs.
 
 The current workbook contains 333 reviewed sources: 282 included and 51
-excluded. Raw Event Registry responses remain unchanged; the policy will be
-applied before article text enters the normalization and local-LLM stages.
+excluded. Raw Event Registry responses remain unchanged.
+
+### Build Policy-Filtered News Articles
+
+After generating the reviewed source policy, normalize and de-duplicate the
+collected articles:
+
+```console
+uv run python -m buli_news.main build-news-articles --season 2025
+```
+
+Inputs:
+
+```text
+data/interim/2025/news/requests.jsonl
+data/raw/newsapi/2025/*.json
+config/news_source_policy.json
+```
+
+Outputs:
+
+```text
+data/interim/2025/news/articles.jsonl
+data/interim/2025/news/article_links.jsonl
+data/interim/2025/news/articles_quality.json
+```
+
+`articles.jsonl` contains each policy-approved canonical article once. The
+Event Registry article URI is the primary de-duplication key; a SHA-256 of the
+normalized article URL is the deterministic fallback. Article text from
+excluded or unknown hosts never enters this output.
+
+`article_links.jsonl` preserves the exact request occurrence that created each
+association. An article returned by a home-team request is linked only to that
+request's `match_id`, `side`, and `team_id`. It is not assigned to another
+match or side based on its content. If the same canonical article occurs in a
+second raw response, it receives a separate link to that second request while
+its text remains stored only once.
+
+The stage requires exactly one home and one away request per match and exactly
+one raw response per planned request. It validates the Event Registry query
+date and converts `dateTimePub` to `Europe/Berlin`; only occurrences whose
+actual publication date is inside that request's pre-match window receive a
+link. The quality report records policy decisions, rejected occurrences,
+de-duplication, request coverage, and requests without usable links.
+
+For the current 2025/26 collection, the stage produces 24,509 canonical
+articles and 49,286 request-bound links. It excludes 10,907 occurrences by
+policy and rejects another 338 included-source occurrences whose publication
+timestamp lies outside the associated request window. All 612 requests and all
+306 matches retain at least one valid link.
 
 ## Planned Next Stages
 
-1. apply the reviewed source policy, then normalize and deduplicate raw articles
-2. define a versioned structured local-LLM annotation schema
-3. annotate only pre-match article text and persist the responses
-4. aggregate annotations into home- and away-team news features per `match_id`
-5. train the identical selected model with numerical plus news features
-6. compare both variants on the same 63 test matches
+1. define a versioned structured local-LLM annotation schema
+2. annotate only pre-match article text and persist the responses
+3. aggregate annotations into home- and away-team news features per `match_id`
+4. train the identical selected model with numerical plus news features
+5. compare both variants on the same 63 test matches
