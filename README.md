@@ -14,12 +14,14 @@ The implemented pipeline currently supports:
 4. joining both match sources into a canonical numerical match history
 5. calculating leakage-safe numerical pre-match features
 6. planning and fetching German pre-match news from Event Registry / NewsAPI.ai
-7. evaluating a prior-based numerical `DummyClassifier` reference
-8. evaluating standardized multinomial logistic regression on the numerical
+7. exporting collected source homepages into a workbook for manual legal review
+8. converting the reviewed news-source XLSX into a versioned JSON policy
+9. evaluating a prior-based numerical `DummyClassifier` reference
+10. evaluating standardized multinomial logistic regression on the numerical
    features
-9. selecting numerical logistic-regression regularization and one of two fixed
+11. selecting numerical logistic-regression regularization and one of two fixed
    feature sets with training-only expanding-window validation
-10. evaluating the frozen training-selected numerical logistic model on the
+12. evaluating the frozen training-selected numerical logistic model on the
     fixed test split without overwriting the original baseline
 
 Local LLM annotation, news-feature aggregation, and the final model comparison
@@ -73,8 +75,12 @@ Football-Data raw -----> non-betting match stats ----+             |
                                                                    v
                                                numerical pre-match features
 
-NewsAPI.ai raw --------> normalized articles -> local LLM
-                                             -> news features
+NewsAPI.ai raw -----> source-review XLSX -----> source policy
+       |                                          |
+       +------------------------------------------+
+                                                  v
+                               normalized articles -> local LLM
+                                                   -> news features
 
 numerical features -------------------------> model A
 numerical features + news features ---------> model B
@@ -119,6 +125,7 @@ never be passed to the local LLM or the prediction model.
 ```text
 bundesliga-news-prediction/
 ├── config/
+│   ├── news_source_policy.json
 │   └── teams.json
 ├── data/
 │   ├── raw/
@@ -129,16 +136,17 @@ bundesliga-news-prediction/
 │   └── processed/
 ├── outputs/
 │   └── modeling/
-├── scripts/
-│   └── export_news_source_homepages.py
 ├── src/
 │   └── buli_news/
 │       ├── __init__.py
 │       ├── football_data.py
 │       ├── main.py
 │       ├── matches.py
+│       ├── model_selection.py
 │       ├── modeling.py
 │       ├── news_requests.py
+│       ├── news_source_policy.py
+│       ├── news_source_review.py
 │       ├── newsapi.py
 │       ├── numerical_features.py
 │       ├── numerical_matches.py
@@ -172,6 +180,10 @@ or through the console script:
 ```console
 uv run buli-news ...
 ```
+
+The project currently has no automated test suite. Pipeline stages perform
+their own input and output validation; dedicated tests may be added during a
+later cleanup phase.
 
 ## Numerical Data Pipeline
 
@@ -775,9 +787,82 @@ Fetch behavior:
 The API key is read from `NEWSAPI_KEY` in the environment or `.env`. It must
 never be hardcoded, logged, or committed.
 
+### Export Sources for Manual Legal Review
+
+After fetching the raw responses, create the review workbook:
+
+```console
+uv run python -m buli_news.main export-news-source-review --season 2025
+```
+
+Input:
+
+```text
+data/raw/newsapi/2025/*.json
+```
+
+Output:
+
+```text
+data/interim/news_source_homepages_2025.xlsx
+```
+
+The command normalizes every article or source URI to an HTTPS homepage,
+counts its occurrences before article deduplication, and sorts sources by
+descending count and then URL. It creates the `sources` worksheet with the
+complete review schema:
+
+```text
+website_url, article_count, legal_text, review_status, review_date
+```
+
+Only `website_url` and `article_count` are filled automatically. The three
+remaining columns are reserved for the manual legal review. To protect that
+work, the command refuses to replace an existing output file. The explicit
+`--overwrite` option should only be used when all existing manual review data
+may be discarded.
+
+### Build Reviewed News Source Policy
+
+After reviewing the exported source workbook, convert it reproducibly into the
+versioned JSON policy:
+
+```console
+uv run python -m buli_news.main build-news-source-policy --season 2025
+```
+
+Input:
+
+```text
+data/interim/news_source_homepages_2025.xlsx
+```
+
+Output:
+
+```text
+config/news_source_policy.json
+```
+
+The `sources` worksheet must contain exactly these columns in row 1:
+
+```text
+website_url, article_count, legal_text, review_status, review_date
+```
+
+The converter maps `complete_no_ml_clause` to `include` and
+`complete_explicit_ml_clause` to `exclude`. Every excluded source needs legal
+text containing at least one evidence URL. Homepage URLs are normalized to
+lowercase hosts with one leading `www.` label removed, matching is exact, and
+unknown hosts are excluded by default. The generated policy records the source
+workbook's SHA-256 and is sorted by host for deterministic diffs.
+
+The current workbook contains 333 reviewed sources: 282 included and 51
+excluded. Raw Event Registry responses remain unchanged; the policy will be
+applied before article text enters the normalization and local-LLM stages.
+
 ## Planned Next Stages
 
-1. normalize and deduplicate raw articles
+1. apply the reviewed source policy, then normalize and deduplicate raw articles
 2. define a versioned structured local-LLM annotation schema
 3. annotate only pre-match article text and persist the responses
 4. aggregate annotations into home- and away-team news features per `match_id`

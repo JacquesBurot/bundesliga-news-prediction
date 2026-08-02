@@ -1,0 +1,3477 @@
+{
+  "schema_version": 1,
+  "policy_id": "news_source_policy_2025_v1",
+  "purpose": "Control which collected news sources may enter local-LLM feature extraction and downstream match-outcome modeling.",
+  "source_review": {
+    "workbook_path": "data/interim/news_source_homepages_2025.xlsx",
+    "workbook_sha256": "0956456f1fdc212026dfdcbb455f1b7d067acadef1f73c29c72b516a5228580d",
+    "worksheet": "sources",
+    "reviewed_source_count": 333,
+    "review_date_min": "2026-07-17",
+    "review_date_max": "2026-08-01"
+  },
+  "decision_policy": {
+    "unknown_host_decision": "exclude",
+    "host_matching": "Normalize the candidate hostname to lowercase, remove one leading 'www.' label, and require an exact match with rule.host.",
+    "include_status": "complete_no_ml_clause",
+    "exclude_status": "complete_explicit_ml_clause",
+    "interpretation": "The policy reproduces the review decisions recorded in the source workbook. It does not independently determine legal permission."
+  },
+  "summary": {
+    "include_source_count": 282,
+    "exclude_source_count": 51,
+    "unreviewed_source_count": 0,
+    "reviewed_article_occurrence_count": 60531,
+    "included_article_occurrence_count_before_deduplication": 49624,
+    "excluded_article_occurrence_count_before_deduplication": 10907
+  },
+  "rules": [
+    {
+      "host": "20min.ch",
+      "website_url": "https://20min.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 30,
+      "evidence_urls": []
+    },
+    {
+      "host": "24rhein.de",
+      "website_url": "https://24rhein.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 79,
+      "evidence_urls": []
+    },
+    {
+      "host": "90min.de",
+      "website_url": "https://90min.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 2133,
+      "evidence_urls": []
+    },
+    {
+      "host": "aachener-zeitung.de",
+      "website_url": "https://aachener-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 42,
+      "evidence_urls": [
+        "https://www.aachener-zeitung.de/robots.txt"
+      ]
+    },
+    {
+      "host": "aargauerzeitung.ch",
+      "website_url": "https://aargauerzeitung.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 16,
+      "evidence_urls": []
+    },
+    {
+      "host": "abendblatt.de",
+      "website_url": "https://abendblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 182,
+      "evidence_urls": []
+    },
+    {
+      "host": "abendzeitung-muenchen.de",
+      "website_url": "https://abendzeitung-muenchen.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 379,
+      "evidence_urls": []
+    },
+    {
+      "host": "absolutfussball.com",
+      "website_url": "https://absolutfussball.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "ad-hoc-news.de",
+      "website_url": "https://ad-hoc-news.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 395,
+      "evidence_urls": []
+    },
+    {
+      "host": "americadigital.com",
+      "website_url": "https://americadigital.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "anderlecht-online.be",
+      "website_url": "https://anderlecht-online.be",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "antenne.de",
+      "website_url": "https://antenne.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "apa.at",
+      "website_url": "https://apa.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 3,
+      "evidence_urls": [
+        "https://apa.at/about/disclaimer-ki/",
+        "https://apa.at/wp-content/uploads/2020/05/AGB-2026-DE.pdf"
+      ]
+    },
+    {
+      "host": "ardmediathek.de",
+      "website_url": "https://ardmediathek.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": [
+        "https://www.ardmediathek.de/robots.txt"
+      ]
+    },
+    {
+      "host": "augsburger-allgemeine.de",
+      "website_url": "https://augsburger-allgemeine.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 1490,
+      "evidence_urls": []
+    },
+    {
+      "host": "az-online.de",
+      "website_url": "https://az-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 215,
+      "evidence_urls": []
+    },
+    {
+      "host": "az.com.na",
+      "website_url": "https://az.com.na",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": []
+    },
+    {
+      "host": "azertag.az",
+      "website_url": "https://azertag.az",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "badische-zeitung.de",
+      "website_url": "https://badische-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 300,
+      "evidence_urls": []
+    },
+    {
+      "host": "bazonline.ch",
+      "website_url": "https://bazonline.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 32,
+      "evidence_urls": []
+    },
+    {
+      "host": "bbc.com",
+      "website_url": "https://bbc.com",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.bbc.com/robots.txt",
+        "https://www.bbc.com/pages/terms-of-use",
+        "https://www.bbc.co.uk/usingthebbc/terms-of-use/",
+        "https://www.bbc.co.uk/usingthebbc/terms/can-i-use-bbc-content/"
+      ]
+    },
+    {
+      "host": "berliner-sonntagsblatt.de",
+      "website_url": "https://berliner-sonntagsblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "berliner-zeitung.de",
+      "website_url": "https://berliner-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 545,
+      "evidence_urls": []
+    },
+    {
+      "host": "bernerzeitung.ch",
+      "website_url": "https://bernerzeitung.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "bild.de",
+      "website_url": "https://bild.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1212,
+      "evidence_urls": [
+        "https://www.bild.de/rsl.xml"
+      ]
+    },
+    {
+      "host": "blick.ch",
+      "website_url": "https://blick.ch",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 135,
+      "evidence_urls": [
+        "https://www.blick.ch/services/allgemeine-geschaeftsbedingungen-id8470701.html",
+        "https://www.blick.ch/services/allgemeine-nutzungsbedingungen-id158845.html"
+      ]
+    },
+    {
+      "host": "bluewin.ch",
+      "website_url": "https://bluewin.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 87,
+      "evidence_urls": []
+    },
+    {
+      "host": "bnn.de",
+      "website_url": "https://bnn.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 66,
+      "evidence_urls": []
+    },
+    {
+      "host": "bo.de",
+      "website_url": "https://bo.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "bochum.t-online.de",
+      "website_url": "https://bochum.t-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "boerse-express.com",
+      "website_url": "https://boerse-express.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 43,
+      "evidence_urls": []
+    },
+    {
+      "host": "boerse-online.de",
+      "website_url": "https://boerse-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 24,
+      "evidence_urls": []
+    },
+    {
+      "host": "boerse.de",
+      "website_url": "https://boerse.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "boersen-zeitung.de",
+      "website_url": "https://boersen-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": []
+    },
+    {
+      "host": "bote.ch",
+      "website_url": "https://bote.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": []
+    },
+    {
+      "host": "br.de",
+      "website_url": "https://br.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 133,
+      "evidence_urls": [
+        "https://www.br.de/robots.txt"
+      ]
+    },
+    {
+      "host": "braunschweiger-zeitung.de",
+      "website_url": "https://braunschweiger-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 74,
+      "evidence_urls": []
+    },
+    {
+      "host": "brf.be",
+      "website_url": "https://brf.be",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "bundesliga.com",
+      "website_url": "https://bundesliga.com",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 752,
+      "evidence_urls": [
+        "https://www.bundesliga.com/de/bundesliga/info/rechtliche-hinweise"
+      ]
+    },
+    {
+      "host": "burgenland.orf.at",
+      "website_url": "https://burgenland.orf.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "butenunbinnen.de",
+      "website_url": "https://butenunbinnen.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 129,
+      "evidence_urls": [
+        "https://butenunbinnen.de/robots.txt"
+      ]
+    },
+    {
+      "host": "bvz.at",
+      "website_url": "https://bvz.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "bwabtk.com",
+      "website_url": "https://bwabtk.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 248,
+      "evidence_urls": []
+    },
+    {
+      "host": "bz-berlin.de",
+      "website_url": "https://bz-berlin.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 77,
+      "evidence_urls": []
+    },
+    {
+      "host": "ca.sports.yahoo.com",
+      "website_url": "https://ca.sports.yahoo.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "checkpoint.tagesspiegel.de",
+      "website_url": "https://checkpoint.tagesspiegel.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.tagesspiegel.de/impressum-tagesspiegel-online-471039.html"
+      ]
+    },
+    {
+      "host": "chip.de",
+      "website_url": "https://chip.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": []
+    },
+    {
+      "host": "clubfokus.de",
+      "website_url": "https://clubfokus.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 16,
+      "evidence_urls": []
+    },
+    {
+      "host": "come-on.de",
+      "website_url": "https://come-on.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 367,
+      "evidence_urls": []
+    },
+    {
+      "host": "computerbild.de",
+      "website_url": "https://computerbild.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 9,
+      "evidence_urls": [
+        "https://www.computerbild.de/rsl.xml"
+      ]
+    },
+    {
+      "host": "dasinvestment.com",
+      "website_url": "https://dasinvestment.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "de.marketscreener.com",
+      "website_url": "https://de.marketscreener.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "de.nachrichten.yahoo.com",
+      "website_url": "https://de.nachrichten.yahoo.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 34,
+      "evidence_urls": []
+    },
+    {
+      "host": "de.uefa.com",
+      "website_url": "https://de.uefa.com",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": [
+        "https://de.uefa.com/termsconditions/"
+      ]
+    },
+    {
+      "host": "deraktionaer.de",
+      "website_url": "https://deraktionaer.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "derbund.ch",
+      "website_url": "https://derbund.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 18,
+      "evidence_urls": []
+    },
+    {
+      "host": "derstandard.at",
+      "website_url": "https://derstandard.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "derstandard.de",
+      "website_url": "https://derstandard.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": []
+    },
+    {
+      "host": "derwesten.de",
+      "website_url": "https://derwesten.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 740,
+      "evidence_urls": []
+    },
+    {
+      "host": "desired.de",
+      "website_url": "https://desired.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "deutsch.radio.cz",
+      "website_url": "https://deutsch.radio.cz",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "deutsche-wirtschafts-nachrichten.de",
+      "website_url": "https://deutsche-wirtschafts-nachrichten.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "deutschlandfunk.de",
+      "website_url": "https://deutschlandfunk.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "dewezet.de",
+      "website_url": "https://dewezet.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 33,
+      "evidence_urls": []
+    },
+    {
+      "host": "diepresse.com",
+      "website_url": "https://diepresse.com",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": [
+        "https://www.diepresse.com/robots.txt"
+      ]
+    },
+    {
+      "host": "digitaldaily.de",
+      "website_url": "https://digitaldaily.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "digitalfernsehen.de",
+      "website_url": "https://digitalfernsehen.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 11,
+      "evidence_urls": []
+    },
+    {
+      "host": "direktbroker.de",
+      "website_url": "https://direktbroker.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "dk-online.de",
+      "website_url": "https://dk-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 13,
+      "evidence_urls": []
+    },
+    {
+      "host": "dnn.de",
+      "website_url": "https://dnn.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 72,
+      "evidence_urls": []
+    },
+    {
+      "host": "donaukurier.de",
+      "website_url": "https://donaukurier.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 77,
+      "evidence_urls": []
+    },
+    {
+      "host": "dortmund.t-online.de",
+      "website_url": "https://dortmund.t-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "dresden.t-online.de",
+      "website_url": "https://dresden.t-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "dsb.de",
+      "website_url": "https://dsb.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "dtj-online.de",
+      "website_url": "https://dtj-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "dw.com",
+      "website_url": "https://dw.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 114,
+      "evidence_urls": []
+    },
+    {
+      "host": "dwdl.de",
+      "website_url": "https://dwdl.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "echo24.de",
+      "website_url": "https://echo24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 47,
+      "evidence_urls": []
+    },
+    {
+      "host": "epaper.neue.at",
+      "website_url": "https://epaper.neue.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "epaper.vn.at",
+      "website_url": "https://epaper.vn.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "epochtimes.de",
+      "website_url": "https://epochtimes.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": []
+    },
+    {
+      "host": "esslinger-zeitung.de",
+      "website_url": "https://esslinger-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 349,
+      "evidence_urls": []
+    },
+    {
+      "host": "express.de",
+      "website_url": "https://express.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1324,
+      "evidence_urls": []
+    },
+    {
+      "host": "extremnews.com",
+      "website_url": "https://extremnews.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "faz.net",
+      "website_url": "https://faz.net",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 408,
+      "evidence_urls": [
+        "https://agb.faz.net/agb"
+      ]
+    },
+    {
+      "host": "fcbayern.com",
+      "website_url": "https://fcbayern.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 16,
+      "evidence_urls": []
+    },
+    {
+      "host": "fehmarn24.de",
+      "website_url": "https://fehmarn24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 254,
+      "evidence_urls": []
+    },
+    {
+      "host": "finanzen.at",
+      "website_url": "https://finanzen.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 44,
+      "evidence_urls": []
+    },
+    {
+      "host": "finanznachrichten.de",
+      "website_url": "https://finanznachrichten.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 204,
+      "evidence_urls": []
+    },
+    {
+      "host": "firmenpresse.de",
+      "website_url": "https://firmenpresse.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 59,
+      "evidence_urls": []
+    },
+    {
+      "host": "fnp.de",
+      "website_url": "https://fnp.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 64,
+      "evidence_urls": []
+    },
+    {
+      "host": "fnweb.de",
+      "website_url": "https://fnweb.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 19,
+      "evidence_urls": []
+    },
+    {
+      "host": "focus.de",
+      "website_url": "https://focus.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 206,
+      "evidence_urls": []
+    },
+    {
+      "host": "forum.digitalfernsehen.de",
+      "website_url": "https://forum.digitalfernsehen.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 3,
+      "evidence_urls": []
+    },
+    {
+      "host": "fr.de",
+      "website_url": "https://fr.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 291,
+      "evidence_urls": []
+    },
+    {
+      "host": "frankenpost.de",
+      "website_url": "https://frankenpost.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "freenet.de",
+      "website_url": "https://freenet.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 128,
+      "evidence_urls": []
+    },
+    {
+      "host": "freiepresse.de",
+      "website_url": "https://freiepresse.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 509,
+      "evidence_urls": []
+    },
+    {
+      "host": "fundscene.com",
+      "website_url": "https://fundscene.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 3,
+      "evidence_urls": []
+    },
+    {
+      "host": "ga.de",
+      "website_url": "https://ga.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 76,
+      "evidence_urls": []
+    },
+    {
+      "host": "gala.de",
+      "website_url": "https://gala.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": []
+    },
+    {
+      "host": "gamers.at",
+      "website_url": "https://gamers.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "gamestar.de",
+      "website_url": "https://gamestar.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.gamestar.de/robots.txt",
+        "https://www.gamestar.de/nutzungsbestimmungen/"
+      ]
+    },
+    {
+      "host": "gameswelt.de",
+      "website_url": "https://gameswelt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "gameswirtschaft.de",
+      "website_url": "https://gameswirtschaft.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "gea.de",
+      "website_url": "https://gea.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 193,
+      "evidence_urls": [
+        "https://www.gea.de/robots.txt"
+      ]
+    },
+    {
+      "host": "giessener-allgemeine.de",
+      "website_url": "https://giessener-allgemeine.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 119,
+      "evidence_urls": []
+    },
+    {
+      "host": "gladbachlive.de",
+      "website_url": "https://gladbachlive.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "gmx.at",
+      "website_url": "https://gmx.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 45,
+      "evidence_urls": []
+    },
+    {
+      "host": "gmx.ch",
+      "website_url": "https://gmx.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 99,
+      "evidence_urls": []
+    },
+    {
+      "host": "gmx.net",
+      "website_url": "https://gmx.net",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 405,
+      "evidence_urls": []
+    },
+    {
+      "host": "godisageek.com",
+      "website_url": "https://godisageek.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "goettinger-tageblatt.de",
+      "website_url": "https://goettinger-tageblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "gq-magazin.de",
+      "website_url": "https://gq-magazin.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.gq-magazin.de/info/allgemeine-nutzungsbedingungen",
+        "https://www.gq-magazin.de/service/artikel/impressum"
+      ]
+    },
+    {
+      "host": "grenzecho.net",
+      "website_url": "https://grenzecho.net",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 27,
+      "evidence_urls": []
+    },
+    {
+      "host": "guetsel.de",
+      "website_url": "https://guetsel.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": []
+    },
+    {
+      "host": "haller-kreisblatt.de",
+      "website_url": "https://haller-kreisblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 162,
+      "evidence_urls": []
+    },
+    {
+      "host": "hallo-muenchen.de",
+      "website_url": "https://hallo-muenchen.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 18,
+      "evidence_urls": []
+    },
+    {
+      "host": "handelsblatt.com",
+      "website_url": "https://handelsblatt.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "handelsmeldungen.de",
+      "website_url": "https://handelsmeldungen.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "harzkurier.de",
+      "website_url": "https://harzkurier.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "haz.de",
+      "website_url": "https://haz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 42,
+      "evidence_urls": []
+    },
+    {
+      "host": "heidelberg24.de",
+      "website_url": "https://heidelberg24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 123,
+      "evidence_urls": []
+    },
+    {
+      "host": "heise.de",
+      "website_url": "https://heise.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.heise.de/robots.txt"
+      ]
+    },
+    {
+      "host": "hellwegeranzeiger.de",
+      "website_url": "https://hellwegeranzeiger.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 13,
+      "evidence_urls": []
+    },
+    {
+      "host": "hersfelder-zeitung.de",
+      "website_url": "https://hersfelder-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 41,
+      "evidence_urls": []
+    },
+    {
+      "host": "hessenschau.de",
+      "website_url": "https://hessenschau.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 141,
+      "evidence_urls": [
+        "https://www.hessenschau.de/robots.txt"
+      ]
+    },
+    {
+      "host": "heute.at",
+      "website_url": "https://heute.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 103,
+      "evidence_urls": []
+    },
+    {
+      "host": "hna.de",
+      "website_url": "https://hna.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 265,
+      "evidence_urls": []
+    },
+    {
+      "host": "hoefner.ch",
+      "website_url": "https://hoefner.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "hsv24.mopo.de",
+      "website_url": "https://hsv24.mopo.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 353,
+      "evidence_urls": []
+    },
+    {
+      "host": "hurriyet.de",
+      "website_url": "https://hurriyet.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 16,
+      "evidence_urls": []
+    },
+    {
+      "host": "hz.de",
+      "website_url": "https://hz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 966,
+      "evidence_urls": []
+    },
+    {
+      "host": "idowa.de",
+      "website_url": "https://idowa.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "idw-online.de",
+      "website_url": "https://idw-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": []
+    },
+    {
+      "host": "ikz-online.de",
+      "website_url": "https://ikz-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 29,
+      "evidence_urls": []
+    },
+    {
+      "host": "infranken.de",
+      "website_url": "https://infranken.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "innsalzach24.de",
+      "website_url": "https://innsalzach24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 17,
+      "evidence_urls": []
+    },
+    {
+      "host": "inside-digital.de",
+      "website_url": "https://inside-digital.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "it-boltwise.de",
+      "website_url": "https://it-boltwise.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 381,
+      "evidence_urls": [
+        "https://www.it-boltwise.de/robots.txt"
+      ]
+    },
+    {
+      "host": "journalistenwatch.com",
+      "website_url": "https://journalistenwatch.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "joyn.de",
+      "website_url": "https://joyn.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "juedische-allgemeine.de",
+      "website_url": "https://juedische-allgemeine.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "jungewelt.de",
+      "website_url": "https://jungewelt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "jungle.world",
+      "website_url": "https://jungle.world",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": []
+    },
+    {
+      "host": "kicker.de",
+      "website_url": "https://kicker.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1643,
+      "evidence_urls": []
+    },
+    {
+      "host": "kleinezeitung.at",
+      "website_url": "https://kleinezeitung.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 34,
+      "evidence_urls": [
+        "https://www.kleinezeitung.at/robots.txt",
+        "https://www.kleinezeitung.at/agb"
+      ]
+    },
+    {
+      "host": "kn-online.de",
+      "website_url": "https://kn-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 141,
+      "evidence_urls": []
+    },
+    {
+      "host": "kreiszeitung.de",
+      "website_url": "https://kreiszeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 602,
+      "evidence_urls": []
+    },
+    {
+      "host": "krone.at",
+      "website_url": "https://krone.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": [
+        "https://www.krone.at/robots.txt"
+      ]
+    },
+    {
+      "host": "ksta.de",
+      "website_url": "https://ksta.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 785,
+      "evidence_urls": []
+    },
+    {
+      "host": "kurier.at",
+      "website_url": "https://kurier.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "landeszeitung.de",
+      "website_url": "https://landeszeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 13,
+      "evidence_urls": []
+    },
+    {
+      "host": "laola1.at",
+      "website_url": "https://laola1.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 261,
+      "evidence_urls": []
+    },
+    {
+      "host": "latina-press.com",
+      "website_url": "https://latina-press.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 3,
+      "evidence_urls": []
+    },
+    {
+      "host": "laut.de",
+      "website_url": "https://laut.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "lauterbacher-anzeiger.de",
+      "website_url": "https://lauterbacher-anzeiger.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 95,
+      "evidence_urls": []
+    },
+    {
+      "host": "leipzig.t-online.de",
+      "website_url": "https://leipzig.t-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": []
+    },
+    {
+      "host": "ln-online.de",
+      "website_url": "https://ln-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 174,
+      "evidence_urls": []
+    },
+    {
+      "host": "lr-online.de",
+      "website_url": "https://lr-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 16,
+      "evidence_urls": []
+    },
+    {
+      "host": "luzernerzeitung.ch",
+      "website_url": "https://luzernerzeitung.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "lvz.de",
+      "website_url": "https://lvz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 660,
+      "evidence_urls": []
+    },
+    {
+      "host": "m.noen.at",
+      "website_url": "https://m.noen.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "mail.freenet.de",
+      "website_url": "https://mail.freenet.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 81,
+      "evidence_urls": []
+    },
+    {
+      "host": "main-spitze.de",
+      "website_url": "https://main-spitze.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 333,
+      "evidence_urls": []
+    },
+    {
+      "host": "mallorcazeitung.es",
+      "website_url": "https://mallorcazeitung.es",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://meinaccount.mallorcazeitung.es/protecciondatos?gdprTipo=3"
+      ]
+    },
+    {
+      "host": "mannheim24.de",
+      "website_url": "https://mannheim24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 84,
+      "evidence_urls": []
+    },
+    {
+      "host": "mannheimer-morgen.de",
+      "website_url": "https://mannheimer-morgen.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "marler-zeitung.de",
+      "website_url": "https://marler-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 76,
+      "evidence_urls": []
+    },
+    {
+      "host": "maz-online.de",
+      "website_url": "https://maz-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 79,
+      "evidence_urls": []
+    },
+    {
+      "host": "mdr.de",
+      "website_url": "https://mdr.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 43,
+      "evidence_urls": [
+        "https://www.mdr.de/robots.txt"
+      ]
+    },
+    {
+      "host": "meedia.de",
+      "website_url": "https://meedia.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 9,
+      "evidence_urls": []
+    },
+    {
+      "host": "merkur.de",
+      "website_url": "https://merkur.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 519,
+      "evidence_urls": []
+    },
+    {
+      "host": "migazin.de",
+      "website_url": "https://migazin.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "mittelbayerische.de",
+      "website_url": "https://mittelbayerische.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "mittelhessen.de",
+      "website_url": "https://mittelhessen.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.mittelhessen.de/robots.txt"
+      ]
+    },
+    {
+      "host": "mittelstandcafe.de",
+      "website_url": "https://mittelstandcafe.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 3,
+      "evidence_urls": []
+    },
+    {
+      "host": "mmnews.de",
+      "website_url": "https://mmnews.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 20,
+      "evidence_urls": []
+    },
+    {
+      "host": "moin.de",
+      "website_url": "https://moin.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "mopo.de",
+      "website_url": "https://mopo.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 651,
+      "evidence_urls": []
+    },
+    {
+      "host": "morgenpost.de",
+      "website_url": "https://morgenpost.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 62,
+      "evidence_urls": []
+    },
+    {
+      "host": "moz.de",
+      "website_url": "https://moz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 56,
+      "evidence_urls": []
+    },
+    {
+      "host": "muensterschezeitung.de",
+      "website_url": "https://muensterschezeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 44,
+      "evidence_urls": []
+    },
+    {
+      "host": "mz.de",
+      "website_url": "https://mz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 247,
+      "evidence_urls": []
+    },
+    {
+      "host": "n-tv.de",
+      "website_url": "https://n-tv.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1221,
+      "evidence_urls": []
+    },
+    {
+      "host": "nachrichten.at",
+      "website_url": "https://nachrichten.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "nachrichten.idw-online.de",
+      "website_url": "https://nachrichten.idw-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 4,
+      "evidence_urls": []
+    },
+    {
+      "host": "nau.ch",
+      "website_url": "https://nau.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 107,
+      "evidence_urls": []
+    },
+    {
+      "host": "nd-aktuell.de",
+      "website_url": "https://nd-aktuell.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 82,
+      "evidence_urls": [
+        "https://www.nd-aktuell.de/robots.txt",
+        "https://robotstxt.com/ai"
+      ]
+    },
+    {
+      "host": "ndr.de",
+      "website_url": "https://ndr.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 352,
+      "evidence_urls": [
+        "https://www.ndr.de/robots.txt"
+      ]
+    },
+    {
+      "host": "ndz.de",
+      "website_url": "https://ndz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 80,
+      "evidence_urls": []
+    },
+    {
+      "host": "netzwelt.de",
+      "website_url": "https://netzwelt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 67,
+      "evidence_urls": []
+    },
+    {
+      "host": "neuepresse.de",
+      "website_url": "https://neuepresse.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 62,
+      "evidence_urls": []
+    },
+    {
+      "host": "news-gazette.com",
+      "website_url": "https://news-gazette.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 25,
+      "evidence_urls": []
+    },
+    {
+      "host": "news.de",
+      "website_url": "https://news.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 6437,
+      "evidence_urls": []
+    },
+    {
+      "host": "newstime.joyn.de",
+      "website_url": "https://newstime.joyn.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 7,
+      "evidence_urls": []
+    },
+    {
+      "host": "niederlausitz-aktuell.de",
+      "website_url": "https://niederlausitz-aktuell.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "nordbayern.de",
+      "website_url": "https://nordbayern.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 64,
+      "evidence_urls": []
+    },
+    {
+      "host": "nordkurier.de",
+      "website_url": "https://nordkurier.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 43,
+      "evidence_urls": []
+    },
+    {
+      "host": "nordsee-zeitung.de",
+      "website_url": "https://nordsee-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 44,
+      "evidence_urls": []
+    },
+    {
+      "host": "notiulti.com",
+      "website_url": "https://notiulti.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "noz.de",
+      "website_url": "https://noz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 37,
+      "evidence_urls": []
+    },
+    {
+      "host": "nrz.de",
+      "website_url": "https://nrz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 52,
+      "evidence_urls": []
+    },
+    {
+      "host": "nw.de",
+      "website_url": "https://nw.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 149,
+      "evidence_urls": []
+    },
+    {
+      "host": "nwzonline.de",
+      "website_url": "https://nwzonline.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 350,
+      "evidence_urls": []
+    },
+    {
+      "host": "nzz.ch",
+      "website_url": "https://nzz.ch",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 21,
+      "evidence_urls": [
+        "https://www.nzz.ch/information/nutzungsbedingungen-ld.1388256"
+      ]
+    },
+    {
+      "host": "oe24.at",
+      "website_url": "https://oe24.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 68,
+      "evidence_urls": []
+    },
+    {
+      "host": "oe3.orf.at",
+      "website_url": "https://oe3.orf.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "old.ruhrnachrichten.de",
+      "website_url": "https://old.ruhrnachrichten.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 70,
+      "evidence_urls": []
+    },
+    {
+      "host": "onetz.de",
+      "website_url": "https://onetz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 63,
+      "evidence_urls": []
+    },
+    {
+      "host": "onvista.de",
+      "website_url": "https://onvista.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "op-online.de",
+      "website_url": "https://op-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 520,
+      "evidence_urls": []
+    },
+    {
+      "host": "ostbelgiendirekt.be",
+      "website_url": "https://ostbelgiendirekt.be",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 11,
+      "evidence_urls": []
+    },
+    {
+      "host": "ostsee-zeitung.de",
+      "website_url": "https://ostsee-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 70,
+      "evidence_urls": []
+    },
+    {
+      "host": "ots.at",
+      "website_url": "https://ots.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": [
+        "https://apa.at/about/disclaimer-ki/"
+      ]
+    },
+    {
+      "host": "otz.de",
+      "website_url": "https://otz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 18,
+      "evidence_urls": []
+    },
+    {
+      "host": "ovb-online.de",
+      "website_url": "https://ovb-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "paz-online.de",
+      "website_url": "https://paz-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 36,
+      "evidence_urls": []
+    },
+    {
+      "host": "pcgames.de",
+      "website_url": "https://pcgames.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.pcgames.de/robots.txt",
+        "https://www.pcgames.de/agb/"
+      ]
+    },
+    {
+      "host": "play3.de",
+      "website_url": "https://play3.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 6,
+      "evidence_urls": [
+        "https://www.play3.de/robots.txt"
+      ]
+    },
+    {
+      "host": "pnp.de",
+      "website_url": "https://pnp.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 53,
+      "evidence_urls": []
+    },
+    {
+      "host": "poppress.de",
+      "website_url": "https://poppress.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 25,
+      "evidence_urls": []
+    },
+    {
+      "host": "pr-echo.de",
+      "website_url": "https://pr-echo.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "presseportal.de",
+      "website_url": "https://presseportal.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 96,
+      "evidence_urls": []
+    },
+    {
+      "host": "promiflash.de",
+      "website_url": "https://promiflash.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 2,
+      "evidence_urls": []
+    },
+    {
+      "host": "pv-magazine.de",
+      "website_url": "https://pv-magazine.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "radiobielefeld.de",
+      "website_url": "https://radiobielefeld.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 69,
+      "evidence_urls": [
+        "https://www.radiobielefeld.de/robots.txt"
+      ]
+    },
+    {
+      "host": "radiodresden.de",
+      "website_url": "https://radiodresden.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "radiohamburg.de",
+      "website_url": "https://radiohamburg.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 39,
+      "evidence_urls": []
+    },
+    {
+      "host": "rbb24.de",
+      "website_url": "https://rbb24.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 36,
+      "evidence_urls": [
+        "https://www.rbb24.de/robots.txt"
+      ]
+    },
+    {
+      "host": "rblive.de",
+      "website_url": "https://rblive.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 482,
+      "evidence_urls": []
+    },
+    {
+      "host": "reitschuster.de",
+      "website_url": "https://reitschuster.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "report-k.de",
+      "website_url": "https://report-k.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "reportage.wdr.de",
+      "website_url": "https://reportage.wdr.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "rf-news.de",
+      "website_url": "https://rf-news.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "rga.de",
+      "website_url": "https://rga.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 18,
+      "evidence_urls": []
+    },
+    {
+      "host": "rhein-zeitung.de",
+      "website_url": "https://rhein-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 401,
+      "evidence_urls": []
+    },
+    {
+      "host": "rheinpfalz.de",
+      "website_url": "https://rheinpfalz.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 63,
+      "evidence_urls": [
+        "https://www.rheinpfalz.de/agb.html"
+      ]
+    },
+    {
+      "host": "rnd.de",
+      "website_url": "https://rnd.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 513,
+      "evidence_urls": []
+    },
+    {
+      "host": "rnz.de",
+      "website_url": "https://rnz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 189,
+      "evidence_urls": []
+    },
+    {
+      "host": "rp-online.de",
+      "website_url": "https://rp-online.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 278,
+      "evidence_urls": [
+        "https://leserservice.rp-online.de/Services/agb"
+      ]
+    },
+    {
+      "host": "rpr1.de",
+      "website_url": "https://rpr1.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 45,
+      "evidence_urls": []
+    },
+    {
+      "host": "rtl.de",
+      "website_url": "https://rtl.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 89,
+      "evidence_urls": []
+    },
+    {
+      "host": "ruhr24.de",
+      "website_url": "https://ruhr24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 470,
+      "evidence_urls": []
+    },
+    {
+      "host": "saarbruecker-zeitung.de",
+      "website_url": "https://saarbruecker-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 753,
+      "evidence_urls": []
+    },
+    {
+      "host": "saba.ye",
+      "website_url": "https://saba.ye",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 13,
+      "evidence_urls": []
+    },
+    {
+      "host": "saechsische.de",
+      "website_url": "https://saechsische.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 314,
+      "evidence_urls": []
+    },
+    {
+      "host": "salue.de",
+      "website_url": "https://salue.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 6,
+      "evidence_urls": []
+    },
+    {
+      "host": "salzburg.orf.at",
+      "website_url": "https://salzburg.orf.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "sauerlandkurier.de",
+      "website_url": "https://sauerlandkurier.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 23,
+      "evidence_urls": []
+    },
+    {
+      "host": "saz-aktuell.com",
+      "website_url": "https://saz-aktuell.com",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "schwaebische.de",
+      "website_url": "https://schwaebische.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 162,
+      "evidence_urls": []
+    },
+    {
+      "host": "schwarzwaelder-bote.de",
+      "website_url": "https://schwarzwaelder-bote.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 273,
+      "evidence_urls": []
+    },
+    {
+      "host": "science.apa.at",
+      "website_url": "https://science.apa.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://apa.at/about/impressum/"
+      ]
+    },
+    {
+      "host": "shz.de",
+      "website_url": "https://shz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 114,
+      "evidence_urls": []
+    },
+    {
+      "host": "skysportaustria.at",
+      "website_url": "https://skysportaustria.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 710,
+      "evidence_urls": []
+    },
+    {
+      "host": "sn-online.de",
+      "website_url": "https://sn-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 33,
+      "evidence_urls": []
+    },
+    {
+      "host": "sn.at",
+      "website_url": "https://sn.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 33,
+      "evidence_urls": [
+        "https://www.sn.at/robots.txt"
+      ]
+    },
+    {
+      "host": "soester-anzeiger.de",
+      "website_url": "https://soester-anzeiger.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 252,
+      "evidence_urls": []
+    },
+    {
+      "host": "solinger-tageblatt.de",
+      "website_url": "https://solinger-tageblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 41,
+      "evidence_urls": []
+    },
+    {
+      "host": "spiegel.de",
+      "website_url": "https://spiegel.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 43,
+      "evidence_urls": [
+        "https://www.spiegel.de/nutzungsbedingungen",
+        "https://www.spiegel.de/impressum"
+      ]
+    },
+    {
+      "host": "sport.bild.de",
+      "website_url": "https://sport.bild.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": [
+        "https://www.bild.de/corporate-site/agb/bild-de/artikel-agb-2952414.bild.html"
+      ]
+    },
+    {
+      "host": "sport.orf.at",
+      "website_url": "https://sport.orf.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 98,
+      "evidence_urls": []
+    },
+    {
+      "host": "sport1.de",
+      "website_url": "https://sport1.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1531,
+      "evidence_urls": []
+    },
+    {
+      "host": "sportbild.bild.de",
+      "website_url": "https://sportbild.bild.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 283,
+      "evidence_urls": [
+        "https://sportbild.bild.de/rsl.xml",
+        "https://rslstandard.org/rsl"
+      ]
+    },
+    {
+      "host": "sportreport.biz",
+      "website_url": "https://sportreport.biz",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "sportschau.de",
+      "website_url": "https://sportschau.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 2281,
+      "evidence_urls": [
+        "https://www.sportschau.de/robots.txt"
+      ]
+    },
+    {
+      "host": "srf.ch",
+      "website_url": "https://srf.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 79,
+      "evidence_urls": []
+    },
+    {
+      "host": "stern.de",
+      "website_url": "https://stern.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1024,
+      "evidence_urls": []
+    },
+    {
+      "host": "stimme.de",
+      "website_url": "https://stimme.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 404,
+      "evidence_urls": []
+    },
+    {
+      "host": "stpauli24.mopo.de",
+      "website_url": "https://stpauli24.mopo.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 192,
+      "evidence_urls": []
+    },
+    {
+      "host": "stuttgart.t-online.de",
+      "website_url": "https://stuttgart.t-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 29,
+      "evidence_urls": []
+    },
+    {
+      "host": "stuttgarter-nachrichten.de",
+      "website_url": "https://stuttgarter-nachrichten.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 224,
+      "evidence_urls": []
+    },
+    {
+      "host": "stuttgarter-zeitung.de",
+      "website_url": "https://stuttgarter-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 225,
+      "evidence_urls": []
+    },
+    {
+      "host": "sueddeutsche.de",
+      "website_url": "https://sueddeutsche.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 884,
+      "evidence_urls": []
+    },
+    {
+      "host": "suedkurier.de",
+      "website_url": "https://suedkurier.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 78,
+      "evidence_urls": []
+    },
+    {
+      "host": "suedostschweiz.ch",
+      "website_url": "https://suedostschweiz.ch",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 11,
+      "evidence_urls": [
+        "https://direkt.somedia.ch/agb/"
+      ]
+    },
+    {
+      "host": "suedtirolnews.it",
+      "website_url": "https://suedtirolnews.it",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "swp.de",
+      "website_url": "https://swp.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 110,
+      "evidence_urls": []
+    },
+    {
+      "host": "swr.de",
+      "website_url": "https://swr.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 737,
+      "evidence_urls": [
+        "https://www.swr.de/robots.txt"
+      ]
+    },
+    {
+      "host": "t-online.de",
+      "website_url": "https://t-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 525,
+      "evidence_urls": []
+    },
+    {
+      "host": "tag24.de",
+      "website_url": "https://tag24.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 372,
+      "evidence_urls": []
+    },
+    {
+      "host": "tagblatt.ch",
+      "website_url": "https://tagblatt.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 9,
+      "evidence_urls": []
+    },
+    {
+      "host": "tageblatt.de",
+      "website_url": "https://tageblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 60,
+      "evidence_urls": []
+    },
+    {
+      "host": "tageblatt.lu",
+      "website_url": "https://tageblatt.lu",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 24,
+      "evidence_urls": []
+    },
+    {
+      "host": "tagesanzeiger.ch",
+      "website_url": "https://tagesanzeiger.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 23,
+      "evidence_urls": []
+    },
+    {
+      "host": "tagesschau.de",
+      "website_url": "https://tagesschau.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 6,
+      "evidence_urls": [
+        "https://www.tagesschau.de/robots.txt"
+      ]
+    },
+    {
+      "host": "tagesspiegel.de",
+      "website_url": "https://tagesspiegel.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 621,
+      "evidence_urls": []
+    },
+    {
+      "host": "tah.de",
+      "website_url": "https://tah.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 21,
+      "evidence_urls": []
+    },
+    {
+      "host": "taz.de",
+      "website_url": "https://taz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 43,
+      "evidence_urls": []
+    },
+    {
+      "host": "techbook.de",
+      "website_url": "https://techbook.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 26,
+      "evidence_urls": []
+    },
+    {
+      "host": "telepolis.de",
+      "website_url": "https://telepolis.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": [
+        "https://www.telepolis.de/robots.txt"
+      ]
+    },
+    {
+      "host": "teltarif.de",
+      "website_url": "https://teltarif.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 16,
+      "evidence_urls": []
+    },
+    {
+      "host": "thueringer-allgemeine.de",
+      "website_url": "https://thueringer-allgemeine.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 26,
+      "evidence_urls": []
+    },
+    {
+      "host": "tichyseinblick.de",
+      "website_url": "https://tichyseinblick.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 5,
+      "evidence_urls": []
+    },
+    {
+      "host": "tips.at",
+      "website_url": "https://tips.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": []
+    },
+    {
+      "host": "tlz.de",
+      "website_url": "https://tlz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 18,
+      "evidence_urls": []
+    },
+    {
+      "host": "torgauerzeitung.de",
+      "website_url": "https://torgauerzeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 198,
+      "evidence_urls": []
+    },
+    {
+      "host": "transfermarkt.at",
+      "website_url": "https://transfermarkt.at",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 209,
+      "evidence_urls": [
+        "https://www.transfermarkt.de/license.xml",
+        "https://rslstandard.org/rsl"
+      ]
+    },
+    {
+      "host": "transfermarkt.ch",
+      "website_url": "https://transfermarkt.ch",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 103,
+      "evidence_urls": [
+        "https://www.transfermarkt.de/license.xml",
+        "https://rslstandard.org/rsl"
+      ]
+    },
+    {
+      "host": "transfermarkt.de",
+      "website_url": "https://transfermarkt.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 935,
+      "evidence_urls": [
+        "https://www.transfermarkt.de/license.xml"
+      ]
+    },
+    {
+      "host": "tvspielfilm.de",
+      "website_url": "https://tvspielfilm.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 144,
+      "evidence_urls": []
+    },
+    {
+      "host": "tz.de",
+      "website_url": "https://tz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 169,
+      "evidence_urls": []
+    },
+    {
+      "host": "unternehmen-heute.de",
+      "website_url": "https://unternehmen-heute.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 8,
+      "evidence_urls": []
+    },
+    {
+      "host": "vienna.at",
+      "website_url": "https://vienna.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": []
+    },
+    {
+      "host": "vol.at",
+      "website_url": "https://vol.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 12,
+      "evidence_urls": []
+    },
+    {
+      "host": "volksfreund.de",
+      "website_url": "https://volksfreund.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 528,
+      "evidence_urls": []
+    },
+    {
+      "host": "volksstimme.de",
+      "website_url": "https://volksstimme.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 231,
+      "evidence_urls": []
+    },
+    {
+      "host": "wa.de",
+      "website_url": "https://wa.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 173,
+      "evidence_urls": []
+    },
+    {
+      "host": "wallstreet-online.de",
+      "website_url": "https://wallstreet-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 52,
+      "evidence_urls": []
+    },
+    {
+      "host": "watson.ch",
+      "website_url": "https://watson.ch",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 136,
+      "evidence_urls": []
+    },
+    {
+      "host": "watson.de",
+      "website_url": "https://watson.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 123,
+      "evidence_urls": []
+    },
+    {
+      "host": "waz-online.de",
+      "website_url": "https://waz-online.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 652,
+      "evidence_urls": []
+    },
+    {
+      "host": "waz.de",
+      "website_url": "https://waz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 278,
+      "evidence_urls": []
+    },
+    {
+      "host": "web.de",
+      "website_url": "https://web.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 813,
+      "evidence_urls": []
+    },
+    {
+      "host": "welt.de",
+      "website_url": "https://welt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1012,
+      "evidence_urls": []
+    },
+    {
+      "host": "weltfussball.at",
+      "website_url": "https://weltfussball.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 147,
+      "evidence_urls": []
+    },
+    {
+      "host": "weser-kurier.de",
+      "website_url": "https://weser-kurier.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1065,
+      "evidence_urls": []
+    },
+    {
+      "host": "wetterauer-zeitung.de",
+      "website_url": "https://wetterauer-zeitung.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 36,
+      "evidence_urls": []
+    },
+    {
+      "host": "wiki.sn.at",
+      "website_url": "https://wiki.sn.at",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 15,
+      "evidence_urls": []
+    },
+    {
+      "host": "wiwo.de",
+      "website_url": "https://wiwo.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-08-01",
+      "article_count": 8,
+      "evidence_urls": []
+    },
+    {
+      "host": "wn.de",
+      "website_url": "https://wn.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 53,
+      "evidence_urls": []
+    },
+    {
+      "host": "wochenblatt.de",
+      "website_url": "https://wochenblatt.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 18,
+      "evidence_urls": []
+    },
+    {
+      "host": "wochenspiegellive.de",
+      "website_url": "https://wochenspiegellive.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-18",
+      "article_count": 1,
+      "evidence_urls": []
+    },
+    {
+      "host": "wort.lu",
+      "website_url": "https://wort.lu",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 19,
+      "evidence_urls": [
+        "https://www.wort.lu/robots.txt",
+        "https://www.mediahuis.lu/fr/A-propos-de-nous/sites-internet-conditions-generales-dutilisation"
+      ]
+    },
+    {
+      "host": "wp.de",
+      "website_url": "https://wp.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 82,
+      "evidence_urls": []
+    },
+    {
+      "host": "wr.de",
+      "website_url": "https://wr.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 54,
+      "evidence_urls": []
+    },
+    {
+      "host": "www1.wdr.de",
+      "website_url": "https://www1.wdr.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 162,
+      "evidence_urls": [
+        "https://www1.wdr.de/robots.txt"
+      ]
+    },
+    {
+      "host": "wz.de",
+      "website_url": "https://wz.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 203,
+      "evidence_urls": []
+    },
+    {
+      "host": "zdf.de",
+      "website_url": "https://zdf.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 10,
+      "evidence_urls": []
+    },
+    {
+      "host": "zdfheute.de",
+      "website_url": "https://zdfheute.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 193,
+      "evidence_urls": []
+    },
+    {
+      "host": "zeit.de",
+      "website_url": "https://zeit.de",
+      "match_type": "exact_host",
+      "decision": "exclude",
+      "review_status": "complete_explicit_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 1503,
+      "evidence_urls": [
+        "https://www.zeit.de/administratives/agb-kommentare-artikel-alt"
+      ]
+    },
+    {
+      "host": "zvw.de",
+      "website_url": "https://zvw.de",
+      "match_type": "exact_host",
+      "decision": "include",
+      "review_status": "complete_no_ml_clause",
+      "review_date": "2026-07-17",
+      "article_count": 334,
+      "evidence_urls": []
+    }
+  ]
+}

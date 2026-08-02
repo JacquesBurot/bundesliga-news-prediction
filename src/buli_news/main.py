@@ -26,6 +26,8 @@ from buli_news.newsapi import (
     select_requests,
 )
 from buli_news.news_requests import build_news_requests
+from buli_news.news_source_policy import build_news_source_policy
+from buli_news.news_source_review import export_news_source_review
 from buli_news.numerical_features import (
     NUMERICAL_FEATURE_OUTPUT_COLUMNS,
     build_numerical_features,
@@ -176,6 +178,68 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=int,
         help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    export_news_source_review_parser = subparsers.add_parser(
+        "export-news-source-review",
+        help="Export collected news-source homepages for manual legal review.",
+    )
+    export_news_source_review_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    export_news_source_review_parser.add_argument(
+        "--raw-dir",
+        default=None,
+        help=(
+            "Directory with raw news response JSON files. Defaults to "
+            "data/raw/newsapi/{season}."
+        ),
+    )
+    export_news_source_review_parser.add_argument(
+        "--output",
+        default=None,
+        help=(
+            "Output XLSX. Defaults to "
+            "data/interim/news_source_homepages_{season}.xlsx."
+        ),
+    )
+    export_news_source_review_parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace an existing workbook, including any manual review data.",
+    )
+
+    build_news_source_policy_parser = subparsers.add_parser(
+        "build-news-source-policy",
+        help="Build a versioned JSON policy from the reviewed source XLSX.",
+    )
+    build_news_source_policy_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    build_news_source_policy_parser.add_argument(
+        "--input",
+        default=None,
+        help=(
+            "Reviewed XLSX input. Defaults to "
+            "data/interim/news_source_homepages_{season}.xlsx."
+        ),
+    )
+    build_news_source_policy_parser.add_argument(
+        "--output",
+        default="config/news_source_policy.json",
+        help="Output path for the generated JSON policy.",
+    )
+    build_news_source_policy_parser.add_argument(
+        "--policy-version",
+        default=1,
+        type=int,
+        help="Positive policy version used in the generated policy ID.",
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -515,6 +579,66 @@ def select_numerical_logistic_configuration_command(season: int) -> None:
     print("Outer test matches used for model selection: 0")
 
 
+def build_news_source_policy_command(
+    season: int,
+    input_path: str | None,
+    output_path: str,
+    policy_version: int,
+) -> None:
+    workbook_path = (
+        Path(input_path)
+        if input_path is not None
+        else Path("data")
+        / "interim"
+        / f"news_source_homepages_{season}.xlsx"
+    )
+    policy = build_news_source_policy(
+        workbook_path=workbook_path,
+        season=season,
+        policy_version=policy_version,
+    )
+    destination = Path(output_path)
+    write_json(policy, destination)
+
+    summary = policy["summary"]
+    print(f"Saved reviewed news source policy to {destination}")
+    print(f"Reviewed sources: {policy['source_review']['reviewed_source_count']}")
+    print(f"Included sources: {summary['include_source_count']}")
+    print(f"Excluded sources: {summary['exclude_source_count']}")
+    print("Unknown source decision: exclude")
+
+
+def export_news_source_review_command(
+    season: int,
+    raw_dir: str | None,
+    output_path: str | None,
+    overwrite: bool,
+) -> None:
+    source_dir = (
+        Path(raw_dir)
+        if raw_dir is not None
+        else Path("data") / "raw" / "newsapi" / str(season)
+    )
+    destination = (
+        Path(output_path)
+        if output_path is not None
+        else Path("data")
+        / "interim"
+        / f"news_source_homepages_{season}.xlsx"
+    )
+    homepage_counts = export_news_source_review(
+        raw_dir=source_dir,
+        output_path=destination,
+        overwrite=overwrite,
+    )
+    print(f"Read raw news responses from {source_dir}")
+    print(f"Exported {len(homepage_counts)} unique sources to {destination}")
+    print(
+        "Article occurrences before deduplication: "
+        f"{sum(count for _, count in homepage_counts)}"
+    )
+
+
 def build_news_requests_command(season: int, config_path: str, lang: str) -> None:
     matches_path = Path("data") / "interim" / f"matches_{season}.jsonl"
     config = read_json(Path(config_path))
@@ -606,6 +730,20 @@ def main() -> None:
             select_numerical_logistic_configuration_command(season=args.season)
         elif args.command == "evaluate-numerical-logistic-final":
             evaluate_numerical_logistic_final_command(season=args.season)
+        elif args.command == "export-news-source-review":
+            export_news_source_review_command(
+                season=args.season,
+                raw_dir=args.raw_dir,
+                output_path=args.output,
+                overwrite=args.overwrite,
+            )
+        elif args.command == "build-news-source-policy":
+            build_news_source_policy_command(
+                season=args.season,
+                input_path=args.input,
+                output_path=args.output,
+                policy_version=args.policy_version,
+            )
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,
