@@ -33,6 +33,22 @@ class SeasonPaths:
         return self.interim_root / "news"
 
     @property
+    def news_collection_dir(self) -> Path:
+        return self.news_interim_dir / "collection"
+
+    @property
+    def news_articles_dir(self) -> Path:
+        return self.news_interim_dir / "articles"
+
+    @property
+    def news_contents_dir(self) -> Path:
+        return self.news_interim_dir / "contents"
+
+    @property
+    def news_annotations_dir(self) -> Path:
+        return self.news_interim_dir / "annotations"
+
+    @property
     def normalized_matches(self) -> Path:
         return self.matches_interim_dir / "normalized.jsonl"
 
@@ -46,35 +62,51 @@ class SeasonPaths:
 
     @property
     def news_requests(self) -> Path:
-        return self.news_interim_dir / "requests.jsonl"
+        return self.news_collection_dir / "requests.jsonl"
 
     @property
     def news_fetch_results(self) -> Path:
-        return self.news_interim_dir / "fetch_results.jsonl"
+        return self.news_collection_dir / "fetch_results.jsonl"
 
     @property
     def news_articles(self) -> Path:
-        return self.news_interim_dir / "articles.jsonl"
+        return self.news_articles_dir / "articles.jsonl"
 
     @property
     def news_article_links(self) -> Path:
-        return self.news_interim_dir / "article_links.jsonl"
+        return self.news_articles_dir / "request_links.jsonl"
 
     @property
     def news_articles_quality(self) -> Path:
-        return self.news_interim_dir / "articles_quality.json"
+        return self.news_articles_dir / "quality.json"
 
     @property
     def news_contents(self) -> Path:
-        return self.news_interim_dir / "contents.jsonl"
+        return self.news_contents_dir / "contents.jsonl"
 
     @property
     def news_article_content_links(self) -> Path:
-        return self.news_interim_dir / "article_content_links.jsonl"
+        return self.news_contents_dir / "article_links.jsonl"
 
     @property
     def news_contents_quality(self) -> Path:
-        return self.news_interim_dir / "contents_quality.json"
+        return self.news_contents_dir / "quality.json"
+
+    @property
+    def news_annotation_tasks(self) -> Path:
+        return self.news_annotations_dir / "tasks.jsonl"
+
+    @property
+    def news_annotation_tasks_quality(self) -> Path:
+        return self.news_annotations_dir / "tasks_quality.json"
+
+    @property
+    def news_annotations(self) -> Path:
+        return self.news_annotations_dir / "results.jsonl"
+
+    @property
+    def news_annotation_failures(self) -> Path:
+        return self.news_annotations_dir / "failures.jsonl"
 
     @property
     def news_source_review(self) -> Path:

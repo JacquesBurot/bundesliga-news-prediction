@@ -20,6 +20,15 @@ from buli_news.modeling import (
     evaluate_numerical_logistic_reference,
 )
 from buli_news.news_articles import build_news_articles
+from buli_news.news_annotations import (
+    DEFAULT_ANNOTATION_CONFIG_PATH,
+    DEFAULT_OLLAMA_BASE_URL,
+    DEFAULT_OLLAMA_MODEL,
+    DEFAULT_OLLAMA_NUM_CTX,
+    annotate_news_tasks,
+    build_news_annotation_tasks,
+    load_annotation_config,
+)
 from buli_news.news_contents import build_news_contents
 from buli_news.newsapi import (
     count_successful_existing_responses,
@@ -281,6 +290,92 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=int,
         help="Season start year, e.g. 2025 for 2025/26.",
+    )
+
+    build_news_annotation_tasks_parser = subparsers.add_parser(
+        "build-news-annotation-tasks",
+        help="Build request-bound team-specific local-LLM annotation tasks.",
+    )
+    build_news_annotation_tasks_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    build_news_annotation_tasks_parser.add_argument(
+        "--config",
+        default=str(DEFAULT_ANNOTATION_CONFIG_PATH),
+        help="Path to the versioned news annotation schema and prompt.",
+    )
+
+    annotate_news_parser = subparsers.add_parser(
+        "annotate-news",
+        help="Annotate team-specific news tasks through a local Ollama server.",
+    )
+    annotate_news_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    annotate_news_parser.add_argument(
+        "--config",
+        default=str(DEFAULT_ANNOTATION_CONFIG_PATH),
+        help="Path to the versioned news annotation schema and prompt.",
+    )
+    annotate_news_parser.add_argument(
+        "--model",
+        default=DEFAULT_OLLAMA_MODEL,
+        help="Exact locally installed Ollama model tag.",
+    )
+    annotate_news_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_OLLAMA_BASE_URL,
+        help="Base URL of the local Ollama server.",
+    )
+    annotate_news_parser.add_argument(
+        "--output",
+        default=None,
+        help=(
+            "Append-only annotation JSONL. Defaults to "
+            "data/interim/{season}/news/annotations/results.jsonl."
+        ),
+    )
+    annotate_news_parser.add_argument(
+        "--failure-output",
+        default=None,
+        help=(
+            "Append-only deferred failures JSONL. Defaults to "
+            "data/interim/{season}/news/annotations/failures.jsonl."
+        ),
+    )
+    annotate_news_parser.add_argument(
+        "--task-id",
+        default=None,
+        help="Annotate only one exact task ID.",
+    )
+    annotate_news_parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of not-yet-annotated tasks for this run.",
+    )
+    annotate_news_parser.add_argument(
+        "--retry-failures-only",
+        action="store_true",
+        help="Retry only unresolved failures for the same config and model.",
+    )
+    annotate_news_parser.add_argument(
+        "--timeout-seconds",
+        type=float,
+        default=300.0,
+        help="Per-request Ollama HTTP timeout.",
+    )
+    annotate_news_parser.add_argument(
+        "--num-ctx",
+        type=int,
+        default=DEFAULT_OLLAMA_NUM_CTX,
+        help="Ollama context-window size used for every article.",
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -691,6 +786,94 @@ def build_news_contents_command(season: int) -> None:
     print(f"Collapsed duplicate article rows: {summary['collapsed_article_count']}")
 
 
+def build_news_annotation_tasks_command(season: int, config_path: str) -> None:
+    paths = SeasonPaths(season)
+    config = load_annotation_config(Path(config_path))
+    build = build_news_annotation_tasks(
+        matches=read_jsonl(paths.normalized_matches),
+        articles=read_jsonl(paths.news_articles),
+        article_links=read_jsonl(paths.news_article_links),
+        article_content_links=read_jsonl(paths.news_article_content_links),
+        contents=read_jsonl(paths.news_contents),
+        season=season,
+        annotation_schema_id=config.schema_id,
+    )
+    write_jsonl(build.tasks, paths.news_annotation_tasks)
+    write_json(build.quality_report, paths.news_annotation_tasks_quality)
+
+    summary = build.quality_report["summary"]
+    print(
+        f"Saved {len(build.tasks)} team-specific annotation tasks to "
+        f"{paths.news_annotation_tasks}"
+    )
+    print(
+        "Collapsed same-content article links inside the same request: "
+        f"{summary['collapsed_within_request_article_link_count']}"
+    )
+    print(
+        "Every task retains its original request, match, side, and target team."
+    )
+    print(
+        "Saved annotation-task quality report to "
+        f"{paths.news_annotation_tasks_quality}"
+    )
+
+
+def annotate_news_command(
+    season: int,
+    config_path: str,
+    model: str,
+    base_url: str,
+    output_path: str | None,
+    failure_output_path: str | None,
+    task_id: str | None,
+    limit: int | None,
+    retry_failures_only: bool,
+    timeout_seconds: float,
+    num_ctx: int,
+) -> None:
+    paths = SeasonPaths(season)
+    config = load_annotation_config(Path(config_path))
+    tasks = read_jsonl(paths.news_annotation_tasks)
+    destination = (
+        Path(output_path) if output_path is not None else paths.news_annotations
+    )
+    failure_destination = (
+        Path(failure_output_path)
+        if failure_output_path is not None
+        else paths.news_annotation_failures
+    )
+    run = annotate_news_tasks(
+        tasks=tasks,
+        config=config,
+        output_path=destination,
+        failure_output_path=failure_destination,
+        model=model,
+        base_url=base_url,
+        limit=limit,
+        task_id=task_id,
+        retry_failures_only=retry_failures_only,
+        timeout_seconds=timeout_seconds,
+        num_ctx=num_ctx,
+        append_annotation=append_jsonl,
+        append_failure=append_jsonl,
+    )
+    print(f"Resolved local Ollama model digest: {run.model_digest}")
+    if run.skipped_count:
+        print(f"Skipped {run.skipped_count} existing matching annotations.")
+    if run.deferred_failure_count:
+        print(
+            f"Deferred {run.deferred_failure_count} known failures; use "
+            "--retry-failures-only to retry them."
+        )
+    print(f"Appended {run.annotated_count} validated annotations to {destination}")
+    if run.failed_count:
+        print(
+            f"Appended {run.failed_count} deferred failures to "
+            f"{failure_destination} and continued."
+        )
+
+
 def export_news_source_review_command(
     season: int,
     raw_dir: str | None,
@@ -837,6 +1020,25 @@ def main() -> None:
             )
         elif args.command == "build-news-contents":
             build_news_contents_command(season=args.season)
+        elif args.command == "build-news-annotation-tasks":
+            build_news_annotation_tasks_command(
+                season=args.season,
+                config_path=args.config,
+            )
+        elif args.command == "annotate-news":
+            annotate_news_command(
+                season=args.season,
+                config_path=args.config,
+                model=args.model,
+                base_url=args.base_url,
+                output_path=args.output,
+                failure_output_path=args.failure_output,
+                task_id=args.task_id,
+                limit=args.limit,
+                retry_failures_only=args.retry_failures_only,
+                timeout_seconds=args.timeout_seconds,
+                num_ctx=args.num_ctx,
+            )
         elif args.command == "build-news-requests":
             build_news_requests_command(
                 season=args.season,

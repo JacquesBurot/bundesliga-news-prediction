@@ -20,15 +20,18 @@ The implemented pipeline currently supports:
    request-bound match and team-side links
 10. grouping text-identical publications under stable content IDs while
     retaining every article and request association
-11. evaluating a prior-based numerical `DummyClassifier` reference
-12. evaluating standardized multinomial logistic regression on the numerical
+11. building request-bound, team-specific local-LLM annotation tasks
+12. extracting six structured news indicators through a local Ollama server
+    with a versioned system prompt and strict JSON output
+13. evaluating a prior-based numerical `DummyClassifier` reference
+14. evaluating standardized multinomial logistic regression on the numerical
    features
-13. selecting numerical logistic-regression regularization and one of two fixed
+15. selecting numerical logistic-regression regularization and one of two fixed
    feature sets with training-only expanding-window validation
-14. evaluating the frozen training-selected numerical logistic model on the
+16. evaluating the frozen training-selected numerical logistic model on the
     fixed test split without overwriting the original baseline
 
-Local LLM annotation, news-feature aggregation, and the final model comparison
+News-feature aggregation and the final numerical-versus-news model comparison
 are the next planned stages.
 
 ## Experiment Design
@@ -86,7 +89,8 @@ NewsAPI.ai raw -----> source-review XLSX -----> source policy
                       canonical articles + request-bound links
                                                   |
                                                   v
-                                     content IDs -> local LLM
+                                     content IDs -> team-specific tasks
+                                                   -> local Ollama annotations
                                                    -> news features
 
 numerical features -------------------------> model A
@@ -97,7 +101,10 @@ The data directories represent processing stages:
 
 - `data/raw`: unchanged responses from external sources
 - `data/interim/{season}/matches`: normalized and joined match data
-- `data/interim/{season}/news`: planned requests, fetch logs, and later news data
+- `data/interim/{season}/news/collection`: planned requests and fetch ledger
+- `data/interim/{season}/news/articles`: canonical articles and request links
+- `data/interim/{season}/news/contents`: exact-content groups and article links
+- `data/interim/{season}/news/annotations`: local-LLM tasks, results, and failures
 - `data/review/{season}`: manually maintained review workbooks
 - `data/processed`: model-ready pre-match feature tables
 - `outputs/modeling`: generated model reports and prediction tables
@@ -138,6 +145,7 @@ never be passed to the local LLM or the prediction model.
 ```text
 bundesliga-news-prediction/
 ├── config/
+│   ├── news_annotation_schema_v1.json
 │   ├── news_source_policy.json
 │   └── teams.json
 ├── data/
@@ -149,6 +157,10 @@ bundesliga-news-prediction/
 │   │   └── {season}/
 │   │       ├── matches/
 │   │       └── news/
+│   │           ├── collection/
+│   │           ├── articles/
+│   │           ├── contents/
+│   │           └── annotations/
 │   ├── review/
 │   │   └── {season}/
 │   └── processed/
@@ -163,6 +175,7 @@ bundesliga-news-prediction/
 │       ├── model_selection.py
 │       ├── modeling.py
 │       ├── news_articles.py
+│       ├── news_annotations.py
 │       ├── news_contents.py
 │       ├── news_requests.py
 │       ├── news_source_policy.py
@@ -756,7 +769,7 @@ config/teams.json
 Output:
 
 ```text
-data/interim/2025/news/requests.jsonl
+data/interim/2025/news/collection/requests.jsonl
 ```
 
 For every match, the command creates separate home-team and away-team requests.
@@ -794,7 +807,7 @@ Outputs:
 
 ```text
 data/raw/newsapi/2025/{request_id}.json
-data/interim/2025/news/fetch_results.jsonl
+data/interim/2025/news/collection/fetch_results.jsonl
 ```
 
 Fetch behavior:
@@ -892,7 +905,7 @@ uv run python -m buli_news.main build-news-articles --season 2025
 Inputs:
 
 ```text
-data/interim/2025/news/requests.jsonl
+data/interim/2025/news/collection/requests.jsonl
 data/raw/newsapi/2025/*.json
 config/news_source_policy.json
 ```
@@ -900,9 +913,9 @@ config/news_source_policy.json
 Outputs:
 
 ```text
-data/interim/2025/news/articles.jsonl
-data/interim/2025/news/article_links.jsonl
-data/interim/2025/news/articles_quality.json
+data/interim/2025/news/articles/articles.jsonl
+data/interim/2025/news/articles/request_links.jsonl
+data/interim/2025/news/articles/quality.json
 ```
 
 `articles.jsonl` contains each policy-approved canonical article once. The
@@ -910,7 +923,7 @@ Event Registry article URI is the primary de-duplication key; a SHA-256 of the
 normalized article URL is the deterministic fallback. Article text from
 excluded or unknown hosts never enters this output.
 
-`article_links.jsonl` preserves the exact request occurrence that created each
+`request_links.jsonl` preserves the exact request occurrence that created each
 association. An article returned by a home-team request is linked only to that
 request's `match_id`, `side`, and `team_id`. It is not assigned to another
 match or side based on its content. If the same canonical article occurs in a
@@ -942,15 +955,15 @@ uv run python -m buli_news.main build-news-contents --season 2025
 Input:
 
 ```text
-data/interim/2025/news/articles.jsonl
+data/interim/2025/news/articles/articles.jsonl
 ```
 
 Outputs:
 
 ```text
-data/interim/2025/news/contents.jsonl
-data/interim/2025/news/article_content_links.jsonl
-data/interim/2025/news/contents_quality.json
+data/interim/2025/news/contents/contents.jsonl
+data/interim/2025/news/contents/article_links.jsonl
+data/interim/2025/news/contents/quality.json
 ```
 
 The stage normalizes each article body with Unicode NFKC normalization, Unicode
@@ -959,7 +972,7 @@ that normalized UTF-8 text with SHA-256 to form a stable `content_id`. It does
 not group similar or semantically related text.
 
 `contents.jsonl` stores one representative original body for every distinct
-normalized text. `article_content_links.jsonl` maps every `article_id` to
+normalized text. `contents/article_links.jsonl` maps every `article_id` to
 exactly one `content_id`. The original article rows, titles, URLs, sources, and
 request-bound match and side links remain unchanged. Content grouping therefore
 cannot assign an article to another request, match, side, or team.
@@ -968,13 +981,141 @@ For the current collection, 24,509 canonical publications map to 23,738
 contents. The 771 collapsed publication rows belong to 543 duplicate groups;
 443 of those groups contain publications from more than one source host. The
 largest group contains 30 publications. These groups are descriptive inputs
-for the later LLM design and do not yet determine whether annotation happens
-once per content or once per content-and-team combination.
+for the local-LLM stage. The request-bound annotation-task stage decides where
+an identical content needs to be interpreted.
+
+### Build Team-Specific LLM Annotation Tasks
+
+Create one deterministic task per `request_id` and `content_id`:
+
+```console
+uv run python -m buli_news.main build-news-annotation-tasks --season 2025
+```
+
+Inputs:
+
+```text
+data/interim/2025/matches/normalized.jsonl
+data/interim/2025/news/articles/articles.jsonl
+data/interim/2025/news/articles/request_links.jsonl
+data/interim/2025/news/contents/contents.jsonl
+data/interim/2025/news/contents/article_links.jsonl
+config/news_annotation_schema_v1.json
+```
+
+Outputs:
+
+```text
+data/interim/2025/news/annotations/tasks.jsonl
+data/interim/2025/news/annotations/tasks_quality.json
+```
+
+A task keeps the exact request, fixture, home/away side, and target team through
+which its article was collected. Content de-duplication therefore never moves
+an article to the other team or another fixture. If the same normalized content
+appears through several sites inside the same request, those article links form
+one LLM task. If it appears in a different home- or away-team request, it forms
+a separate task with that request's target-team context.
+
+Every task contains the target team, opponent, matchday, kickoff, publication
+timestamp, article title, and article body. When several publication rows share
+the same content inside one request, the title and body are selected together
+from the article with the lowest response position and then the lowest
+`article_id`. The quality report records this deterministic selection and the
+number of collapsed within-request links.
+
+For the current collection, 49,286 request-bound article links produce 48,466
+team-specific annotation tasks. The difference consists of 820 additional
+publication links whose normalized content already occurs in the same request.
+All 612 home/away requests and all 306 fixtures remain represented.
+
+### Annotate News Through Local Ollama
+
+Start Ollama and install the selected model once:
+
+```console
+ollama serve
+ollama pull gemma4:12b-it-qat
+```
+
+Run a small pilot before processing the complete task file:
+
+```console
+uv run python -m buli_news.main annotate-news \
+  --season 2025 \
+  --model gemma4:12b-it-qat \
+  --limit 200
+```
+
+The default server is `http://localhost:11434`. `--base-url`, `--model`,
+`--num-ctx`, `--timeout-seconds`, `--output`, and `--failure-output` can be set
+explicitly. Use `--task-id` for one exact task. Successful annotations are
+appended immediately to `data/interim/2025/news/annotations/results.jsonl`; a rerun
+skips only annotations with the same task, annotation configuration, and local
+Ollama model digest.
+The default context size is 32,768 tokens because the current collection also
+contains a small number of unusually long article bodies. Each response may use
+up to 2,048 generated tokens, leaving enough room for all six ratings and as
+many as twelve short evidence quotes. This is only an upper bound; Ollama stops
+normally as soon as the complete structured JSON response is finished.
+
+Each task receives at most two semantic attempts. If both responses fail JSON,
+schema, rating, or verbatim-evidence validation, the failure and the last model
+response are appended to
+`data/interim/2025/news/annotations/failures.jsonl`. The command then continues
+with the next untouched task. Normal later runs defer these known failures so
+they cannot repeatedly block progress. Retry only unresolved failures for the
+same annotation configuration and model digest with:
+
+```console
+uv run python -m buli_news.main annotate-news \
+  --season 2025 \
+  --model gemma4:12b-it-qat \
+  --retry-failures-only
+```
+
+A later valid result is appended to `annotations/results.jsonl`; previous failure rows
+remain as an auditable history. HTTP and Ollama-server failures still stop the
+command because they indicate an infrastructure problem rather than one bad
+article response.
+
+The committed `config/news_annotation_schema_v1.json` versions the system
+prompt, JSON Schema, and numeric rating mapping. Each request sends two chat
+messages:
+
+1. a fixed system prompt defining the extraction task, all indicator meanings,
+   the evidence rules, and the prohibition on external knowledge
+2. a user message containing the target-team match context, article title, and
+   complete article body as untrusted JSON data
+
+Ollama receives the full response JSON Schema through its structured-output
+`format` field, with temperature `0` and a fixed seed. Python then validates the
+response again. Every assessed indicator must have at least one short verbatim
+quote found in the title or body; unmentioned indicators must not receive
+invented evidence.
+
+The six extracted indicators are:
+
+```text
+overall_match_outlook
+sporting_form
+squad_availability
+lineup_stability
+physical_readiness
+team_confidence_and_motivation
+```
+
+Ratings map to `-2`, `-1`, `0`, `1`, and `2`. `not_mentioned` and
+`not_assessable` remain missing values rather than being treated as neutral.
+This stage persists article-level, team-contextual annotations only; it does not
+yet aggregate them or train the combined prediction model.
 
 ## Planned Next Stages
 
-1. define a versioned structured local-LLM annotation schema
-2. annotate only pre-match article text and persist the responses
+1. manually audit a stratified pilot of local-LLM annotations and freeze the
+   chosen model, prompt, and schema before the full run
+2. annotate all request-bound pre-match tasks and report missingness and rating
+   distributions
 3. aggregate annotations into home- and away-team news features per `match_id`
 4. train the identical selected model with numerical plus news features
 5. compare both variants on the same 63 test matches
