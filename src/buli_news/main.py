@@ -19,6 +19,7 @@ from buli_news.modeling import (
     evaluate_numerical_logistic_final,
     evaluate_numerical_logistic_reference,
 )
+from buli_news.news_articles import build_news_articles
 from buli_news.newsapi import (
     count_successful_existing_responses,
     fetch_news_requests,
@@ -236,6 +237,38 @@ def build_parser() -> argparse.ArgumentParser:
         default=1,
         type=int,
         help="Positive policy version used in the generated policy ID.",
+    )
+
+    build_news_articles_parser = subparsers.add_parser(
+        "build-news-articles",
+        help=(
+            "Build policy-filtered canonical articles and request-bound "
+            "match links."
+        ),
+    )
+    build_news_articles_parser.add_argument(
+        "--season",
+        required=True,
+        type=int,
+        help="Season start year, e.g. 2025 for 2025/26.",
+    )
+    build_news_articles_parser.add_argument(
+        "--policy",
+        default="config/news_source_policy.json",
+        help="Path to the reviewed news-source policy JSON.",
+    )
+    build_news_articles_parser.add_argument(
+        "--raw-dir",
+        default=None,
+        help=(
+            "Directory with raw news response JSON files. Defaults to "
+            "data/raw/newsapi/{season}."
+        ),
+    )
+    build_news_articles_parser.add_argument(
+        "--timezone",
+        default="Europe/Berlin",
+        help="Timezone used to check publication timestamps against windows.",
     )
 
     build_news_requests_parser = subparsers.add_parser(
@@ -578,6 +611,52 @@ def build_news_source_policy_command(
     print("Unknown source decision: exclude")
 
 
+def build_news_articles_command(
+    season: int,
+    policy_path: str,
+    raw_dir: str | None,
+    timezone: str,
+) -> None:
+    paths = SeasonPaths(season)
+    requests = read_jsonl(paths.news_requests)
+    policy = read_json(Path(policy_path))
+    if not isinstance(policy, dict):
+        msg = f"{policy_path} must contain a JSON object."
+        raise ValueError(msg)
+    source_dir = Path(raw_dir) if raw_dir is not None else paths.news_raw_dir
+    build = build_news_articles(
+        requests=requests,
+        raw_dir=source_dir,
+        policy=policy,
+        season=season,
+        timezone=timezone,
+    )
+
+    write_jsonl(build.articles, paths.news_articles)
+    write_jsonl(build.article_links, paths.news_article_links)
+    write_json(build.quality_report, paths.news_articles_quality)
+
+    summary = build.quality_report["summary"]
+    print(f"Saved {len(build.articles)} canonical articles to {paths.news_articles}")
+    print(
+        f"Saved {len(build.article_links)} request-bound article links to "
+        f"{paths.news_article_links}"
+    )
+    print(f"Saved news article quality report to {paths.news_articles_quality}")
+    print(
+        "Policy-excluded occurrences: "
+        f"{summary['policy_exclude_occurrence_count']}"
+    )
+    outside_window_count = build.quality_report["rejection_counts"].get(
+        "publication_datetime_outside_request_window",
+        0,
+    )
+    print(
+        "Occurrences outside their request publication window: "
+        f"{outside_window_count}"
+    )
+
+
 def export_news_source_review_command(
     season: int,
     raw_dir: str | None,
@@ -714,6 +793,13 @@ def main() -> None:
                 input_path=args.input,
                 output_path=args.output,
                 policy_version=args.policy_version,
+            )
+        elif args.command == "build-news-articles":
+            build_news_articles_command(
+                season=args.season,
+                policy_path=args.policy,
+                raw_dir=args.raw_dir,
+                timezone=args.timezone,
             )
         elif args.command == "build-news-requests":
             build_news_requests_command(
