@@ -49,6 +49,10 @@ class SeasonPaths:
         return self.news_interim_dir / "annotations"
 
     @property
+    def news_annotation_pilots_dir(self) -> Path:
+        return self.news_annotations_dir / "pilots"
+
+    @property
     def normalized_matches(self) -> Path:
         return self.matches_interim_dir / "normalized.jsonl"
 
@@ -107,6 +111,35 @@ class SeasonPaths:
     @property
     def news_annotation_failures(self) -> Path:
         return self.news_annotations_dir / "failures.jsonl"
+
+    def news_annotation_pilot_dir(self, schema_version: int) -> Path:
+        return self.news_annotation_pilots_dir / f"v{schema_version}"
+
+    def news_annotation_pilot_artifact(
+        self,
+        schema_version: int,
+        artifact: str,
+        selection_version: int,
+        size: int,
+        seed: int,
+    ) -> Path:
+        filename = (
+            f"{artifact}_selection_v{selection_version}_{size}_seed_{seed}.jsonl"
+        )
+        return self.news_annotation_pilot_dir(schema_version) / filename
+
+    def news_annotation_match_pilot_artifact(
+        self,
+        schema_version: int,
+        match_id: int,
+        artifact: str,
+    ) -> Path:
+        directory = (
+            self.news_annotation_pilot_dir(schema_version)
+            / "matches"
+            / str(match_id)
+        )
+        return directory / f"{artifact}.jsonl"
 
     @property
     def news_source_review(self) -> Path:

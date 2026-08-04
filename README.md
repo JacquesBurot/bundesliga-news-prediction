@@ -21,7 +21,7 @@ The implemented pipeline currently supports:
 10. grouping text-identical publications under stable content IDs while
     retaining every article and request association
 11. building request-bound, team-specific local-LLM annotation tasks
-12. extracting six structured news indicators through a local Ollama server
+12. extracting four structured news indicators through a local Ollama server
     with a versioned system prompt and strict JSON output
 13. evaluating a prior-based numerical `DummyClassifier` reference
 14. evaluating standardized multinomial logistic regression on the numerical
@@ -147,6 +147,7 @@ bundesliga-news-prediction/
 ├── config/
 │   ├── news_annotation_schema_v1.json
 │   ├── news_annotation_schema_v2.json
+│   ├── news_annotation_schema_v3.json
 │   ├── news_source_policy.json
 │   └── teams.json
 ├── data/
@@ -162,6 +163,8 @@ bundesliga-news-prediction/
 │   │           ├── articles/
 │   │           ├── contents/
 │   │           └── annotations/
+│   │               └── pilots/
+│   │                   └── v{schema_version}/
 │   ├── review/
 │   │   └── {season}/
 │   └── processed/
@@ -1001,7 +1004,7 @@ data/interim/2025/news/articles/articles.jsonl
 data/interim/2025/news/articles/request_links.jsonl
 data/interim/2025/news/contents/contents.jsonl
 data/interim/2025/news/contents/article_links.jsonl
-config/news_annotation_schema_v2.json
+config/news_annotation_schema_v3.json
 ```
 
 Outputs:
@@ -1018,9 +1021,10 @@ appears through several sites inside the same request, those article links form
 one LLM task. If it appears in a different home- or away-team request, it forms
 a separate task with that request's target-team context.
 
-Every task contains the target team, opponent, matchday, kickoff, publication
-timestamp, article title, and article body. When several publication rows share
-the same content inside one request, the title and body are selected together
+Every stored task contains the full request and fixture provenance needed for
+later feature aggregation. Ollama receives only the target team, its configured
+aliases, the article title, and the article body. When several publication rows
+share the same content inside one request, the title and body are selected together
 from the article with the lowest response position and then the lowest
 `article_id`. The quality report records this deterministic selection and the
 number of collapsed within-request links.
@@ -1050,30 +1054,61 @@ uv run python -m buli_news.main annotate-news \
   --workers 2
 ```
 
-The default server is `http://localhost:11434`. `--base-url`, `--model`,
-`--num-ctx`, `--timeout-seconds`, `--workers`, `--output`, and
-`--failure-output` can be set explicitly. Use `--task-id` for one exact task.
+The default server is `http://localhost:11434`, and the default Ollama context
+window is `40960` tokens. `--base-url`, `--model`, `--num-ctx`,
+`--timeout-seconds`, `--workers`, `--output`, and `--failure-output` can be set
+explicitly. Use `--task-id` for one exact task.
 `--pilot-size` selects a deterministic pilot balanced across matchdays, target
 teams, home/away sides, source hosts, unique contents, and article-length
 quartiles. The selected task manifest is stored beside the annotation outputs
-as `pilot_tasks_v{selection_version}_{size}_seed_{seed}.jsonl`. `--limit`
-remains available for a
-simple prefix of untouched tasks but is not a stratified pilot. Successful
-annotations are appended immediately to
-`data/interim/2025/news/annotations/results.jsonl`; a rerun skips only
+below
+`data/interim/2025/news/annotations/pilots/v{schema_version}/` as
+`tasks_selection_v{selection_version}_{size}_seed_{seed}.jsonl`,
+`results_selection_v{selection_version}_{size}_seed_{seed}.jsonl`, and
+`failures_selection_v{selection_version}_{size}_seed_{seed}.jsonl`. Explicit
+`--output` and `--failure-output` paths still take precedence. `--limit`
+remains available for a simple prefix of untouched tasks but is not a
+stratified pilot.
+
+A full run without `--pilot-size`, `--output`, or `--failure-output` keeps the
+canonical append-only destinations
+`data/interim/2025/news/annotations/results.jsonl` and
+`data/interim/2025/news/annotations/failures.jsonl`. A rerun skips only
 annotations with the same task, annotation configuration, and local Ollama
 model digest. Concurrent requests are processed by worker threads, but all
 successful and failed JSONL rows are appended by the main thread so writes
-cannot interleave. Use one worker unless the local Ollama hardware has been
-benchmarked; two workers improved throughput on the development machine.
-The default context size is 32,768 tokens because the current collection also
-contains a small number of unusually long article bodies. Each response may use
-up to 2,048 generated tokens, leaving enough room for all six ratings and as
-many as twelve short evidence quotes. This is only an upper bound; Ollama stops
-normally as soon as the complete structured JSON response is finished.
+cannot interleave. An OS-level lock on the selected result path also rejects a
+second annotation process before it can append duplicate rows; resume a stopped
+run only after its previous process has actually exited. Use one worker unless
+the local Ollama hardware has been benchmarked; two workers improved throughput
+on the development machine.
 
-Each task receives at most two semantic attempts. If both responses fail JSON,
-schema, rating, or verbatim-evidence validation, the failure and the last model
+To inspect the complete article set for one fixture without touching the full
+run outputs, select its exact match ID:
+
+```console
+uv run python -m buli_news.main annotate-news \
+  --season 2025 \
+  --model gemma4:12b-it-qat \
+  --match-id 77393 \
+  --workers 2
+```
+
+This writes `tasks.jsonl`, `results.jsonl`, and, only when needed,
+`failures.jsonl` below
+`annotations/pilots/v{schema_version}/matches/{match_id}/`. `--match-id`
+cannot be combined with `--pilot-size`, `--task-id`, `--limit`, or
+`--retry-failures-only`.
+The default context size is 40,960 tokens because the current collection also
+contains a small number of unusually long article bodies. Each response may use
+up to 8,192 generated tokens so Thinking can finish before Ollama emits the four
+ratings and their evidence arrays. The larger context leaves additional input
+headroom beyond the longest prompts observed in the 100-task pilot. The output
+limit is only an upper bound; Ollama stops normally as soon as the complete
+structured JSON response is finished.
+
+Each task receives at most two attempts. If both responses fail JSON,
+schema, rating, or evidence-presence validation, the failure and the last model
 response are appended to
 `data/interim/2025/news/annotations/failures.jsonl`. The command then continues
 with the next untouched task. Normal later runs defer these known failures so
@@ -1092,41 +1127,42 @@ remain as an auditable history. HTTP and Ollama-server failures still stop the
 command because they indicate an infrastructure problem rather than one bad
 article response.
 
-The default `config/news_annotation_schema_v2.json` versions the system prompt,
-JSON Schema, target-team relevance gate, and numeric rating mapping. The v1
-configuration remains committed so earlier pilot rows stay reproducible. Each
-request sends two chat messages:
+The default `config/news_annotation_schema_v3.json` is the complete annotation
+configuration: system prompt, response JSON Schema, target-team aliases, and
+numeric rating mapping. It does not inherit from or append text to another
+configuration. The v1 and v2 files remain only so earlier pilot rows stay
+interpretable; the active annotation code accepts the complete v3 structure.
+Each request sends two chat messages:
 
 1. a fixed system prompt defining the extraction task, all indicator meanings,
    the evidence rules, and the prohibition on external knowledge
-2. a user message containing the target-team match context, article title, and
-   complete article body as untrusted JSON data
+2. a user message containing only the target team, its aliases, article title,
+   and complete article body as untrusted JSON data
 
 Ollama receives the full response JSON Schema through its structured-output
-`format` field, with temperature `0` and a fixed seed. Python then validates the
-response again. The model must first classify the article as `relevant` or
-`not_relevant` for the exact target team. A relevant row requires one or two
-verbatim relevance quotes and at least one assessed indicator. A feature-inert
-response is canonicalized to not relevant. A not-relevant row is forced to
-leave every rating missing and both evidence collections empty. Every assessed
-indicator must have at least one short verbatim, target-team-specific quote
-found in the title or body; unmentioned indicators must not receive invented
-evidence. Facts about the opponent or another club must never be assigned to
-the target team.
+`format` field, with thinking enabled, temperature `0`, and a fixed seed. Each
+indicator directly contains its rating and one supporting quote. Python does
+not rewrite, discard, or reclassify the model's semantic decisions. It only
+checks the exact JSON fields and allowed ratings. Evidence is always an array:
+it must be empty for `not_mentioned` and contain one or two non-empty strings
+for every assessed rating. Python does not compare those strings against the
+article text. An invalid response is retried once and is then recorded as a
+failure.
+Article scope, target-team attribution, opponent separation, and indicator
+meaning are owned by the system prompt and remain visible in the model output.
 
-The six extracted indicators are:
+The four extracted indicators are:
 
 ```text
-overall_match_outlook
 sporting_form
-squad_availability
-lineup_stability
+personnel_situation
 physical_readiness
-team_confidence_and_motivation
+confidence_and_motivation
 ```
 
-Ratings map to `-2`, `-1`, `0`, `1`, and `2`. `not_mentioned` and
-`not_assessable` remain missing values rather than being treated as neutral.
+Ratings map to `-2`, `-1`, `0`, `1`, and `2`. `not_mentioned` remains a missing
+value rather than being treated as neutral. Relevance is implicit: an article
+contains an extracted signal when at least one indicator is not `not_mentioned`.
 This stage persists article-level, team-contextual annotations only; it does not
 yet aggregate them or train the combined prediction model.
 

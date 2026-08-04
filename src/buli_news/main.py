@@ -339,22 +339,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         default=None,
         help=(
-            "Append-only annotation JSONL. Defaults to "
-            "data/interim/{season}/news/annotations/results.jsonl."
+            "Append-only annotation JSONL. Full runs default to "
+            "data/interim/{season}/news/annotations/results.jsonl; pilots "
+            "default to their schema-specific pilots directory."
         ),
     )
     annotate_news_parser.add_argument(
         "--failure-output",
         default=None,
         help=(
-            "Append-only deferred failures JSONL. Defaults to "
-            "data/interim/{season}/news/annotations/failures.jsonl."
+            "Append-only deferred failures JSONL. Full runs default to "
+            "data/interim/{season}/news/annotations/failures.jsonl; pilots "
+            "default to their schema-specific pilots directory."
         ),
     )
     annotate_news_parser.add_argument(
         "--task-id",
         default=None,
         help="Annotate only one exact task ID.",
+    )
+    annotate_news_parser.add_argument(
+        "--match-id",
+        type=int,
+        default=None,
+        help=(
+            "Annotate every home- and away-team task for one match. Unless "
+            "explicitly overridden, artifacts are stored below "
+            "annotations/pilots/v{schema_version}/matches/{match_id}."
+        ),
     )
     annotate_news_parser.add_argument(
         "--limit",
@@ -368,7 +380,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Select a deterministic stratified pilot across matchdays, teams, "
-            "sides, sources, and article lengths."
+            "sides, sources, and article lengths. Unless explicitly overridden, "
+            "pilot tasks, results, and failures are stored below "
+            "annotations/pilots/v{schema_version}."
         ),
     )
     annotate_news_parser.add_argument(
@@ -392,7 +406,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--num-ctx",
         type=int,
         default=DEFAULT_OLLAMA_NUM_CTX,
-        help="Ollama context-window size used for every article.",
+        help=(
+            "Ollama context-window size used for every article "
+            f"(default: {DEFAULT_OLLAMA_NUM_CTX})."
+        ),
     )
     annotate_news_parser.add_argument(
         "--workers",
@@ -853,6 +870,7 @@ def annotate_news_command(
     output_path: str | None,
     failure_output_path: str | None,
     task_id: str | None,
+    match_id: int | None,
     limit: int | None,
     pilot_size: int | None,
     pilot_seed: int,
@@ -865,10 +883,15 @@ def annotate_news_command(
     config = load_annotation_config(Path(config_path))
     tasks = read_jsonl(paths.news_annotation_tasks)
     if pilot_size is not None:
-        if task_id is not None or limit is not None or retry_failures_only:
+        if (
+            task_id is not None
+            or match_id is not None
+            or limit is not None
+            or retry_failures_only
+        ):
             msg = (
-                "--pilot-size cannot be combined with --task-id, --limit, or "
-                "--retry-failures-only."
+                "--pilot-size cannot be combined with --task-id, --match-id, "
+                "--limit, or --retry-failures-only."
             )
             raise ValueError(msg)
         tasks = select_stratified_annotation_tasks(
@@ -876,13 +899,12 @@ def annotate_news_command(
             size=pilot_size,
             seed=pilot_seed,
         )
-        pilot_path = (
-            paths.news_annotations_dir
-            / (
-                "pilot_tasks_"
-                f"v{NEWS_ANNOTATION_PILOT_SELECTION_VERSION}_"
-                f"{pilot_size}_seed_{pilot_seed}.jsonl"
-            )
+        pilot_path = paths.news_annotation_pilot_artifact(
+            schema_version=config.schema_version,
+            artifact="tasks",
+            selection_version=NEWS_ANNOTATION_PILOT_SELECTION_VERSION,
+            size=pilot_size,
+            seed=pilot_seed,
         )
         write_jsonl(tasks, pilot_path)
         print(
@@ -896,14 +918,70 @@ def annotate_news_command(
             f"{len({task['source_host'] for task in tasks})} source hosts, "
             f"{len({task['content_id'] for task in tasks})} unique contents."
         )
-    destination = (
-        Path(output_path) if output_path is not None else paths.news_annotations
-    )
-    failure_destination = (
-        Path(failure_output_path)
-        if failure_output_path is not None
-        else paths.news_annotation_failures
-    )
+    elif match_id is not None:
+        if task_id is not None or limit is not None or retry_failures_only:
+            msg = (
+                "--match-id cannot be combined with --task-id, --limit, or "
+                "--retry-failures-only."
+            )
+            raise ValueError(msg)
+        tasks = [task for task in tasks if task["match_id"] == match_id]
+        if not tasks:
+            msg = f"Unknown annotation match ID {match_id}."
+            raise ValueError(msg)
+        match_tasks_path = paths.news_annotation_match_pilot_artifact(
+            schema_version=config.schema_version,
+            match_id=match_id,
+            artifact="tasks",
+        )
+        write_jsonl(tasks, match_tasks_path)
+        print(
+            f"Saved all {len(tasks)} annotation tasks for match {match_id} to "
+            f"{match_tasks_path}"
+        )
+        print(
+            "Match coverage: "
+            f"{sum(task['side'] == 'home' for task in tasks)} home-team tasks, "
+            f"{sum(task['side'] == 'away' for task in tasks)} away-team tasks, "
+            f"{len({task['source_host'] for task in tasks})} source hosts, "
+            f"{len({task['content_id'] for task in tasks})} unique contents."
+        )
+    if output_path is not None:
+        destination = Path(output_path)
+    elif pilot_size is not None:
+        destination = paths.news_annotation_pilot_artifact(
+            schema_version=config.schema_version,
+            artifact="results",
+            selection_version=NEWS_ANNOTATION_PILOT_SELECTION_VERSION,
+            size=pilot_size,
+            seed=pilot_seed,
+        )
+    elif match_id is not None:
+        destination = paths.news_annotation_match_pilot_artifact(
+            schema_version=config.schema_version,
+            match_id=match_id,
+            artifact="results",
+        )
+    else:
+        destination = paths.news_annotations
+    if failure_output_path is not None:
+        failure_destination = Path(failure_output_path)
+    elif pilot_size is not None:
+        failure_destination = paths.news_annotation_pilot_artifact(
+            schema_version=config.schema_version,
+            artifact="failures",
+            selection_version=NEWS_ANNOTATION_PILOT_SELECTION_VERSION,
+            size=pilot_size,
+            seed=pilot_seed,
+        )
+    elif match_id is not None:
+        failure_destination = paths.news_annotation_match_pilot_artifact(
+            schema_version=config.schema_version,
+            match_id=match_id,
+            artifact="failures",
+        )
+    else:
+        failure_destination = paths.news_annotation_failures
     run = annotate_news_tasks(
         tasks=tasks,
         config=config,
@@ -1096,6 +1174,7 @@ def main() -> None:
                 output_path=args.output,
                 failure_output_path=args.failure_output,
                 task_id=args.task_id,
+                match_id=args.match_id,
                 limit=args.limit,
                 pilot_size=args.pilot_size,
                 pilot_seed=args.pilot_seed,
