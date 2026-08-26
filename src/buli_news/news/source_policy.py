@@ -13,7 +13,7 @@ from typing import Any
 from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
-from buli_news.news_source_review import (
+from buli_news.news.source_review import (
     SOURCE_REVIEW_COLUMNS,
     SOURCE_REVIEW_WORKSHEET,
 )

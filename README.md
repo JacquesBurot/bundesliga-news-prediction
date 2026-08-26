@@ -4,6 +4,22 @@ Python pipeline for a master's thesis investigating whether structured
 pre-match sports-news features improve Bundesliga match-outcome predictions
 beyond numerical pre-match data alone.
 
+## Contents
+
+- [Current Scope](#current-scope)
+- [Experiment Design](#experiment-design)
+- [Data Flow](#data-flow)
+- [Leakage Rules](#leakage-rules)
+- [Project Structure](#project-structure)
+- [Setup](#setup)
+- [Numerical Data Pipeline](#numerical-data-pipeline)
+- [Numerical Dummy Baseline](#numerical-dummy-baseline)
+- [Numerical Logistic Reference](#numerical-logistic-reference)
+- [Training-Only Numerical Logistic Configuration Selection](#training-only-numerical-logistic-configuration-selection)
+- [Final Numerical Logistic Regression](#final-numerical-logistic-regression)
+- [News Pipeline](#news-pipeline)
+- [Planned Next Stages](#planned-next-stages)
+
 ## Current Scope
 
 The implemented pipeline currently supports:
@@ -173,30 +189,67 @@ bundesliga-news-prediction/
 ├── src/
 │   └── buli_news/
 │       ├── __init__.py
-│       ├── football_data.py
 │       ├── main.py
-│       ├── matches.py
-│       ├── model_selection.py
-│       ├── modeling.py
-│       ├── news_articles.py
-│       ├── news_annotations.py
-│       ├── news_contents.py
-│       ├── news_requests.py
-│       ├── news_source_policy.py
-│       ├── news_source_review.py
-│       ├── newsapi.py
-│       ├── numerical_features.py
-│       ├── numerical_matches.py
-│       ├── openligadb.py
 │       ├── paths.py
-│       └── storage.py
+│       ├── storage.py
+│       ├── cli/
+│       │   ├── application.py
+│       │   ├── arguments.py
+│       │   ├── errors.py
+│       │   ├── parser.py
+│       │   └── commands/
+│       │       ├── annotations.py
+│       │       ├── matches.py
+│       │       ├── modeling.py
+│       │       ├── news_collection.py
+│       │       └── news_processing.py
+│       ├── matches/
+│       │   ├── features.py
+│       │   ├── football_data.py
+│       │   ├── history.py
+│       │   ├── normalization.py
+│       │   └── openligadb.py
+│       ├── modeling/
+│       │   ├── evaluation.py
+│       │   └── selection.py
+│       └── news/
+│           ├── articles.py
+│           ├── contents.py
+│           ├── fetch.py
+│           ├── requests.py
+│           ├── source_policy.py
+│           ├── source_review.py
+│           └── annotations/
+│               ├── _validation.py
+│               ├── config.py
+│               ├── ollama.py
+│               ├── results.py
+│               ├── runner.py
+│               ├── selection.py
+│               └── tasks.py
 ├── .env.example
+├── .gitattributes
 ├── .gitignore
 ├── .python-version
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
 ```
+
+The source tree follows the pipeline domains. `matches` owns match acquisition
+and numerical feature construction, `news` owns collection and article
+processing, and `modeling` owns model selection and evaluation. `cli` contains
+command registration, top-level artifact orchestration, console output, and the
+shared error boundary; domain modules never import it. Format-bound and
+resume-sensitive I/O remains with the responsible domain stage, including raw
+response persistence, source-review XLSX handling, and locked append-only
+annotation outputs. The small top-level `main.py` keeps both
+`python -m buli_news.main` and the `buli-news` console script stable.
+
+The annotation package separates deterministic configuration and task
+construction from Ollama communication, append-only result handling, and
+concurrent run orchestration. This keeps schema- and ID-defining code isolated
+from infrastructure concerns while preserving the existing artifact formats.
 
 ## Setup
 
@@ -707,10 +760,11 @@ The console-script equivalent is:
 uv run buli-news evaluate-numerical-logistic-final --season 2025
 ```
 
-Input:
+Inputs:
 
 ```text
 data/processed/numerical_features_2025.csv
+outputs/modeling/2025/numerical/logistic_regression/selection/report.json
 ```
 
 Outputs:
@@ -730,6 +784,12 @@ excluded features = home_matches_played, away_matches_played,
                     away_venue_matches_played
 C = 0.01
 ```
+
+Before fitting, the command loads the training-only selection report and
+validates its season, selected feature set, retained and excluded columns, and
+`C` against this frozen source configuration. A missing, stale, or mismatching
+selection report is rejected; the report is provenance input and never causes
+the outer test split to participate in model selection.
 
 The pipeline fits a new `StandardScaler` and logistic regression on all 243
 matches from matchdays 1-27, then transforms and predicts the unchanged 63
@@ -818,9 +878,22 @@ Fetch behavior:
 
 - successful existing raw responses are skipped
 - failed responses can be retried
-- successful fetch results are appended immediately
+- each new response must first pass its HTTP-status and expected article-result
+  structure checks
+- a structurally valid empty `articles.results` list is stored as a successful
+  zero-result response with `article_count = 0`
+- after validation, the exact `response.content` bytes are stored unchanged
+- successful fetch metadata is appended immediately
 - HTTP 429 responses are retried up to three times with a 10-second wait
 - only page 1 with up to 100 articles is fetched per planned request
+
+`fetch_results.jsonl` is an append-only observation ledger, not an inventory of
+all raw files. A row records only the request and HTTP metadata observed when
+that fetch was actually performed. The current 612 legacy raw response files
+remain valid pipeline input even where no historical ledger row exists, because
+their stored article-result structure is validated directly. The pipeline must
+not invent retrospective ledger rows for those files or present reconstructed
+metadata as a historical fetch observation.
 
 The API key is read from `NEWSAPI_KEY` in the environment or `.env`. It must
 never be hardcoded, logged, or committed.
@@ -1107,9 +1180,9 @@ headroom beyond the longest prompts observed in the 100-task pilot. The output
 limit is only an upper bound; Ollama stops normally as soon as the complete
 structured JSON response is finished.
 
-Each task receives at most two attempts. If both responses fail JSON,
-schema, rating, or evidence-presence validation, the failure and the last model
-response are appended to
+Each selected task receives at most two semantic response attempts per command
+execution. If both responses fail JSON, schema, rating, or evidence-presence
+validation, one failure event and the last model response are appended to
 `data/interim/2025/news/annotations/failures.jsonl`. The command then continues
 with the next untouched task. Normal later runs defer these known failures so
 they cannot repeatedly block progress. Retry only unresolved failures for the
@@ -1122,10 +1195,12 @@ uv run python -m buli_news.main annotate-news \
   --retry-failures-only
 ```
 
-A later valid result is appended to `annotations/results.jsonl`; previous failure rows
-remain as an auditable history. HTTP and Ollama-server failures still stop the
-command because they indicate an infrastructure problem rather than one bad
-article response.
+Each explicit `--retry-failures-only` execution may make a new pair of semantic
+attempts. If that pair also fails, it appends another failure event rather than
+overwriting the earlier event. A later valid result is appended to
+`annotations/results.jsonl`; all previous failure rows remain as an auditable
+history. HTTP and Ollama-server failures still stop the command because they
+indicate an infrastructure problem rather than one bad article response.
 
 The default `config/news_annotation_schema_v3.json` is the complete annotation
 configuration: system prompt, response JSON Schema, target-team aliases, and
@@ -1141,13 +1216,13 @@ Each request sends two chat messages:
 
 Ollama receives the full response JSON Schema through its structured-output
 `format` field, with thinking enabled, temperature `0`, and a fixed seed. Each
-indicator directly contains its rating and one supporting quote. Python does
-not rewrite, discard, or reclassify the model's semantic decisions. It only
-checks the exact JSON fields and allowed ratings. Evidence is always an array:
-it must be empty for `not_mentioned` and contain one or two non-empty strings
-for every assessed rating. Python does not compare those strings against the
-article text. An invalid response is retried once and is then recorded as a
-failure.
+indicator directly contains its rating and one or two supporting quotes. Python
+does not rewrite, discard, or reclassify the model's semantic decisions. It
+only checks the exact JSON fields and allowed ratings. Evidence is always an
+array: it must be empty for `not_mentioned` and contain one or two non-empty
+strings for every assessed rating. Python does not compare those strings
+against the article text. Within one execution, an invalid response is retried
+once and is then recorded as one failure event.
 Article scope, target-team attribution, opponent separation, and indicator
 meaning are owned by the system prompt and remain visible in the model output.
 
@@ -1168,10 +1243,9 @@ yet aggregate them or train the combined prediction model.
 
 ## Planned Next Stages
 
-1. manually audit a stratified pilot of local-LLM annotations and freeze the
-   chosen model, prompt, and schema before the full run
-2. annotate all request-bound pre-match tasks and report missingness and rating
-   distributions
-3. aggregate annotations into home- and away-team news features per `match_id`
-4. train the identical selected model with numerical plus news features
-5. compare both variants on the same 63 test matches
+1. aggregate the validated article annotations into leakage-safe home- and
+   away-team news features per `match_id`
+2. join those news features to the unchanged numerical feature rows
+3. train the frozen selected model once with numerical features only and once
+   with the identical numerical features plus news features
+4. evaluate and compare both variants on the same 63 fixed test matches

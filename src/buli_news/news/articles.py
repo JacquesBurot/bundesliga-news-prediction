@@ -12,7 +12,7 @@ from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
-from buli_news.news_source_review import get_homepage_url
+from buli_news.news.source_review import get_homepage_url
 
 
 NEWS_ARTICLE_SCHEMA_VERSION = 1

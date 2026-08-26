@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
@@ -24,7 +25,7 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from buli_news.numerical_features import (
+from buli_news.matches.features import (
     LAST_MATCHDAY,
     NUMERICAL_FEATURE_COLUMNS,
     NUMERICAL_FEATURE_OUTPUT_COLUMNS,
@@ -181,6 +182,10 @@ def evaluate_numerical_logistic_final(
     selection_report_path: Path,
 ) -> ModelEvaluationArtifacts:
     """Evaluate the frozen training-selected numerical logistic model."""
+    validate_numerical_logistic_selection_report(
+        selection_report_path=selection_report_path,
+        season=season,
+    )
     return evaluate_numerical_logistic_configuration(
         features_path=features_path,
         season=season,
@@ -197,6 +202,151 @@ def evaluate_numerical_logistic_final(
             "outer_test_used_for_selection": False,
         },
     )
+
+
+def validate_numerical_logistic_selection_report(
+    selection_report_path: Path,
+    season: int,
+) -> None:
+    """Validate the training-only report behind the frozen final model."""
+    try:
+        selection_report = json.loads(
+            selection_report_path.read_text(encoding="utf-8")
+        )
+    except json.JSONDecodeError as exc:
+        msg = (
+            f"Numerical model-selection report {selection_report_path} is not "
+            f"valid JSON: {exc.msg} at line {exc.lineno}, column {exc.colno}."
+        )
+        raise ValueError(msg) from exc
+
+    if not isinstance(selection_report, dict):
+        msg = (
+            f"Numerical model-selection report {selection_report_path} must "
+            "contain a JSON object."
+        )
+        raise ValueError(msg)
+
+    validate_selection_report_value(
+        data=selection_report,
+        key="experiment",
+        expected="numerical_logistic_configuration_selection",
+        context="Numerical model-selection report",
+    )
+    validate_selection_report_value(
+        data=selection_report,
+        key="season",
+        expected=season,
+        context="Numerical model-selection report",
+    )
+
+    expected_configuration = {
+        "feature_set": SELECTED_NUMERICAL_FEATURE_SET,
+        "feature_columns": list(SELECTED_NUMERICAL_FEATURE_COLUMNS),
+        "excluded_columns": list(
+            SELECTED_NUMERICAL_EXCLUDED_FEATURE_COLUMNS
+        ),
+        "feature_count": len(SELECTED_NUMERICAL_FEATURE_COLUMNS),
+        "C": SELECTED_LOGISTIC_C,
+    }
+    selected_configuration = require_selection_report_object(
+        data=selection_report,
+        key="selected_configuration",
+        context="Numerical model-selection report",
+    )
+    for key, expected in expected_configuration.items():
+        validate_selection_report_value(
+            data=selected_configuration,
+            key=key,
+            expected=expected,
+            context="Selected numerical logistic configuration",
+        )
+
+    frozen_configuration = require_selection_report_object(
+        data=selection_report,
+        key="frozen_evaluation_configuration",
+        context="Numerical model-selection report",
+    )
+    for key, expected in expected_configuration.items():
+        if key == "feature_count":
+            continue
+        validate_selection_report_value(
+            data=frozen_configuration,
+            key=key,
+            expected=expected,
+            context="Frozen numerical logistic configuration",
+        )
+    validate_selection_report_value(
+        data=frozen_configuration,
+        key="matches_selected_configuration",
+        expected=True,
+        context="Frozen numerical logistic configuration",
+    )
+    frozen_feature_columns = frozen_configuration["feature_columns"]
+    if len(frozen_feature_columns) != expected_configuration["feature_count"]:
+        msg = (
+            "Frozen numerical logistic configuration must contain exactly "
+            f"{expected_configuration['feature_count']} feature columns, got "
+            f"{len(frozen_feature_columns)}."
+        )
+        raise ValueError(msg)
+
+    selection_scope = require_selection_report_object(
+        data=selection_report,
+        key="selection_scope",
+        context="Numerical model-selection report",
+    )
+    expected_selection_scope = {
+        "type": "expanding_window_training_only",
+        "outer_training_matchdays": [1, TRAIN_END_MATCHDAY],
+        "outer_test_matchdays": [TEST_START_MATCHDAY, LAST_MATCHDAY],
+        "outer_training_row_count": EXPECTED_TRAIN_COUNT,
+        "outer_test_rows_used_for_fitting": 0,
+        "outer_test_rows_used_for_scaling": 0,
+        "outer_test_rows_used_for_scoring": 0,
+        "refit_after_selection": False,
+        "outer_test_evaluation_performed": False,
+    }
+    for key, expected in expected_selection_scope.items():
+        validate_selection_report_value(
+            data=selection_scope,
+            key=key,
+            expected=expected,
+            context="Numerical logistic selection scope",
+        )
+
+
+def require_selection_report_object(
+    data: dict[str, Any],
+    key: str,
+    context: str,
+) -> dict[str, Any]:
+    """Return one required object from the numerical selection report."""
+    value = data.get(key)
+    if not isinstance(value, dict):
+        msg = f"{context} field {key!r} must be a JSON object."
+        raise ValueError(msg)
+    return value
+
+
+def validate_selection_report_value(
+    data: dict[str, Any],
+    key: str,
+    expected: Any,
+    context: str,
+) -> None:
+    """Require one report field to equal its frozen expected value."""
+    if key not in data:
+        msg = f"{context} is missing required field {key!r}."
+        raise ValueError(msg)
+
+    actual = data[key]
+    if type(actual) is not type(expected) or actual != expected:
+        msg = (
+            f"{context} field {key!r} must be {expected!r}, "
+            f"got {actual!r}."
+        )
+        raise ValueError(msg)
 
 
 def evaluate_numerical_logistic_configuration(

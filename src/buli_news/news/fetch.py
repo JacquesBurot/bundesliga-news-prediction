@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 import httpx
 
-from buli_news.storage import write_text
+from buli_news.storage import write_bytes
 
 
 API_KEY_ENV_VAR = "NEWSAPI_KEY"
@@ -141,9 +141,13 @@ def fetch_news_request(
     payload_with_key["apiKey"] = api_key
 
     response = post_with_rate_limit_retries(client, endpoint, payload_with_key)
-    raw_response_path = output_dir / f"{request_id}.json"
-    write_text(response.text, raw_response_path)
     response.raise_for_status()
+    articles = validate_news_response(
+        response.content,
+        context=f"News response for request {request_id!r}",
+    )
+    raw_response_path = output_dir / f"{request_id}.json"
+    write_bytes(response.content, raw_response_path)
 
     return {
         "request_id": request_id,
@@ -154,7 +158,7 @@ def fetch_news_request(
         "request_type": planned_request.get("request_type"),
         "query_strategy": planned_request.get("query_strategy"),
         "status_code": response.status_code,
-        "article_count": get_article_count(response.text),
+        "article_count": len(articles),
         "raw_response_path": str(raw_response_path),
     }
 
@@ -177,22 +181,39 @@ def post_with_rate_limit_retries(
     return response
 
 
-def get_article_count(response_text: str) -> int | None:
-    """Extract the number of returned articles from an Event Registry response."""
+def validate_news_response(
+    response_content: bytes,
+    context: str,
+) -> list[dict[str, Any]]:
+    """Return the possibly empty article list from one valid JSON response."""
+    if not response_content.strip():
+        msg = f"{context} is empty."
+        raise ValueError(msg)
+
     try:
-        data = json.loads(response_text)
-    except json.JSONDecodeError:
-        return None
+        data = json.loads(response_content)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        msg = f"{context} is not valid JSON: {exc}."
+        raise ValueError(msg) from exc
+
+    if not isinstance(data, dict) or not data:
+        msg = f"{context} must contain a non-empty JSON object."
+        raise ValueError(msg)
 
     articles = data.get("articles")
-    if not isinstance(articles, dict):
-        return None
+    if not isinstance(articles, dict) or not articles:
+        msg = f"{context} must contain a non-empty articles object."
+        raise ValueError(msg)
 
     results = articles.get("results")
-    if isinstance(results, list):
-        return len(results)
+    if not isinstance(results, list):
+        msg = f"{context} must contain an articles.results list."
+        raise ValueError(msg)
+    if not all(isinstance(article, dict) for article in results):
+        msg = f"{context} contains a non-object article result."
+        raise ValueError(msg)
 
-    return None
+    return results
 
 
 def is_successful_raw_response(path: Path) -> bool:
@@ -201,15 +222,14 @@ def is_successful_raw_response(path: Path) -> bool:
         return False
 
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        validate_news_response(
+            path.read_bytes(),
+            context=f"Raw news response {path}",
+        )
+    except ValueError:
         return False
 
-    articles = data.get("articles")
-    if not isinstance(articles, dict):
-        return False
-
-    return isinstance(articles.get("results"), list)
+    return True
 
 
 def get_required_str(data: dict[str, Any], key: str) -> str:

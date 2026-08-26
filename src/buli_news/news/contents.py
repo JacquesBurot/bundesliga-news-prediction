@@ -9,7 +9,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
-from buli_news.news_articles import NEWS_ARTICLE_COLUMNS
+from buli_news.news.articles import NEWS_ARTICLE_COLUMNS
 
 
 NEWS_CONTENT_SCHEMA_VERSION = 1

@@ -8,7 +8,7 @@ from datetime import date, datetime
 from io import StringIO
 from typing import Any
 
-from buli_news.football_data import BUNDESLIGA_DIVISION, decode_csv
+from buli_news.matches.football_data import BUNDESLIGA_DIVISION, decode_csv
 
 
 FOOTBALL_DATA_COLUMNS = frozenset(

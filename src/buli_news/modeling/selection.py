@@ -16,7 +16,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import confusion_matrix
 
-from buli_news.modeling import (
+from buli_news.modeling.evaluation import (
     EXPECTED_MATCHES_PER_MATCHDAY,
     METRIC_PROBABILITY_CLASSES,
     PREDICTION_METADATA_COLUMNS,
@@ -34,7 +34,7 @@ from buli_news.modeling import (
     reorder_probabilities,
     validate_target_classes,
 )
-from buli_news.numerical_features import (
+from buli_news.matches.features import (
     LAST_MATCHDAY,
     NUMERICAL_FEATURE_COLUMNS,
     TEST_START_MATCHDAY,
