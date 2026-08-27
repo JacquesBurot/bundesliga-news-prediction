@@ -381,6 +381,10 @@ data/interim/2025/matches/numerical_quality.json
 Team mappings connect exact Football-Data names to OpenLigaDB team IDs. The
 sources must match one-to-one by local date, home team, and away team.
 
+During numerical-history parsing, Football-Data goals and match statistics
+must be non-negative integers, the result class must agree with the full-time
+goals, and shots on target must not exceed total shots for either team.
+
 Source responsibilities:
 
 - OpenLigaDB: match ID, matchday, kickoff, canonical team names, and team IDs

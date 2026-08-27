@@ -282,6 +282,18 @@ def parse_football_data_match(
 
     home_goals = parse_csv_integer(row, "FTHG", context)
     away_goals = parse_csv_integer(row, "FTAG", context)
+    home_shots = parse_csv_integer(row, "HS", context)
+    away_shots = parse_csv_integer(row, "AS", context)
+    home_shots_on_target = parse_csv_integer(row, "HST", context)
+    away_shots_on_target = parse_csv_integer(row, "AST", context)
+    home_fouls = parse_csv_integer(row, "HF", context)
+    away_fouls = parse_csv_integer(row, "AF", context)
+    home_corners = parse_csv_integer(row, "HC", context)
+    away_corners = parse_csv_integer(row, "AC", context)
+    home_yellow_cards = parse_csv_integer(row, "HY", context)
+    away_yellow_cards = parse_csv_integer(row, "AY", context)
+    home_red_cards = parse_csv_integer(row, "HR", context)
+    away_red_cards = parse_csv_integer(row, "AR", context)
     result = require_csv_text(row, "FTR", context)
     if result not in {"H", "D", "A"}:
         msg = f"{context} has invalid FTR value {result!r}."
@@ -296,6 +308,19 @@ def parse_football_data_match(
         )
         raise ValueError(msg)
 
+    if home_shots_on_target > home_shots:
+        msg = (
+            f"{context} has HST {home_shots_on_target}, which exceeds "
+            f"HS {home_shots}."
+        )
+        raise ValueError(msg)
+    if away_shots_on_target > away_shots:
+        msg = (
+            f"{context} has AST {away_shots_on_target}, which exceeds "
+            f"AS {away_shots}."
+        )
+        raise ValueError(msg)
+
     return FootballDataMatch(
         match_date=match_date,
         home_team=require_csv_text(row, "HomeTeam", context),
@@ -303,18 +328,18 @@ def parse_football_data_match(
         home_goals=home_goals,
         away_goals=away_goals,
         result=result,
-        home_shots=parse_csv_integer(row, "HS", context),
-        away_shots=parse_csv_integer(row, "AS", context),
-        home_shots_on_target=parse_csv_integer(row, "HST", context),
-        away_shots_on_target=parse_csv_integer(row, "AST", context),
-        home_fouls=parse_csv_integer(row, "HF", context),
-        away_fouls=parse_csv_integer(row, "AF", context),
-        home_corners=parse_csv_integer(row, "HC", context),
-        away_corners=parse_csv_integer(row, "AC", context),
-        home_yellow_cards=parse_csv_integer(row, "HY", context),
-        away_yellow_cards=parse_csv_integer(row, "AY", context),
-        home_red_cards=parse_csv_integer(row, "HR", context),
-        away_red_cards=parse_csv_integer(row, "AR", context),
+        home_shots=home_shots,
+        away_shots=away_shots,
+        home_shots_on_target=home_shots_on_target,
+        away_shots_on_target=away_shots_on_target,
+        home_fouls=home_fouls,
+        away_fouls=away_fouls,
+        home_corners=home_corners,
+        away_corners=away_corners,
+        home_yellow_cards=home_yellow_cards,
+        away_yellow_cards=away_yellow_cards,
+        home_red_cards=home_red_cards,
+        away_red_cards=away_red_cards,
     )
 
 
