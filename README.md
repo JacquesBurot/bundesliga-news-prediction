@@ -18,6 +18,7 @@ beyond numerical pre-match data alone.
 - [Training-Only Numerical Logistic Configuration Selection](#training-only-numerical-logistic-configuration-selection)
 - [Final Numerical Logistic Regression](#final-numerical-logistic-regression)
 - [News Pipeline](#news-pipeline)
+- [News Feature Aggregation](#news-feature-aggregation)
 - [Planned Next Stages](#planned-next-stages)
 
 ## Current Scope
@@ -39,16 +40,18 @@ The implemented pipeline currently supports:
 11. building request-bound, team-specific local-LLM annotation tasks
 12. extracting four structured news indicators through a local Ollama server
     with a versioned system prompt and strict JSON output
-13. evaluating a prior-based numerical `DummyClassifier` reference
-14. evaluating standardized multinomial logistic regression on the numerical
+13. aggregating the validated annotations into 16 match-level home/away news
+    features with a separate quality report
+14. evaluating a prior-based numerical `DummyClassifier` reference
+15. evaluating standardized multinomial logistic regression on the numerical
    features
-15. selecting numerical logistic-regression regularization and one of two fixed
+16. selecting numerical logistic-regression regularization and one of two fixed
    feature sets with training-only expanding-window validation
-16. evaluating the frozen training-selected numerical logistic model on the
+17. evaluating the frozen training-selected numerical logistic model on the
     fixed test split without overwriting the original baseline
 
-News-feature aggregation and the final numerical-versus-news model comparison
-are the next planned stages.
+Joining numerical and news features and the final numerical-versus-news model
+comparison are the next planned stages.
 
 ## Experiment Design
 
@@ -206,6 +209,7 @@ bundesliga-news-prediction/
 │       │       ├── matches.py
 │       │       ├── modeling.py
 │       │       ├── news_collection.py
+│       │       ├── news_features.py
 │       │       └── news_processing.py
 │       ├── matches/
 │       │   ├── features.py
@@ -220,6 +224,7 @@ bundesliga-news-prediction/
 │           ├── articles.py
 │           ├── contents.py
 │           ├── fetch.py
+│           ├── features.py
 │           ├── requests.py
 │           ├── source_policy.py
 │           ├── source_review.py
@@ -1246,14 +1251,89 @@ confidence_and_motivation
 Ratings map to `-2`, `-1`, `0`, `1`, and `2`. `not_mentioned` remains a missing
 value rather than being treated as neutral. Relevance is implicit: an article
 contains an extracted signal when at least one indicator is not `not_mentioned`.
-This stage persists article-level, team-contextual annotations only; it does not
-yet aggregate them or train the combined prediction model.
+This stage persists article-level, team-contextual annotations. The next stage
+aggregates them without retaining article text or evidence excerpts.
+
+## News Feature Aggregation
+
+Aggregate the successful request-bound annotations into one feature row per
+match:
+
+```console
+uv run python -m buli_news.main build-news-features --season 2025
+```
+
+The console-script equivalent is:
+
+```console
+uv run buli-news build-news-features --season 2025
+```
+
+Inputs:
+
+```text
+data/interim/2025/matches/normalized.jsonl
+data/interim/2025/news/annotations/tasks.jsonl
+data/interim/2025/news/annotations/results.jsonl
+data/interim/2025/news/annotations/failures.jsonl
+config/news_annotation_schema_v3.json
+```
+
+Outputs:
+
+```text
+data/processed/news_features_2025.csv
+data/processed/news_features_2025_quality.json
+```
+
+Every task already represents one exact normalized content inside one request
+and target-team context. The feature builder therefore gives every successful
+task equal weight and groups only by `match_id`, home/away side, and the stable
+request. It validates that every normalized fixture has exactly one home and
+one away request context, that task ownership agrees with the fixture, and that
+all successful rows use one exact annotation configuration and model digest.
+
+For each home/away side and each of the four indicators, the builder creates:
+
+```text
+{side}_news_{indicator}_mean_rating
+{side}_news_{indicator}_mention_share
+```
+
+This fixed Cartesian product produces 16 model features. `mean_rating` is the
+unweighted arithmetic mean of mapped ratings among annotations in which the
+indicator is mentioned. `mention_share` is the mentioned count divided by the
+number of successful annotations in that request. `not_mentioned` is excluded
+from the rating mean but remains in the mention-share denominator. A neutral
+rating is a real mention with numeric value zero. If an indicator is never
+mentioned in a request, both output values are zero; their combination keeps
+that case distinguishable from a neutral mean with a positive mention share.
+Means and shares are rounded to six decimal places, consistent with the
+numerical feature table.
+
+An unresolved task is not interpreted as `not_mentioned` and is not imputed.
+It is excluded from both aggregation denominators and retained in the separate
+quality report. Every match side must still have at least one successful
+annotation. Absolute task counts, coverage, failure history, per-indicator
+mention counts, and rating distributions are quality information and never
+appear as model columns in the feature CSV.
+
+The output CSV has the same ten match and split metadata columns used by the
+numerical feature table followed by the 16 news features. It contains no match
+target, article text, title, evidence, source field, or quality column. The
+quality JSON records the complete aggregation contract, annotation and model
+provenance, global and home/away indicator distributions, all 612 text-free
+match-side quality summaries, and unresolved-task metadata.
+
+For the current season, 48,465 of 48,466 tasks contribute to 306 match rows.
+All 16 features are finite, and the fixed 243/63 train/test split is preserved.
+The only incomplete context is the Bayer 04 Leverkusen home request for match
+`77374`, where 77 of 78 tasks are successful. Its coverage is documented in the
+quality report while its 77 valid annotations form the feature values.
 
 ## Planned Next Stages
 
-1. aggregate the validated article annotations into leakage-safe home- and
-   away-team news features per `match_id`
-2. join those news features to the unchanged numerical feature rows
-3. train the frozen selected model once with numerical features only and once
+1. join the frozen news features to the unchanged numerical feature rows
+2. train the frozen selected model once with numerical features only and once
    with the identical numerical features plus news features
-4. evaluate and compare both variants on the same 63 fixed test matches
+3. evaluate and compare both variants on the same 63 fixed test matches

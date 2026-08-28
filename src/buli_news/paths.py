@@ -153,6 +153,14 @@ class SeasonPaths:
     def numerical_features(self) -> Path:
         return PROCESSED_ROOT / f"numerical_features_{self.season}.csv"
 
+    @property
+    def news_features(self) -> Path:
+        return PROCESSED_ROOT / f"news_features_{self.season}.csv"
+
+    @property
+    def news_features_quality(self) -> Path:
+        return PROCESSED_ROOT / f"news_features_{self.season}_quality.json"
+
     def openligadb_raw(self, league: str) -> Path:
         return RAW_ROOT / "openligadb" / f"{league}_{self.season}.json"
 
