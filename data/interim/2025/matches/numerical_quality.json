@@ -1,0 +1,28 @@
+{
+  "season": 2025,
+  "openligadb_match_count": 306,
+  "football_data_match_count": 306,
+  "matched_match_count": 306,
+  "team_mapping_count": 18,
+  "result_source": "Football-Data.co.uk",
+  "result_mismatch_count": 1,
+  "result_mismatches": [
+    {
+      "match_id": 77546,
+      "matchday": 33,
+      "kickoff": "2026-05-10T19:30:00+02:00",
+      "home_team": "1. FSV Mainz 05",
+      "away_team": "1. FC Union Berlin",
+      "openligadb": {
+        "home_goals": 0,
+        "away_goals": 1,
+        "result": "A"
+      },
+      "football_data": {
+        "home_goals": 1,
+        "away_goals": 3,
+        "result": "A"
+      }
+    }
+  ]
+}

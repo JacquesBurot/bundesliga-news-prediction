@@ -1,0 +1,3125 @@
+{
+  "experiment": "numerical_logistic_configuration_selection",
+  "season": 2025,
+  "input_path": "data/processed/numerical_features_2025.csv",
+  "scikit_learn_version": "1.9.0",
+  "target_classes": [
+    "H",
+    "D",
+    "A"
+  ],
+  "selection_scope": {
+    "type": "expanding_window_training_only",
+    "outer_training_matchdays": [
+      1,
+      27
+    ],
+    "outer_test_matchdays": [
+      28,
+      34
+    ],
+    "outer_training_row_count": 243,
+    "outer_test_rows_used_for_fitting": 0,
+    "outer_test_rows_used_for_scaling": 0,
+    "outer_test_rows_used_for_scoring": 0,
+    "validation_row_count_per_candidate": 135,
+    "validation_match_ids": [
+      77364,
+      77365,
+      77366,
+      77367,
+      77368,
+      77369,
+      77370,
+      77371,
+      77372,
+      77373,
+      77374,
+      77375,
+      77376,
+      77377,
+      77378,
+      77379,
+      77380,
+      77381,
+      77382,
+      77383,
+      77384,
+      77385,
+      77386,
+      77387,
+      77388,
+      77389,
+      77390,
+      77391,
+      77392,
+      77393,
+      77394,
+      77395,
+      77397,
+      77398,
+      77399,
+      77400,
+      77401,
+      77402,
+      77403,
+      77404,
+      77405,
+      77406,
+      77407,
+      77408,
+      77409,
+      77410,
+      77411,
+      77412,
+      77413,
+      77414,
+      77415,
+      77416,
+      77417,
+      77418,
+      77419,
+      77420,
+      77421,
+      77422,
+      77423,
+      77424,
+      77425,
+      77426,
+      77427,
+      77428,
+      77429,
+      77430,
+      77431,
+      77432,
+      77433,
+      77434,
+      77435,
+      77436,
+      77437,
+      77438,
+      77439,
+      77440,
+      77441,
+      77442,
+      77443,
+      77444,
+      77445,
+      77446,
+      77447,
+      77448,
+      77449,
+      77450,
+      77451,
+      77452,
+      77453,
+      77454,
+      77455,
+      77456,
+      77457,
+      77458,
+      77459,
+      77460,
+      77461,
+      77462,
+      77463,
+      77464,
+      77465,
+      77466,
+      77467,
+      77468,
+      77469,
+      77470,
+      77471,
+      77472,
+      77473,
+      77474,
+      77475,
+      77476,
+      77477,
+      77478,
+      77479,
+      77480,
+      77481,
+      77482,
+      77483,
+      77484,
+      77485,
+      77486,
+      77487,
+      77488,
+      77489,
+      77490,
+      77491,
+      77492,
+      77493,
+      77494,
+      77495,
+      77496,
+      77497,
+      77498,
+      77499
+    ],
+    "refit_after_selection": false,
+    "outer_test_evaluation_performed": false
+  },
+  "folds": [
+    {
+      "fold": "fold_1",
+      "nominal_fit_matchdays": [
+        1,
+        12
+      ],
+      "validation_matchdays": [
+        13,
+        17
+      ],
+      "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+      "fit_row_count": 108,
+      "validation_row_count": 45,
+      "excluded_late_nominal_fit_row_count": 0,
+      "excluded_late_nominal_fit_match_ids": []
+    },
+    {
+      "fold": "fold_2",
+      "nominal_fit_matchdays": [
+        1,
+        17
+      ],
+      "validation_matchdays": [
+        18,
+        22
+      ],
+      "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+      "fit_row_count": 150,
+      "validation_row_count": 45,
+      "excluded_late_nominal_fit_row_count": 3,
+      "excluded_late_nominal_fit_match_ids": [
+        77395,
+        77399,
+        77409
+      ]
+    },
+    {
+      "fold": "fold_3",
+      "nominal_fit_matchdays": [
+        1,
+        22
+      ],
+      "validation_matchdays": [
+        23,
+        27
+      ],
+      "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+      "fit_row_count": 197,
+      "validation_row_count": 45,
+      "excluded_late_nominal_fit_row_count": 1,
+      "excluded_late_nominal_fit_match_ids": [
+        77409
+      ]
+    }
+  ],
+  "search_space": {
+    "feature_sets": [
+      {
+        "name": "full",
+        "feature_count": 35,
+        "feature_columns": [
+          "home_matches_played",
+          "away_matches_played",
+          "home_points_per_game",
+          "away_points_per_game",
+          "home_form_points_last_5",
+          "away_form_points_last_5",
+          "home_goals_for_last_5_avg",
+          "away_goals_for_last_5_avg",
+          "home_goals_against_last_5_avg",
+          "away_goals_against_last_5_avg",
+          "home_shots_for_last_5_avg",
+          "away_shots_for_last_5_avg",
+          "home_shots_against_last_5_avg",
+          "away_shots_against_last_5_avg",
+          "home_shots_on_target_for_last_5_avg",
+          "away_shots_on_target_for_last_5_avg",
+          "home_shots_on_target_against_last_5_avg",
+          "away_shots_on_target_against_last_5_avg",
+          "home_corners_for_last_5_avg",
+          "away_corners_for_last_5_avg",
+          "home_corners_against_last_5_avg",
+          "away_corners_against_last_5_avg",
+          "home_fouls_committed_last_5_avg",
+          "away_fouls_committed_last_5_avg",
+          "home_yellow_cards_last_5_avg",
+          "away_yellow_cards_last_5_avg",
+          "home_red_cards_per_game",
+          "away_red_cards_per_game",
+          "home_venue_matches_played",
+          "away_venue_matches_played",
+          "home_venue_points_per_game",
+          "away_venue_points_per_game",
+          "home_days_since_last_match",
+          "away_days_since_last_match",
+          "elo_difference_before"
+        ],
+        "excluded_columns": []
+      },
+      {
+        "name": "without_match_counts",
+        "feature_count": 31,
+        "feature_columns": [
+          "home_points_per_game",
+          "away_points_per_game",
+          "home_form_points_last_5",
+          "away_form_points_last_5",
+          "home_goals_for_last_5_avg",
+          "away_goals_for_last_5_avg",
+          "home_goals_against_last_5_avg",
+          "away_goals_against_last_5_avg",
+          "home_shots_for_last_5_avg",
+          "away_shots_for_last_5_avg",
+          "home_shots_against_last_5_avg",
+          "away_shots_against_last_5_avg",
+          "home_shots_on_target_for_last_5_avg",
+          "away_shots_on_target_for_last_5_avg",
+          "home_shots_on_target_against_last_5_avg",
+          "away_shots_on_target_against_last_5_avg",
+          "home_corners_for_last_5_avg",
+          "away_corners_for_last_5_avg",
+          "home_corners_against_last_5_avg",
+          "away_corners_against_last_5_avg",
+          "home_fouls_committed_last_5_avg",
+          "away_fouls_committed_last_5_avg",
+          "home_yellow_cards_last_5_avg",
+          "away_yellow_cards_last_5_avg",
+          "home_red_cards_per_game",
+          "away_red_cards_per_game",
+          "home_venue_points_per_game",
+          "away_venue_points_per_game",
+          "home_days_since_last_match",
+          "away_days_since_last_match",
+          "elo_difference_before"
+        ],
+        "excluded_columns": [
+          "home_matches_played",
+          "away_matches_played",
+          "home_venue_matches_played",
+          "away_venue_matches_played"
+        ]
+      }
+    ],
+    "C_values": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "logistic_candidate_count": 8,
+    "fits_per_logistic_candidate": 3,
+    "total_logistic_fit_count": 24,
+    "dummy_reference_fit_count": 3
+  },
+  "selection_rule": {
+    "name": "one_standard_error_with_parsimony",
+    "primary_metric": "pooled log_loss",
+    "best_log_loss_model_id": "logistic__full__C_0.01",
+    "minimum_pooled_log_loss": 0.9869548461013361,
+    "standard_error_source": "Sample standard deviation of the best-log-loss candidate's three fold Log Loss values divided by sqrt(3).",
+    "best_log_loss_standard_error": 0.020598934400356737,
+    "eligible_log_loss_threshold_inclusive": 1.0075537805016928,
+    "eligible_model_ids": [
+      "logistic__without_match_counts__C_0.01",
+      "logistic__full__C_0.01"
+    ],
+    "preference_order_within_threshold": [
+      "lowest feature_count",
+      "lowest pooled multiclass_brier_score",
+      "lowest C",
+      "lowest pooled log_loss"
+    ],
+    "dummy_affects_selection": false
+  },
+  "dummy_reference": {
+    "model_id": "dummy__prior",
+    "model_type": "dummy_prior",
+    "feature_set": "full",
+    "feature_columns": [
+      "home_matches_played",
+      "away_matches_played",
+      "home_points_per_game",
+      "away_points_per_game",
+      "home_form_points_last_5",
+      "away_form_points_last_5",
+      "home_goals_for_last_5_avg",
+      "away_goals_for_last_5_avg",
+      "home_goals_against_last_5_avg",
+      "away_goals_against_last_5_avg",
+      "home_shots_for_last_5_avg",
+      "away_shots_for_last_5_avg",
+      "home_shots_against_last_5_avg",
+      "away_shots_against_last_5_avg",
+      "home_shots_on_target_for_last_5_avg",
+      "away_shots_on_target_for_last_5_avg",
+      "home_shots_on_target_against_last_5_avg",
+      "away_shots_on_target_against_last_5_avg",
+      "home_corners_for_last_5_avg",
+      "away_corners_for_last_5_avg",
+      "home_corners_against_last_5_avg",
+      "away_corners_against_last_5_avg",
+      "home_fouls_committed_last_5_avg",
+      "away_fouls_committed_last_5_avg",
+      "home_yellow_cards_last_5_avg",
+      "away_yellow_cards_last_5_avg",
+      "home_red_cards_per_game",
+      "away_red_cards_per_game",
+      "home_venue_matches_played",
+      "away_venue_matches_played",
+      "home_venue_points_per_game",
+      "away_venue_points_per_game",
+      "home_days_since_last_match",
+      "away_days_since_last_match",
+      "elo_difference_before"
+    ],
+    "excluded_columns": [],
+    "feature_count": 35,
+    "C": null,
+    "uses_feature_values": false,
+    "folds": [
+      {
+        "fold": "fold_1",
+        "nominal_fit_matchdays": [
+          1,
+          12
+        ],
+        "validation_matchdays": [
+          13,
+          17
+        ],
+        "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+        "fit_row_count": 108,
+        "validation_row_count": 45,
+        "excluded_late_nominal_fit_row_count": 0,
+        "excluded_late_nominal_fit_match_ids": [],
+        "fit_class_counts": {
+          "H": 48,
+          "D": 23,
+          "A": 37
+        },
+        "validation_class_counts": {
+          "H": 21,
+          "D": 12,
+          "A": 12
+        },
+        "metrics": {
+          "log_loss": 1.076527521080971,
+          "accuracy": 0.4666666666666667,
+          "macro_f1": 0.21212121212121213,
+          "multiclass_brier_score": 0.6491426611796982
+        },
+        "confusion_matrix": {
+          "labels": [
+            "H",
+            "D",
+            "A"
+          ],
+          "orientation": "rows=true classes, columns=predicted classes",
+          "values": [
+            [
+              21,
+              0,
+              0
+            ],
+            [
+              12,
+              0,
+              0
+            ],
+            [
+              12,
+              0,
+              0
+            ]
+          ]
+        },
+        "training_class_prior": {
+          "H": 0.4444444444444444,
+          "D": 0.21296296296296297,
+          "A": 0.3425925925925926
+        }
+      },
+      {
+        "fold": "fold_2",
+        "nominal_fit_matchdays": [
+          1,
+          17
+        ],
+        "validation_matchdays": [
+          18,
+          22
+        ],
+        "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+        "fit_row_count": 150,
+        "validation_row_count": 45,
+        "excluded_late_nominal_fit_row_count": 3,
+        "excluded_late_nominal_fit_match_ids": [
+          77395,
+          77399,
+          77409
+        ],
+        "fit_class_counts": {
+          "H": 69,
+          "D": 34,
+          "A": 47
+        },
+        "validation_class_counts": {
+          "H": 22,
+          "D": 11,
+          "A": 12
+        },
+        "metrics": {
+          "log_loss": 1.051922403153185,
+          "accuracy": 0.4888888888888889,
+          "macro_f1": 0.21890547263681592,
+          "multiclass_brier_score": 0.633451851851852
+        },
+        "confusion_matrix": {
+          "labels": [
+            "H",
+            "D",
+            "A"
+          ],
+          "orientation": "rows=true classes, columns=predicted classes",
+          "values": [
+            [
+              22,
+              0,
+              0
+            ],
+            [
+              11,
+              0,
+              0
+            ],
+            [
+              12,
+              0,
+              0
+            ]
+          ]
+        },
+        "training_class_prior": {
+          "H": 0.46,
+          "D": 0.22666666666666666,
+          "A": 0.31333333333333335
+        }
+      },
+      {
+        "fold": "fold_3",
+        "nominal_fit_matchdays": [
+          1,
+          22
+        ],
+        "validation_matchdays": [
+          23,
+          27
+        ],
+        "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+        "fit_row_count": 197,
+        "validation_row_count": 45,
+        "excluded_late_nominal_fit_row_count": 1,
+        "excluded_late_nominal_fit_match_ids": [
+          77409
+        ],
+        "fit_class_counts": {
+          "H": 91,
+          "D": 46,
+          "A": 60
+        },
+        "validation_class_counts": {
+          "H": 19,
+          "D": 13,
+          "A": 13
+        },
+        "metrics": {
+          "log_loss": 1.0897559934698617,
+          "accuracy": 0.4222222222222222,
+          "macro_f1": 0.19791666666666666,
+          "multiclass_brier_score": 0.6597049367128472
+        },
+        "confusion_matrix": {
+          "labels": [
+            "H",
+            "D",
+            "A"
+          ],
+          "orientation": "rows=true classes, columns=predicted classes",
+          "values": [
+            [
+              19,
+              0,
+              0
+            ],
+            [
+              13,
+              0,
+              0
+            ],
+            [
+              13,
+              0,
+              0
+            ]
+          ]
+        },
+        "training_class_prior": {
+          "H": 0.4619289340101523,
+          "D": 0.233502538071066,
+          "A": 0.30456852791878175
+        }
+      }
+    ],
+    "fold_metric_summary": {
+      "log_loss": {
+        "mean": 1.0727353059013394,
+        "population_standard_deviation": 0.015676538968343843,
+        "sample_standard_deviation": 0.019199760702649515,
+        "standard_error": 0.011084987010051096
+      },
+      "accuracy": {
+        "mean": 0.45925925925925926,
+        "population_standard_deviation": 0.027715980642769932,
+        "sample_standard_deviation": 0.033945005147821034,
+        "standard_error": 0.019598157859737706
+      },
+      "macro_f1": {
+        "mean": 0.20964778380823157,
+        "population_standard_deviation": 0.008745317975074196,
+        "sample_standard_deviation": 0.010710783338660799,
+        "standard_error": 0.006183873643807571
+      },
+      "multiclass_brier_score": {
+        "mean": 0.6474331499147992,
+        "population_standard_deviation": 0.010785729391291885,
+        "sample_standard_deviation": 0.013209766756202262,
+        "standard_error": 0.007626662392625546
+      }
+    },
+    "pooled_metrics": {
+      "log_loss": 1.0727353059013391,
+      "accuracy": 0.45925925925925926,
+      "macro_f1": 0.2098138747884941,
+      "multiclass_brier_score": 0.6474331499147989
+    },
+    "pooled_confusion_matrix": {
+      "labels": [
+        "H",
+        "D",
+        "A"
+      ],
+      "orientation": "rows=true classes, columns=predicted classes",
+      "values": [
+        [
+          62,
+          0,
+          0
+        ],
+        [
+          36,
+          0,
+          0
+        ],
+        [
+          37,
+          0,
+          0
+        ]
+      ]
+    }
+  },
+  "candidates_ranked": [
+    {
+      "model_id": "logistic__without_match_counts__C_0.01",
+      "model_type": "logistic_regression",
+      "feature_set": "without_match_counts",
+      "feature_columns": [
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_venue_matches_played",
+        "away_venue_matches_played"
+      ],
+      "feature_count": 31,
+      "C": 0.01,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.0287239776575694,
+            "accuracy": 0.5333333333333333,
+            "macro_f1": 0.38641509433962257,
+            "multiclass_brier_score": 0.6137035428285668
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                18,
+                0,
+                3
+              ],
+              [
+                8,
+                0,
+                4
+              ],
+              [
+                6,
+                0,
+                6
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            12
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 0.9442431375997272,
+            "accuracy": 0.6,
+            "macro_f1": 0.43728813559322033,
+            "multiclass_brier_score": 0.5515977385019095
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                21,
+                0,
+                1
+              ],
+              [
+                10,
+                0,
+                1
+              ],
+              [
+                6,
+                0,
+                6
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            12
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 0.9912105958397364,
+            "accuracy": 0.5111111111111111,
+            "macro_f1": 0.3653039832285115,
+            "multiclass_brier_score": 0.5919600851520668
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                18,
+                0,
+                1
+              ],
+              [
+                8,
+                0,
+                5
+              ],
+              [
+                8,
+                0,
+                5
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            12
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 0.9880592370323443,
+          "population_standard_deviation": 0.034561070401723896,
+          "sample_standard_deviation": 0.04232849372431499,
+          "standard_error": 0.024438367246124647
+        },
+        "accuracy": {
+          "mean": 0.5481481481481482,
+          "population_standard_deviation": 0.03777051491550212,
+          "sample_standard_deviation": 0.04625924443258073,
+          "standard_error": 0.026707787225659186
+        },
+        "macro_f1": {
+          "mean": 0.39633573772045144,
+          "population_standard_deviation": 0.03021306474285137,
+          "sample_standard_deviation": 0.03700329609282925,
+          "standard_error": 0.021363862960098394
+        },
+        "multiclass_brier_score": {
+          "mean": 0.5857537888275144,
+          "population_standard_deviation": 0.025731580056633056,
+          "sample_standard_deviation": 0.03151462070716343,
+          "standard_error": 0.018194974748689762
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 0.9880592370323442,
+        "accuracy": 0.5481481481481482,
+        "macro_f1": 0.3945542380324989,
+        "multiclass_brier_score": 0.5857537888275144
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            57,
+            0,
+            5
+          ],
+          [
+            26,
+            0,
+            10
+          ],
+          [
+            20,
+            0,
+            17
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 2,
+      "within_one_standard_error": true,
+      "selection_rank": 1
+    },
+    {
+      "model_id": "logistic__full__C_0.01",
+      "model_type": "logistic_regression",
+      "feature_set": "full",
+      "feature_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_matches_played",
+        "away_venue_matches_played",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [],
+      "feature_count": 35,
+      "C": 0.01,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.0155694617252151,
+            "accuracy": 0.4888888888888889,
+            "macro_f1": 0.3660818713450292,
+            "multiclass_brier_score": 0.6083005663824562
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                18,
+                0,
+                3
+              ],
+              [
+                11,
+                1,
+                0
+              ],
+              [
+                7,
+                2,
+                3
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            11
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 0.9469794428241338,
+            "accuracy": 0.5555555555555556,
+            "macro_f1": 0.37765634486945965,
+            "multiclass_brier_score": 0.5580261890916877
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                21,
+                0,
+                1
+              ],
+              [
+                10,
+                0,
+                1
+              ],
+              [
+                8,
+                0,
+                4
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            13
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 0.9983156337546595,
+            "accuracy": 0.4888888888888889,
+            "macro_f1": 0.3407396857047904,
+            "multiclass_brier_score": 0.5970228161398888
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                19,
+                0,
+                0
+              ],
+              [
+                10,
+                1,
+                2
+              ],
+              [
+                11,
+                0,
+                2
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            11
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 0.9869548461013361,
+          "population_standard_deviation": 0.029131292399418196,
+          "sample_standard_deviation": 0.03567840096319621,
+          "standard_error": 0.020598934400356737
+        },
+        "accuracy": {
+          "mean": 0.5111111111111111,
+          "population_standard_deviation": 0.03142696805273546,
+          "sample_standard_deviation": 0.03849001794597508,
+          "standard_error": 0.02222222222222224
+        },
+        "macro_f1": {
+          "mean": 0.36149263397309306,
+          "population_standard_deviation": 0.015416565888940605,
+          "sample_standard_deviation": 0.01888136000695052,
+          "standard_error": 0.010901158282679117
+        },
+        "multiclass_brier_score": {
+          "mean": 0.5877831905380109,
+          "population_standard_deviation": 0.021539208650594926,
+          "sample_standard_deviation": 0.026380035328649482,
+          "standard_error": 0.015230520498227618
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 0.9869548461013361,
+        "accuracy": 0.5111111111111111,
+        "macro_f1": 0.3649966243826173,
+        "multiclass_brier_score": 0.587783190538011
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            58,
+            0,
+            4
+          ],
+          [
+            31,
+            2,
+            3
+          ],
+          [
+            26,
+            2,
+            9
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 1,
+      "within_one_standard_error": true,
+      "selection_rank": 2
+    },
+    {
+      "model_id": "logistic__without_match_counts__C_0.1",
+      "model_type": "logistic_regression",
+      "feature_set": "without_match_counts",
+      "feature_columns": [
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_venue_matches_played",
+        "away_venue_matches_played"
+      ],
+      "feature_count": 31,
+      "C": 0.1,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.0696440868690429,
+            "accuracy": 0.5111111111111111,
+            "macro_f1": 0.4841491841491841,
+            "multiclass_brier_score": 0.6187065979327332
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                13,
+                2,
+                6
+              ],
+              [
+                6,
+                4,
+                2
+              ],
+              [
+                4,
+                2,
+                6
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            19
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 0.9612108509836056,
+            "accuracy": 0.6,
+            "macro_f1": 0.5036041083099906,
+            "multiclass_brier_score": 0.5482723336840524
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                19,
+                0,
+                3
+              ],
+              [
+                5,
+                2,
+                4
+              ],
+              [
+                5,
+                1,
+                6
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            22
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 1.0015025327451794,
+            "accuracy": 0.4666666666666667,
+            "macro_f1": 0.38088235294117645,
+            "multiclass_brier_score": 0.6039923392155824
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                15,
+                1,
+                3
+              ],
+              [
+                8,
+                1,
+                4
+              ],
+              [
+                6,
+                2,
+                5
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            23
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 1.0107858235326093,
+          "population_standard_deviation": 0.04475173201139599,
+          "sample_standard_deviation": 0.054809454266848044,
+          "standard_error": 0.0316442531751012
+        },
+        "accuracy": {
+          "mean": 0.5259259259259259,
+          "population_standard_deviation": 0.055431961285539864,
+          "sample_standard_deviation": 0.06789001029564207,
+          "standard_error": 0.03919631571947541
+        },
+        "macro_f1": {
+          "mean": 0.45621188180011707,
+          "population_standard_deviation": 0.05385490975518176,
+          "sample_standard_deviation": 0.06595852452191571,
+          "standard_error": 0.038081171888078566
+        },
+        "multiclass_brier_score": {
+          "mean": 0.5903237569441226,
+          "population_standard_deviation": 0.03033555670657781,
+          "sample_standard_deviation": 0.03715331749718989,
+          "standard_error": 0.02145047785829022
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 1.0107858235326093,
+        "accuracy": 0.5259259259259259,
+        "macro_f1": 0.4597402941056192,
+        "multiclass_brier_score": 0.5903237569441226
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            47,
+            3,
+            12
+          ],
+          [
+            19,
+            7,
+            10
+          ],
+          [
+            15,
+            5,
+            17
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 3,
+      "within_one_standard_error": false,
+      "selection_rank": 3
+    },
+    {
+      "model_id": "logistic__full__C_0.1",
+      "model_type": "logistic_regression",
+      "feature_set": "full",
+      "feature_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_matches_played",
+        "away_venue_matches_played",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [],
+      "feature_count": 35,
+      "C": 0.1,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.076514916456848,
+            "accuracy": 0.4888888888888889,
+            "macro_f1": 0.45079365079365075,
+            "multiclass_brier_score": 0.630445584410617
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                13,
+                5,
+                3
+              ],
+              [
+                6,
+                6,
+                0
+              ],
+              [
+                2,
+                7,
+                3
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            20
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 0.9768025743206695,
+            "accuracy": 0.6444444444444445,
+            "macro_f1": 0.5866666666666667,
+            "multiclass_brier_score": 0.5623068577315913
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                19,
+                2,
+                1
+              ],
+              [
+                4,
+                5,
+                2
+              ],
+              [
+                5,
+                2,
+                5
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            22
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 1.019892947920483,
+            "accuracy": 0.4222222222222222,
+            "macro_f1": 0.30883190883190886,
+            "multiclass_brier_score": 0.61091769149065
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                16,
+                1,
+                2
+              ],
+              [
+                9,
+                1,
+                3
+              ],
+              [
+                8,
+                3,
+                2
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            22
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 1.0244034795660002,
+          "population_standard_deviation": 0.04083214799937654,
+          "sample_standard_deviation": 0.05000896385013875,
+          "standard_error": 0.02887268874077187
+        },
+        "accuracy": {
+          "mean": 0.5185185185185185,
+          "population_standard_deviation": 0.09310966733315953,
+          "sample_standard_deviation": 0.11403558754326412,
+          "standard_error": 0.06583847716530068
+        },
+        "macro_f1": {
+          "mean": 0.4487640754307421,
+          "population_standard_deviation": 0.11343464358354821,
+          "sample_standard_deviation": 0.1389284979670835,
+          "standard_error": 0.08021040569940605
+        },
+        "multiclass_brier_score": {
+          "mean": 0.6012233778776195,
+          "population_standard_deviation": 0.02864968069258465,
+          "sample_standard_deviation": 0.03508854949524968,
+          "standard_error": 0.02025838349655591
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 1.0244034795660002,
+        "accuracy": 0.5185185185185185,
+        "macro_f1": 0.4548118097813838,
+        "multiclass_brier_score": 0.6012233778776194
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            48,
+            8,
+            6
+          ],
+          [
+            19,
+            12,
+            5
+          ],
+          [
+            15,
+            12,
+            10
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 4,
+      "within_one_standard_error": false,
+      "selection_rank": 4
+    },
+    {
+      "model_id": "logistic__without_match_counts__C_1",
+      "model_type": "logistic_regression",
+      "feature_set": "without_match_counts",
+      "feature_columns": [
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_venue_matches_played",
+        "away_venue_matches_played"
+      ],
+      "feature_count": 31,
+      "C": 1.0,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.4025684943573065,
+            "accuracy": 0.4666666666666667,
+            "macro_f1": 0.4402597402597402,
+            "multiclass_brier_score": 0.7319043157621736
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                12,
+                4,
+                5
+              ],
+              [
+                6,
+                5,
+                1
+              ],
+              [
+                1,
+                7,
+                4
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            40
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.1146102666843645,
+            "accuracy": 0.5777777777777777,
+            "macro_f1": 0.514957264957265,
+            "multiclass_brier_score": 0.5967082330649867
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                17,
+                1,
+                4
+              ],
+              [
+                4,
+                3,
+                4
+              ],
+              [
+                5,
+                1,
+                6
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            41
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 1.085232291640465,
+            "accuracy": 0.4888888888888889,
+            "macro_f1": 0.42183028493218866,
+            "multiclass_brier_score": 0.6449983227929421
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                15,
+                1,
+                3
+              ],
+              [
+                8,
+                2,
+                3
+              ],
+              [
+                5,
+                3,
+                5
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            44
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 1.2008036842273786,
+          "population_standard_deviation": 0.14317249575132404,
+          "sample_standard_deviation": 0.1753497798957682,
+          "standard_error": 0.1012382426251634
+        },
+        "accuracy": {
+          "mean": 0.5111111111111111,
+          "population_standard_deviation": 0.04800548665487302,
+          "sample_standard_deviation": 0.058794473579213094,
+          "standard_error": 0.03394500514782102
+        },
+        "macro_f1": {
+          "mean": 0.4590157633830646,
+          "population_standard_deviation": 0.0402657828658507,
+          "sample_standard_deviation": 0.04931531105751796,
+          "standard_error": 0.028472208114228126
+        },
+        "multiclass_brier_score": {
+          "mean": 0.6578702905400341,
+          "population_standard_deviation": 0.05593901953274826,
+          "sample_standard_deviation": 0.06851102728340736,
+          "standard_error": 0.039554860044533034
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 1.2008036842273786,
+        "accuracy": 0.5111111111111111,
+        "macro_f1": 0.4619929453262787,
+        "multiclass_brier_score": 0.6578702905400341
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            44,
+            6,
+            12
+          ],
+          [
+            18,
+            10,
+            8
+          ],
+          [
+            11,
+            11,
+            15
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 5,
+      "within_one_standard_error": false,
+      "selection_rank": 5
+    },
+    {
+      "model_id": "logistic__full__C_1",
+      "model_type": "logistic_regression",
+      "feature_set": "full",
+      "feature_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_matches_played",
+        "away_venue_matches_played",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [],
+      "feature_count": 35,
+      "C": 1.0,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.4250801701763496,
+            "accuracy": 0.4666666666666667,
+            "macro_f1": 0.44835164835164837,
+            "multiclass_brier_score": 0.7507657671252744
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                11,
+                5,
+                5
+              ],
+              [
+                6,
+                6,
+                0
+              ],
+              [
+                1,
+                7,
+                4
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            42
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.1013800880961238,
+            "accuracy": 0.6,
+            "macro_f1": 0.54,
+            "multiclass_brier_score": 0.5839470842085068
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                18,
+                2,
+                2
+              ],
+              [
+                4,
+                5,
+                2
+              ],
+              [
+                6,
+                2,
+                4
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            50
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 1.1333067797941778,
+            "accuracy": 0.5111111111111111,
+            "macro_f1": 0.42653061224489797,
+            "multiclass_brier_score": 0.6534040903410593
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                17,
+                1,
+                1
+              ],
+              [
+                7,
+                3,
+                3
+              ],
+              [
+                6,
+                4,
+                3
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            54
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 1.219922346022217,
+          "population_standard_deviation": 0.1456528475964662,
+          "sample_standard_deviation": 0.17838757809735273,
+          "standard_error": 0.102992116234592
+        },
+        "accuracy": {
+          "mean": 0.5259259259259259,
+          "population_standard_deviation": 0.055431961285539864,
+          "sample_standard_deviation": 0.06789001029564207,
+          "standard_error": 0.03919631571947541
+        },
+        "macro_f1": {
+          "mean": 0.4716274201988488,
+          "population_standard_deviation": 0.0491605984211721,
+          "sample_standard_deviation": 0.060209190790871975,
+          "standard_error": 0.03476179251079947
+        },
+        "multiclass_brier_score": {
+          "mean": 0.6627056472249468,
+          "population_standard_deviation": 0.06842030625903107,
+          "sample_standard_deviation": 0.08379741918979014,
+          "standard_error": 0.04838046252662125
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 1.219922346022217,
+        "accuracy": 0.5259259259259259,
+        "macro_f1": 0.47389620051822773,
+        "multiclass_brier_score": 0.662705647224947
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            46,
+            8,
+            8
+          ],
+          [
+            17,
+            14,
+            5
+          ],
+          [
+            13,
+            13,
+            11
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 6,
+      "within_one_standard_error": false,
+      "selection_rank": 6
+    },
+    {
+      "model_id": "logistic__without_match_counts__C_10",
+      "model_type": "logistic_regression",
+      "feature_set": "without_match_counts",
+      "feature_columns": [
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_venue_matches_played",
+        "away_venue_matches_played"
+      ],
+      "feature_count": 31,
+      "C": 10.0,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 2.2944994878147225,
+            "accuracy": 0.4444444444444444,
+            "macro_f1": 0.4318420985087652,
+            "multiclass_brier_score": 0.8482663418830143
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                10,
+                4,
+                7
+              ],
+              [
+                5,
+                5,
+                2
+              ],
+              [
+                1,
+                6,
+                5
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            84
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.242448888106466,
+            "accuracy": 0.6222222222222222,
+            "macro_f1": 0.5649442755825734,
+            "multiclass_brier_score": 0.6215641359102514
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                17,
+                1,
+                4
+              ],
+              [
+                4,
+                3,
+                4
+              ],
+              [
+                4,
+                0,
+                8
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            59
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 1.1295050753454214,
+            "accuracy": 0.5111111111111111,
+            "macro_f1": 0.4360146820953092,
+            "multiclass_brier_score": 0.657921086965308
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                16,
+                1,
+                2
+              ],
+              [
+                7,
+                2,
+                4
+              ],
+              [
+                5,
+                3,
+                5
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            53
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 1.5554844837555366,
+          "population_standard_deviation": 0.5245928315552291,
+          "sample_standard_deviation": 0.6424923800160585,
+          "standard_error": 0.3709431485545547
+        },
+        "accuracy": {
+          "mean": 0.5259259259259259,
+          "population_standard_deviation": 0.07332959212304939,
+          "sample_standard_deviation": 0.0898100418739418,
+          "standard_error": 0.051851851851851864
+        },
+        "macro_f1": {
+          "mean": 0.47760035206221596,
+          "population_standard_deviation": 0.061784967672264844,
+          "sample_standard_deviation": 0.07567082228570149,
+          "standard_error": 0.04368856961645009
+        },
+        "multiclass_brier_score": {
+          "mean": 0.7092505215861913,
+          "population_standard_deviation": 0.09941329787677267,
+          "sample_standard_deviation": 0.12175592672270166,
+          "standard_error": 0.07029581706878416
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 1.5554844837555364,
+        "accuracy": 0.5259259259259259,
+        "macro_f1": 0.4819652878719329,
+        "multiclass_brier_score": 0.7092505215861913
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            43,
+            6,
+            13
+          ],
+          [
+            16,
+            10,
+            10
+          ],
+          [
+            10,
+            9,
+            18
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 7,
+      "within_one_standard_error": false,
+      "selection_rank": 7
+    },
+    {
+      "model_id": "logistic__full__C_10",
+      "model_type": "logistic_regression",
+      "feature_set": "full",
+      "feature_columns": [
+        "home_matches_played",
+        "away_matches_played",
+        "home_points_per_game",
+        "away_points_per_game",
+        "home_form_points_last_5",
+        "away_form_points_last_5",
+        "home_goals_for_last_5_avg",
+        "away_goals_for_last_5_avg",
+        "home_goals_against_last_5_avg",
+        "away_goals_against_last_5_avg",
+        "home_shots_for_last_5_avg",
+        "away_shots_for_last_5_avg",
+        "home_shots_against_last_5_avg",
+        "away_shots_against_last_5_avg",
+        "home_shots_on_target_for_last_5_avg",
+        "away_shots_on_target_for_last_5_avg",
+        "home_shots_on_target_against_last_5_avg",
+        "away_shots_on_target_against_last_5_avg",
+        "home_corners_for_last_5_avg",
+        "away_corners_for_last_5_avg",
+        "home_corners_against_last_5_avg",
+        "away_corners_against_last_5_avg",
+        "home_fouls_committed_last_5_avg",
+        "away_fouls_committed_last_5_avg",
+        "home_yellow_cards_last_5_avg",
+        "away_yellow_cards_last_5_avg",
+        "home_red_cards_per_game",
+        "away_red_cards_per_game",
+        "home_venue_matches_played",
+        "away_venue_matches_played",
+        "home_venue_points_per_game",
+        "away_venue_points_per_game",
+        "home_days_since_last_match",
+        "away_days_since_last_match",
+        "elo_difference_before"
+      ],
+      "excluded_columns": [],
+      "feature_count": 35,
+      "C": 10.0,
+      "uses_feature_values": true,
+      "folds": [
+        {
+          "fold": "fold_1",
+          "nominal_fit_matchdays": [
+            1,
+            12
+          ],
+          "validation_matchdays": [
+            13,
+            17
+          ],
+          "fit_cutoff_exclusive": "2025-12-05T20:30:00+01:00",
+          "fit_row_count": 108,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 0,
+          "excluded_late_nominal_fit_match_ids": [],
+          "fit_class_counts": {
+            "H": 48,
+            "D": 23,
+            "A": 37
+          },
+          "validation_class_counts": {
+            "H": 21,
+            "D": 12,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 2.5178220816671444,
+            "accuracy": 0.4,
+            "macro_f1": 0.3986515276837858,
+            "multiclass_brier_score": 0.9397726187838954
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                7,
+                4,
+                10
+              ],
+              [
+                4,
+                5,
+                3
+              ],
+              [
+                1,
+                5,
+                6
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 108,
+          "solver_iterations": [
+            92
+          ]
+        },
+        {
+          "fold": "fold_2",
+          "nominal_fit_matchdays": [
+            1,
+            17
+          ],
+          "validation_matchdays": [
+            18,
+            22
+          ],
+          "fit_cutoff_exclusive": "2026-01-16T20:30:00+01:00",
+          "fit_row_count": 150,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 3,
+          "excluded_late_nominal_fit_match_ids": [
+            77395,
+            77399,
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 69,
+            "D": 34,
+            "A": 47
+          },
+          "validation_class_counts": {
+            "H": 22,
+            "D": 11,
+            "A": 12
+          },
+          "metrics": {
+            "log_loss": 1.2269609487136948,
+            "accuracy": 0.6222222222222222,
+            "macro_f1": 0.562108262108262,
+            "multiclass_brier_score": 0.5956870288665448
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                19,
+                1,
+                2
+              ],
+              [
+                4,
+                5,
+                2
+              ],
+              [
+                7,
+                1,
+                4
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 150,
+          "solver_iterations": [
+            94
+          ]
+        },
+        {
+          "fold": "fold_3",
+          "nominal_fit_matchdays": [
+            1,
+            22
+          ],
+          "validation_matchdays": [
+            23,
+            27
+          ],
+          "fit_cutoff_exclusive": "2026-02-20T20:30:00+01:00",
+          "fit_row_count": 197,
+          "validation_row_count": 45,
+          "excluded_late_nominal_fit_row_count": 1,
+          "excluded_late_nominal_fit_match_ids": [
+            77409
+          ],
+          "fit_class_counts": {
+            "H": 91,
+            "D": 46,
+            "A": 60
+          },
+          "validation_class_counts": {
+            "H": 19,
+            "D": 13,
+            "A": 13
+          },
+          "metrics": {
+            "log_loss": 1.2570430923472253,
+            "accuracy": 0.5111111111111111,
+            "macro_f1": 0.45598779557589636,
+            "multiclass_brier_score": 0.686618830702658
+          },
+          "confusion_matrix": {
+            "labels": [
+              "H",
+              "D",
+              "A"
+            ],
+            "orientation": "rows=true classes, columns=predicted classes",
+            "values": [
+              [
+                15,
+                3,
+                1
+              ],
+              [
+                6,
+                5,
+                2
+              ],
+              [
+                6,
+                4,
+                3
+              ]
+            ]
+          },
+          "scaler_training_sample_count": 197,
+          "solver_iterations": [
+            138
+          ]
+        }
+      ],
+      "fold_metric_summary": {
+        "log_loss": {
+          "mean": 1.6672753742426882,
+          "population_standard_deviation": 0.6015527186508454,
+          "sample_standard_deviation": 0.7367486070392903,
+          "standard_error": 0.42536200659921614
+        },
+        "accuracy": {
+          "mean": 0.5111111111111111,
+          "population_standard_deviation": 0.09072184232530289,
+          "sample_standard_deviation": 0.1111111111111111,
+          "standard_error": 0.06415002990995843
+        },
+        "macro_f1": {
+          "mean": 0.47224919512264807,
+          "population_standard_deviation": 0.06771435516733883,
+          "sample_standard_deviation": 0.08293280921078677,
+          "standard_error": 0.04788127972249962
+        },
+        "multiclass_brier_score": {
+          "mean": 0.7406928261176994,
+          "population_standard_deviation": 0.14558324315731358,
+          "sample_standard_deviation": 0.17830233041747445,
+          "standard_error": 0.10294289846366649
+        }
+      },
+      "pooled_metrics": {
+        "log_loss": 1.667275374242688,
+        "accuracy": 0.5111111111111111,
+        "macro_f1": 0.47738845953250203,
+        "multiclass_brier_score": 0.7406928261176994
+      },
+      "pooled_confusion_matrix": {
+        "labels": [
+          "H",
+          "D",
+          "A"
+        ],
+        "orientation": "rows=true classes, columns=predicted classes",
+        "values": [
+          [
+            41,
+            8,
+            13
+          ],
+          [
+            14,
+            15,
+            7
+          ],
+          [
+            14,
+            10,
+            13
+          ]
+        ]
+      },
+      "strict_log_loss_rank": 8,
+      "within_one_standard_error": false,
+      "selection_rank": 8
+    }
+  ],
+  "selected_configuration": {
+    "model_id": "logistic__without_match_counts__C_0.01",
+    "feature_set": "without_match_counts",
+    "feature_columns": [
+      "home_points_per_game",
+      "away_points_per_game",
+      "home_form_points_last_5",
+      "away_form_points_last_5",
+      "home_goals_for_last_5_avg",
+      "away_goals_for_last_5_avg",
+      "home_goals_against_last_5_avg",
+      "away_goals_against_last_5_avg",
+      "home_shots_for_last_5_avg",
+      "away_shots_for_last_5_avg",
+      "home_shots_against_last_5_avg",
+      "away_shots_against_last_5_avg",
+      "home_shots_on_target_for_last_5_avg",
+      "away_shots_on_target_for_last_5_avg",
+      "home_shots_on_target_against_last_5_avg",
+      "away_shots_on_target_against_last_5_avg",
+      "home_corners_for_last_5_avg",
+      "away_corners_for_last_5_avg",
+      "home_corners_against_last_5_avg",
+      "away_corners_against_last_5_avg",
+      "home_fouls_committed_last_5_avg",
+      "away_fouls_committed_last_5_avg",
+      "home_yellow_cards_last_5_avg",
+      "away_yellow_cards_last_5_avg",
+      "home_red_cards_per_game",
+      "away_red_cards_per_game",
+      "home_venue_points_per_game",
+      "away_venue_points_per_game",
+      "home_days_since_last_match",
+      "away_days_since_last_match",
+      "elo_difference_before"
+    ],
+    "excluded_columns": [
+      "home_matches_played",
+      "away_matches_played",
+      "home_venue_matches_played",
+      "away_venue_matches_played"
+    ],
+    "feature_count": 31,
+    "C": 0.01,
+    "pooled_metrics": {
+      "log_loss": 0.9880592370323442,
+      "accuracy": 0.5481481481481482,
+      "macro_f1": 0.3945542380324989,
+      "multiclass_brier_score": 0.5857537888275144
+    },
+    "selection_rank": 1,
+    "strict_log_loss_rank": 2,
+    "within_one_standard_error": true
+  },
+  "frozen_evaluation_configuration": {
+    "feature_set": "without_match_counts",
+    "feature_columns": [
+      "home_points_per_game",
+      "away_points_per_game",
+      "home_form_points_last_5",
+      "away_form_points_last_5",
+      "home_goals_for_last_5_avg",
+      "away_goals_for_last_5_avg",
+      "home_goals_against_last_5_avg",
+      "away_goals_against_last_5_avg",
+      "home_shots_for_last_5_avg",
+      "away_shots_for_last_5_avg",
+      "home_shots_against_last_5_avg",
+      "away_shots_against_last_5_avg",
+      "home_shots_on_target_for_last_5_avg",
+      "away_shots_on_target_for_last_5_avg",
+      "home_shots_on_target_against_last_5_avg",
+      "away_shots_on_target_against_last_5_avg",
+      "home_corners_for_last_5_avg",
+      "away_corners_for_last_5_avg",
+      "home_corners_against_last_5_avg",
+      "away_corners_against_last_5_avg",
+      "home_fouls_committed_last_5_avg",
+      "away_fouls_committed_last_5_avg",
+      "home_yellow_cards_last_5_avg",
+      "away_yellow_cards_last_5_avg",
+      "home_red_cards_per_game",
+      "away_red_cards_per_game",
+      "home_venue_points_per_game",
+      "away_venue_points_per_game",
+      "home_days_since_last_match",
+      "away_days_since_last_match",
+      "elo_difference_before"
+    ],
+    "excluded_columns": [
+      "home_matches_played",
+      "away_matches_played",
+      "home_venue_matches_played",
+      "away_venue_matches_played"
+    ],
+    "C": 0.01,
+    "matches_selected_configuration": true
+  },
+  "metric_definitions": {
+    "pooled_metrics": "Calculated once across all 135 disjoint validation predictions so every validation match has equal weight.",
+    "multiclass_brier_score": "Mean over validation matches of the sum across H, D, and A of (observed_one_hot - predicted_probability) squared; unscaled range 0 to 2, lower is better.",
+    "fold_metric_population_standard_deviation": "Population standard deviation across the three fold metrics.",
+    "fold_metric_sample_standard_deviation": "Sample standard deviation across the three fold metrics.",
+    "fold_metric_standard_error": "Sample standard deviation across the three fold metrics divided by the square root of three."
+  }
+}

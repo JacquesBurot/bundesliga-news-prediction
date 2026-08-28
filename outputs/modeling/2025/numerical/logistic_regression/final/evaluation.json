@@ -1,0 +1,286 @@
+{
+  "experiment": "numerical_logistic_final",
+  "season": 2025,
+  "input_path": "data/processed/numerical_features_2025.csv",
+  "model": {
+    "estimator": "sklearn.pipeline.Pipeline",
+    "scikit_learn_version": "1.9.0",
+    "uses_feature_values": true,
+    "steps": [
+      "sklearn.preprocessing.StandardScaler",
+      "sklearn.linear_model.LogisticRegression"
+    ],
+    "standard_scaler": {
+      "with_mean": true,
+      "with_std": true,
+      "training_sample_count": 243
+    },
+    "logistic_regression": {
+      "loss": "multinomial",
+      "solver": "lbfgs",
+      "C": 0.01,
+      "l1_ratio": 0.0,
+      "class_weight": null,
+      "fit_intercept": true,
+      "max_iter": 1000,
+      "tol": 0.0001,
+      "iterations": [
+        12
+      ]
+    }
+  },
+  "target_classes": [
+    "H",
+    "D",
+    "A"
+  ],
+  "feature_columns": [
+    "home_points_per_game",
+    "away_points_per_game",
+    "home_form_points_last_5",
+    "away_form_points_last_5",
+    "home_goals_for_last_5_avg",
+    "away_goals_for_last_5_avg",
+    "home_goals_against_last_5_avg",
+    "away_goals_against_last_5_avg",
+    "home_shots_for_last_5_avg",
+    "away_shots_for_last_5_avg",
+    "home_shots_against_last_5_avg",
+    "away_shots_against_last_5_avg",
+    "home_shots_on_target_for_last_5_avg",
+    "away_shots_on_target_for_last_5_avg",
+    "home_shots_on_target_against_last_5_avg",
+    "away_shots_on_target_against_last_5_avg",
+    "home_corners_for_last_5_avg",
+    "away_corners_for_last_5_avg",
+    "home_corners_against_last_5_avg",
+    "away_corners_against_last_5_avg",
+    "home_fouls_committed_last_5_avg",
+    "away_fouls_committed_last_5_avg",
+    "home_yellow_cards_last_5_avg",
+    "away_yellow_cards_last_5_avg",
+    "home_red_cards_per_game",
+    "away_red_cards_per_game",
+    "home_venue_points_per_game",
+    "away_venue_points_per_game",
+    "home_days_since_last_match",
+    "away_days_since_last_match",
+    "elo_difference_before"
+  ],
+  "split": {
+    "type": "fixed_chronological_matchday",
+    "train_matchdays": [
+      1,
+      27
+    ],
+    "test_matchdays": [
+      28,
+      34
+    ],
+    "train_row_count": 243,
+    "test_row_count": 63,
+    "train_class_counts": {
+      "H": 110,
+      "D": 59,
+      "A": 74
+    },
+    "test_class_counts": {
+      "H": 24,
+      "D": 16,
+      "A": 23
+    }
+  },
+  "metrics": {
+    "log_loss": 1.0613126381951763,
+    "accuracy": 0.49206349206349204,
+    "macro_f1": 0.3666666666666667,
+    "multiclass_brier_score": 0.6364470984662203
+  },
+  "confusion_matrix": {
+    "labels": [
+      "H",
+      "D",
+      "A"
+    ],
+    "orientation": "rows=true classes, columns=predicted classes",
+    "values": [
+      [
+        21,
+        0,
+        3
+      ],
+      [
+        12,
+        0,
+        4
+      ],
+      [
+        13,
+        0,
+        10
+      ]
+    ]
+  },
+  "coefficients": {
+    "class_order": [
+      "H",
+      "D",
+      "A"
+    ],
+    "feature_columns": [
+      "home_points_per_game",
+      "away_points_per_game",
+      "home_form_points_last_5",
+      "away_form_points_last_5",
+      "home_goals_for_last_5_avg",
+      "away_goals_for_last_5_avg",
+      "home_goals_against_last_5_avg",
+      "away_goals_against_last_5_avg",
+      "home_shots_for_last_5_avg",
+      "away_shots_for_last_5_avg",
+      "home_shots_against_last_5_avg",
+      "away_shots_against_last_5_avg",
+      "home_shots_on_target_for_last_5_avg",
+      "away_shots_on_target_for_last_5_avg",
+      "home_shots_on_target_against_last_5_avg",
+      "away_shots_on_target_against_last_5_avg",
+      "home_corners_for_last_5_avg",
+      "away_corners_for_last_5_avg",
+      "home_corners_against_last_5_avg",
+      "away_corners_against_last_5_avg",
+      "home_fouls_committed_last_5_avg",
+      "away_fouls_committed_last_5_avg",
+      "home_yellow_cards_last_5_avg",
+      "away_yellow_cards_last_5_avg",
+      "home_red_cards_per_game",
+      "away_red_cards_per_game",
+      "home_venue_points_per_game",
+      "away_venue_points_per_game",
+      "home_days_since_last_match",
+      "away_days_since_last_match",
+      "elo_difference_before"
+    ],
+    "orientation": "rows=target classes, columns=standardized feature columns",
+    "values": [
+      [
+        0.04828714715512621,
+        -0.0748171158972802,
+        0.06701704541978953,
+        -0.01993806454015812,
+        0.017373029662748198,
+        -0.07578306768770987,
+        0.007013073574617483,
+        -0.04963982765099174,
+        0.014859083667072781,
+        -0.02830569095833013,
+        -0.016085679517062846,
+        0.06969211492965478,
+        0.07463807494914448,
+        -0.05727135244600141,
+        -0.027529002683182972,
+        0.03250155275863031,
+        0.022122605824358776,
+        -0.0019979927032137725,
+        -0.016599331498315373,
+        0.025803684319126004,
+        -0.012161231317841605,
+        0.03565950285112491,
+        0.006634486503633994,
+        0.03620559405559281,
+        -0.020344852015793335,
+        -0.02890576508380385,
+        0.03973161929948009,
+        -0.03429780356511756,
+        -0.006001224712859875,
+        -0.01065400266167321,
+        0.13515522591942056
+      ],
+      [
+        -0.020045579932382714,
+        0.013531728019599223,
+        0.017747353103662714,
+        0.02411084446176049,
+        -0.009688620572837849,
+        -0.02073283455771371,
+        0.012539668585251943,
+        0.034829375167630704,
+        -0.01466866608007337,
+        -0.008821323186065457,
+        0.010419360786271674,
+        0.039840797163780264,
+        -0.027729392007190833,
+        -0.030992668344439655,
+        -0.012738659307214994,
+        0.051728503791706945,
+        -0.00955423925156493,
+        -0.013340177566573384,
+        -0.06666214726748439,
+        -0.0037188009188800952,
+        -0.002358366553298337,
+        -0.008467966603667294,
+        -0.030811935627296862,
+        -0.030306225396974997,
+        0.07922544331460442,
+        0.003765279906901713,
+        0.010589350687365493,
+        0.057142317581350625,
+        0.0031409587472779094,
+        0.004537061024711471,
+        -0.0881740109861764
+      ],
+      [
+        -0.028241567222743534,
+        0.06128538787768095,
+        -0.08476439852345229,
+        -0.004172779921602409,
+        -0.007684409089910331,
+        0.09651590224542354,
+        -0.019552742159869487,
+        0.014810452483361077,
+        -0.00019041758699941502,
+        0.037127014144395565,
+        0.0056663187307911395,
+        -0.10953291209343508,
+        -0.046908682941953654,
+        0.08826402079044109,
+        0.040267661990397934,
+        -0.08423005655033729,
+        -0.012568366572793853,
+        0.015338170269787166,
+        0.08326147876579972,
+        -0.022084883400245885,
+        0.014519597871139923,
+        -0.027191536247457626,
+        0.024177449123662896,
+        -0.005899368658617735,
+        -0.05888059129881106,
+        0.025140485176902146,
+        -0.050320969986845564,
+        -0.022844514016233067,
+        0.0028602659655819597,
+        0.00611694163696172,
+        -0.04698121493324414
+      ]
+    ],
+    "intercepts": {
+      "H": 0.3410990719918834,
+      "D": -0.24832172041871511,
+      "A": -0.09277735157316798
+    }
+  },
+  "selection_provenance": {
+    "method": "training_only_one_standard_error_with_parsimony",
+    "feature_set": "without_match_counts",
+    "excluded_feature_columns": [
+      "home_matches_played",
+      "away_matches_played",
+      "home_venue_matches_played",
+      "away_venue_matches_played"
+    ],
+    "selection_report_path": "outputs/modeling/2025/numerical/logistic_regression/selection/report.json",
+    "outer_test_used_for_selection": false
+  },
+  "metric_definitions": {
+    "multiclass_brier_score": "Mean over test matches of the sum across H, D, and A of (observed_one_hot - predicted_probability) squared; unscaled range 0 to 2, lower is better."
+  }
+}

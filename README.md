@@ -125,8 +125,12 @@ The data directories represent processing stages:
 - `data/processed`: model-ready pre-match feature tables
 - `outputs/modeling`: generated model reports and prediction tables
 
-Real data files and generated model outputs are ignored by Git. Only `.gitkeep`
-files preserve the directory structure in the repository.
+Numerical source data, derived match data, processed features, news metadata,
+review workbooks, and model outputs may be versioned for reproducibility. Among
+project data, Git ignores only copyright-sensitive news content: raw NewsAPI.ai
+responses, canonical article rows, grouped article contents, and annotation
+JSONL files containing article text or evidence excerpts. Their `.gitkeep`
+files preserve the excluded directory structure in the repository.
 
 All standard season-specific locations are defined centrally in
 `buli_news.paths.SeasonPaths`. Pipeline commands must use these path definitions

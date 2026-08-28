@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "season": 2025,
+  "normalization": {
+    "version": 1,
+    "input_field": "body",
+    "steps": [
+      "Unicode NFKC normalization",
+      "Unicode case folding",
+      "collapse consecutive whitespace to one space",
+      "strip leading and trailing whitespace",
+      "SHA-256 over UTF-8 normalized text"
+    ],
+    "content_id_format": "content_sha256:{64 lowercase hex characters}",
+    "near_duplicate_grouping": false
+  },
+  "association_rule": "Content grouping never changes request, match, side, team, source, URL, or article associations. Every article keeps exactly one article_id-to-content_id mapping.",
+  "summary": {
+    "article_count": 24509,
+    "content_count": 23738,
+    "article_content_link_count": 24509,
+    "duplicate_content_group_count": 543,
+    "articles_in_duplicate_content_groups": 1314,
+    "collapsed_article_count": 771,
+    "cross_source_duplicate_content_group_count": 443,
+    "duplicate_group_with_multiple_titles_count": 164,
+    "maximum_member_article_count": 30
+  },
+  "duplicate_group_size_counts": {
+    "2": 455,
+    "3": 63,
+    "4": 11,
+    "5": 4,
+    "7": 4,
+    "8": 1,
+    "14": 1,
+    "17": 1,
+    "26": 1,
+    "28": 1,
+    "30": 1
+  }
+}

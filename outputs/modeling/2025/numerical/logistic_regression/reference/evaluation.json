@@ -1,0 +1,294 @@
+{
+  "experiment": "numerical_logistic_reference",
+  "season": 2025,
+  "input_path": "data/processed/numerical_features_2025.csv",
+  "model": {
+    "estimator": "sklearn.pipeline.Pipeline",
+    "scikit_learn_version": "1.9.0",
+    "uses_feature_values": true,
+    "steps": [
+      "sklearn.preprocessing.StandardScaler",
+      "sklearn.linear_model.LogisticRegression"
+    ],
+    "standard_scaler": {
+      "with_mean": true,
+      "with_std": true,
+      "training_sample_count": 243
+    },
+    "logistic_regression": {
+      "loss": "multinomial",
+      "solver": "lbfgs",
+      "C": 1.0,
+      "l1_ratio": 0.0,
+      "class_weight": null,
+      "fit_intercept": true,
+      "max_iter": 1000,
+      "tol": 0.0001,
+      "iterations": [
+        53
+      ]
+    }
+  },
+  "target_classes": [
+    "H",
+    "D",
+    "A"
+  ],
+  "feature_columns": [
+    "home_matches_played",
+    "away_matches_played",
+    "home_points_per_game",
+    "away_points_per_game",
+    "home_form_points_last_5",
+    "away_form_points_last_5",
+    "home_goals_for_last_5_avg",
+    "away_goals_for_last_5_avg",
+    "home_goals_against_last_5_avg",
+    "away_goals_against_last_5_avg",
+    "home_shots_for_last_5_avg",
+    "away_shots_for_last_5_avg",
+    "home_shots_against_last_5_avg",
+    "away_shots_against_last_5_avg",
+    "home_shots_on_target_for_last_5_avg",
+    "away_shots_on_target_for_last_5_avg",
+    "home_shots_on_target_against_last_5_avg",
+    "away_shots_on_target_against_last_5_avg",
+    "home_corners_for_last_5_avg",
+    "away_corners_for_last_5_avg",
+    "home_corners_against_last_5_avg",
+    "away_corners_against_last_5_avg",
+    "home_fouls_committed_last_5_avg",
+    "away_fouls_committed_last_5_avg",
+    "home_yellow_cards_last_5_avg",
+    "away_yellow_cards_last_5_avg",
+    "home_red_cards_per_game",
+    "away_red_cards_per_game",
+    "home_venue_matches_played",
+    "away_venue_matches_played",
+    "home_venue_points_per_game",
+    "away_venue_points_per_game",
+    "home_days_since_last_match",
+    "away_days_since_last_match",
+    "elo_difference_before"
+  ],
+  "split": {
+    "type": "fixed_chronological_matchday",
+    "train_matchdays": [
+      1,
+      27
+    ],
+    "test_matchdays": [
+      28,
+      34
+    ],
+    "train_row_count": 243,
+    "test_row_count": 63,
+    "train_class_counts": {
+      "H": 110,
+      "D": 59,
+      "A": 74
+    },
+    "test_class_counts": {
+      "H": 24,
+      "D": 16,
+      "A": 23
+    }
+  },
+  "metrics": {
+    "log_loss": 1.388468128272691,
+    "accuracy": 0.3333333333333333,
+    "macro_f1": 0.28571428571428575,
+    "multiclass_brier_score": 0.8134045826998595
+  },
+  "confusion_matrix": {
+    "labels": [
+      "H",
+      "D",
+      "A"
+    ],
+    "orientation": "rows=true classes, columns=predicted classes",
+    "values": [
+      [
+        16,
+        6,
+        2
+      ],
+      [
+        7,
+        2,
+        7
+      ],
+      [
+        9,
+        11,
+        3
+      ]
+    ]
+  },
+  "coefficients": {
+    "class_order": [
+      "H",
+      "D",
+      "A"
+    ],
+    "feature_columns": [
+      "home_matches_played",
+      "away_matches_played",
+      "home_points_per_game",
+      "away_points_per_game",
+      "home_form_points_last_5",
+      "away_form_points_last_5",
+      "home_goals_for_last_5_avg",
+      "away_goals_for_last_5_avg",
+      "home_goals_against_last_5_avg",
+      "away_goals_against_last_5_avg",
+      "home_shots_for_last_5_avg",
+      "away_shots_for_last_5_avg",
+      "home_shots_against_last_5_avg",
+      "away_shots_against_last_5_avg",
+      "home_shots_on_target_for_last_5_avg",
+      "away_shots_on_target_for_last_5_avg",
+      "home_shots_on_target_against_last_5_avg",
+      "away_shots_on_target_against_last_5_avg",
+      "home_corners_for_last_5_avg",
+      "away_corners_for_last_5_avg",
+      "home_corners_against_last_5_avg",
+      "away_corners_against_last_5_avg",
+      "home_fouls_committed_last_5_avg",
+      "away_fouls_committed_last_5_avg",
+      "home_yellow_cards_last_5_avg",
+      "away_yellow_cards_last_5_avg",
+      "home_red_cards_per_game",
+      "away_red_cards_per_game",
+      "home_venue_matches_played",
+      "away_venue_matches_played",
+      "home_venue_points_per_game",
+      "away_venue_points_per_game",
+      "home_days_since_last_match",
+      "away_days_since_last_match",
+      "elo_difference_before"
+    ],
+    "orientation": "rows=target classes, columns=standardized feature columns",
+    "values": [
+      [
+        0.08752922349879891,
+        0.14940920945374545,
+        0.14688185305233217,
+        -0.19140092938272646,
+        0.2764467567383276,
+        -0.12215374261929068,
+        -0.561215887372746,
+        -0.11586563061269843,
+        0.30052900641551267,
+        -0.446980877818536,
+        -0.24356029318479025,
+        0.12227216209422094,
+        0.026570605810717,
+        0.3745236949380599,
+        0.48185006392565605,
+        0.032248112816935244,
+        -0.23912497634775637,
+        0.13415640811978344,
+        0.10044965797842276,
+        -0.053432828419054154,
+        -0.018217713246094367,
+        -0.08171409525452476,
+        -0.1369205084127384,
+        0.05626119847541074,
+        0.08957149129063136,
+        0.11218682876501616,
+        -0.04810646570346217,
+        -0.12981659569091875,
+        -0.5275201961581495,
+        0.16857813180554002,
+        -0.019299913436459253,
+        0.07697455593106159,
+        0.0023441375853331006,
+        -0.0689100958792437,
+        0.5218255933167594
+      ],
+      [
+        -0.39597866308750934,
+        -0.20981341284876887,
+        0.1315274065767488,
+        -0.2516309084671013,
+        0.23647142299552312,
+        0.15074082136547062,
+        0.03751814252509742,
+        -0.20126036995352434,
+        0.19847937755941955,
+        0.1252373741981454,
+        -0.19577289946484616,
+        0.17159778249270732,
+        0.2526652197548712,
+        0.08645036696591675,
+        0.043282885255097436,
+        -0.34254358098653126,
+        -0.33394220126227553,
+        0.24251563840473836,
+        0.029741337092989158,
+        -0.11254954586580249,
+        -0.33868623933969827,
+        -0.040190740498584246,
+        -0.0034799294229640658,
+        -0.0003949427371627407,
+        -0.1586508741566958,
+        -0.05072989489431997,
+        0.2494701660921271,
+        0.01670780972868221,
+        -0.037782339525294056,
+        0.7912232496077014,
+        -0.006923829141665589,
+        0.3012393457931208,
+        0.018360935267257954,
+        0.004440933674792129,
+        -0.6120186421813794
+      ],
+      [
+        0.30844943958870985,
+        0.060404203395023295,
+        -0.2784092596290804,
+        0.44303183784982825,
+        -0.5129181797338517,
+        -0.028587078746179655,
+        0.5236977448476489,
+        0.31712600056622336,
+        -0.49900838397493086,
+        0.32174350362039017,
+        0.43933319264963516,
+        -0.2938699445869286,
+        -0.27923582556558807,
+        -0.4609740619039775,
+        -0.5251329491807546,
+        0.3102954681695961,
+        0.5730671776100306,
+        -0.3766720465245227,
+        -0.13019099507141182,
+        0.1659823742848556,
+        0.3569039525857925,
+        0.12190483575310886,
+        0.1404004378357024,
+        -0.05586625573824891,
+        0.06907938286606534,
+        -0.06145693387069714,
+        -0.20136370038866477,
+        0.11310878596223799,
+        0.5653025356834434,
+        -0.9598013814132428,
+        0.026223742578124248,
+        -0.3782139017241825,
+        -0.020705072852590906,
+        0.06446916220445176,
+        0.0901930488646187
+      ]
+    ],
+    "intercepts": {
+      "H": 0.4436114221232565,
+      "D": -0.2652621713037044,
+      "A": -0.17834925081955058
+    }
+  },
+  "metric_definitions": {
+    "multiclass_brier_score": "Mean over test matches of the sum across H, D, and A of (observed_one_hot - predicted_probability) squared; unscaled range 0 to 2, lower is better."
+  }
+}

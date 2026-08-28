@@ -212,23 +212,17 @@ tempCodeRunnerFile.py
 # macOS Finder metadata
 .DS_Store
 
-# Project data
-data/raw/**
-data/interim/**
-data/review/**
-data/processed/**
-!data/raw/**/
-!data/interim/**/
-!data/review/**/
-
-# Generated model outputs
-outputs/**
-!outputs/.gitkeep
-!data/processed/**/
-!data/raw/**/.gitkeep
-!data/interim/**/.gitkeep
-!data/review/**/.gitkeep
-!data/processed/**/.gitkeep
+# Copyright-sensitive news content
+# Raw NewsAPI.ai responses and the derived article/content tables contain full
+# article text. Annotation JSONL files contain either that text or evidence
+# excerpts from it, including pilot artifacts below nested directories.
+data/raw/newsapi/**
+!data/raw/newsapi/**/
+!data/raw/newsapi/**/.gitkeep
+data/interim/*/news/articles/articles.jsonl
+data/interim/*/news/contents/contents.jsonl
+data/interim/*/news/annotations/**/*.jsonl
+data/interim/*/news/annotations/**/*.jsonl.lock
 
 # Marimo
 marimo/_static/

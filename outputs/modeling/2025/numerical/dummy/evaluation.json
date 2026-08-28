@@ -1,0 +1,116 @@
+{
+  "experiment": "numerical_dummy_baseline",
+  "season": 2025,
+  "input_path": "data/processed/numerical_features_2025.csv",
+  "model": {
+    "estimator": "sklearn.dummy.DummyClassifier",
+    "scikit_learn_version": "1.9.0",
+    "strategy": "prior",
+    "uses_feature_values": false,
+    "predicted_class": "H",
+    "training_class_prior": {
+      "H": 0.45267489711934156,
+      "D": 0.24279835390946503,
+      "A": 0.3045267489711934
+    }
+  },
+  "target_classes": [
+    "H",
+    "D",
+    "A"
+  ],
+  "feature_columns": [
+    "home_matches_played",
+    "away_matches_played",
+    "home_points_per_game",
+    "away_points_per_game",
+    "home_form_points_last_5",
+    "away_form_points_last_5",
+    "home_goals_for_last_5_avg",
+    "away_goals_for_last_5_avg",
+    "home_goals_against_last_5_avg",
+    "away_goals_against_last_5_avg",
+    "home_shots_for_last_5_avg",
+    "away_shots_for_last_5_avg",
+    "home_shots_against_last_5_avg",
+    "away_shots_against_last_5_avg",
+    "home_shots_on_target_for_last_5_avg",
+    "away_shots_on_target_for_last_5_avg",
+    "home_shots_on_target_against_last_5_avg",
+    "away_shots_on_target_against_last_5_avg",
+    "home_corners_for_last_5_avg",
+    "away_corners_for_last_5_avg",
+    "home_corners_against_last_5_avg",
+    "away_corners_against_last_5_avg",
+    "home_fouls_committed_last_5_avg",
+    "away_fouls_committed_last_5_avg",
+    "home_yellow_cards_last_5_avg",
+    "away_yellow_cards_last_5_avg",
+    "home_red_cards_per_game",
+    "away_red_cards_per_game",
+    "home_venue_matches_played",
+    "away_venue_matches_played",
+    "home_venue_points_per_game",
+    "away_venue_points_per_game",
+    "home_days_since_last_match",
+    "away_days_since_last_match",
+    "elo_difference_before"
+  ],
+  "split": {
+    "type": "fixed_chronological_matchday",
+    "train_matchdays": [
+      1,
+      27
+    ],
+    "test_matchdays": [
+      28,
+      34
+    ],
+    "train_row_count": 243,
+    "test_row_count": 63,
+    "train_class_counts": {
+      "H": 110,
+      "D": 59,
+      "A": 74
+    },
+    "test_class_counts": {
+      "H": 24,
+      "D": 16,
+      "A": 23
+    }
+  },
+  "metrics": {
+    "log_loss": 1.0955118397658599,
+    "accuracy": 0.38095238095238093,
+    "macro_f1": 0.1839080459770115,
+    "multiclass_brier_score": 0.6660279719264632
+  },
+  "confusion_matrix": {
+    "labels": [
+      "H",
+      "D",
+      "A"
+    ],
+    "orientation": "rows=true classes, columns=predicted classes",
+    "values": [
+      [
+        24,
+        0,
+        0
+      ],
+      [
+        16,
+        0,
+        0
+      ],
+      [
+        23,
+        0,
+        0
+      ]
+    ]
+  },
+  "metric_definitions": {
+    "multiclass_brier_score": "Mean over test matches of the sum across H, D, and A of (observed_one_hot - predicted_probability) squared; unscaled range 0 to 2, lower is better."
+  }
+}

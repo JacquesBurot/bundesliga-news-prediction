@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "season": 2025,
+  "annotation_schema_id": "bundesliga_news_team_indicators_v3",
+  "task_key": [
+    "request_id",
+    "content_id"
+  ],
+  "association_rule": "A content is annotated only in the request, match, side, and target-team context in which one of its articles was collected. Identical publications inside that same request collapse to one task; no task is transferred to another request or team.",
+  "article_selection_rule": "For multiple articles with the same content in one request, use the lowest request_article_index and then the lowest article_id. Title and body always come from that same selected article.",
+  "summary": {
+    "match_count": 306,
+    "request_count": 612,
+    "article_link_count": 49286,
+    "annotation_task_count": 48466,
+    "collapsed_within_request_article_link_count": 820,
+    "tasks_with_multiple_linked_articles": 739
+  },
+  "linked_article_count_distribution": {
+    "1": 47727,
+    "2": 660,
+    "3": 77,
+    "4": 2
+  }
+}
