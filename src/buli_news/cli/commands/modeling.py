@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 
 from buli_news.cli.arguments import add_season_argument
+from buli_news.modeling.combined import evaluate_combined_logistic_final
 from buli_news.modeling.evaluation import (
     CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
     evaluate_numerical_dummy,
@@ -63,6 +64,18 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     add_season_argument(evaluate_numerical_logistic_final_parser)
     evaluate_numerical_logistic_final_parser.set_defaults(
         command_handler=evaluate_numerical_logistic_final_command,
+    )
+
+    evaluate_combined_logistic_final_parser = subparsers.add_parser(
+        "evaluate-combined-logistic-final",
+        help=(
+            "Evaluate the frozen logistic model with selected numerical and "
+            "news features on the fixed test split."
+        ),
+    )
+    add_season_argument(evaluate_combined_logistic_final_parser)
+    evaluate_combined_logistic_final_parser.set_defaults(
+        command_handler=evaluate_combined_logistic_final_command,
     )
 
 
@@ -231,6 +244,61 @@ def evaluate_numerical_logistic_final_command(
     print(
         "Frozen configuration: "
         f"feature_set={provenance['feature_set']}, C={logistic['C']:g}"
+    )
+    print(f"Feature count: {len(result['feature_columns'])}")
+    print(f"Solver iterations: {logistic['iterations']}")
+    print(f"Log Loss: {metrics['log_loss']:.6f}")
+    print(f"Accuracy: {metrics['accuracy']:.6f}")
+    print(f"Macro-F1: {metrics['macro_f1']:.6f}")
+    print(
+        "Multiclass Brier Score: "
+        f"{metrics['multiclass_brier_score']:.6f}"
+    )
+
+
+def evaluate_combined_logistic_final_command(
+    args: argparse.Namespace,
+) -> None:
+    paths = SeasonPaths(args.season)
+    selection_report_path = paths.numerical_model_output(
+        "logistic_regression",
+        "selection",
+        "report.json",
+    )
+    evaluation = evaluate_combined_logistic_final(
+        numerical_features_path=paths.numerical_features,
+        news_features_path=paths.news_features,
+        news_features_quality_path=paths.news_features_quality,
+        season=args.season,
+        selection_report_path=selection_report_path,
+    )
+    result_path = paths.combined_model_output(
+        "logistic_regression",
+        "final",
+        "evaluation.json",
+    )
+    predictions_path = paths.combined_model_output(
+        "logistic_regression",
+        "final",
+        "test_predictions.csv",
+    )
+    write_json(evaluation.report, result_path)
+    write_csv(
+        records=evaluation.prediction_rows,
+        fieldnames=CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
+        path=predictions_path,
+    )
+
+    result = evaluation.report
+    metrics = result["metrics"]
+    logistic = result["model"]["logistic_regression"]
+    feature_sources = result["feature_sources"]
+    print(f"Saved final combined logistic results to {result_path}")
+    print(f"Saved final combined logistic predictions to {predictions_path}")
+    print(
+        "Frozen configuration: "
+        f"numerical={feature_sources['numerical']['feature_count']}, "
+        f"news={feature_sources['news']['feature_count']}, C={logistic['C']:g}"
     )
     print(f"Feature count: {len(result['feature_columns'])}")
     print(f"Solver iterations: {logistic['iterations']}")

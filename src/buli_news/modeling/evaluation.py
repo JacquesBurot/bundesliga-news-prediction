@@ -144,7 +144,7 @@ def evaluate_numerical_dummy(
     report = build_classification_report(
         experiment="numerical_dummy_baseline",
         season=season,
-        features_path=features_path,
+        input_reference=features_path,
         model={
             "estimator": "sklearn.dummy.DummyClassifier",
             "scikit_learn_version": sklearn.__version__,
@@ -366,6 +366,28 @@ def evaluate_numerical_logistic_configuration(
         data=data,
         feature_columns=feature_columns,
     )
+    return evaluate_logistic_classification_data(
+        data=data,
+        season=season,
+        experiment=experiment,
+        C=C,
+        input_reference=features_path,
+        selection_provenance=selection_provenance,
+        convergence_context="Numerical logistic regression",
+    )
+
+
+def evaluate_logistic_classification_data(
+    data: ClassificationData,
+    season: int,
+    experiment: str,
+    C: float,
+    input_reference: Path | dict[str, Path],
+    selection_provenance: dict[str, Any] | None = None,
+    report_sections: dict[str, Any] | None = None,
+    convergence_context: str = "Logistic regression",
+) -> ModelEvaluationArtifacts:
+    """Fit and report one logistic model through the shared evaluation path."""
     classifier = build_logistic_pipeline(C=C)
     try:
         with warnings.catch_warnings():
@@ -373,7 +395,7 @@ def evaluate_numerical_logistic_configuration(
             evaluation = evaluate_classifier(classifier=classifier, data=data)
     except ConvergenceWarning as exc:
         msg = (
-            "Numerical logistic regression did not converge within "
+            f"{convergence_context} did not converge within "
             f"{LOGISTIC_MAX_ITER} iterations."
         )
         raise ValueError(msg) from exc
@@ -441,11 +463,20 @@ def evaluate_numerical_logistic_configuration(
     }
     if selection_provenance is not None:
         extra_sections["selection_provenance"] = selection_provenance
+    if report_sections is not None:
+        duplicate_sections = sorted(set(extra_sections) & set(report_sections))
+        if duplicate_sections:
+            msg = (
+                "Logistic evaluation report sections would overwrite shared "
+                f"sections: {duplicate_sections}."
+            )
+            raise ValueError(msg)
+        extra_sections.update(report_sections)
 
     report = build_classification_report(
         experiment=experiment,
         season=season,
-        features_path=features_path,
+        input_reference=input_reference,
         model=model,
         data=data,
         evaluation=evaluation,
@@ -514,17 +545,36 @@ def select_classification_features(
 def build_classification_report(
     experiment: str,
     season: int,
-    features_path: Path,
+    input_reference: Path | dict[str, Path],
     model: dict[str, Any],
     data: ClassificationData,
     evaluation: ClassifierEvaluation,
     extra_sections: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the shared serializable report structure for one classifier."""
+    if isinstance(input_reference, Path):
+        input_fields = {"input_path": str(input_reference)}
+    elif (
+        isinstance(input_reference, dict)
+        and input_reference
+        and all(
+            isinstance(name, str) and name and isinstance(path, Path)
+            for name, path in input_reference.items()
+        )
+    ):
+        input_fields = {
+            "input_paths": {
+                name: str(path) for name, path in input_reference.items()
+            }
+        }
+    else:
+        msg = "Classification report input reference is invalid."
+        raise ValueError(msg)
+
     report = {
         "experiment": experiment,
         "season": season,
-        "input_path": str(features_path),
+        **input_fields,
         "model": model,
         "target_classes": list(TARGET_CLASSES),
         "feature_columns": list(data.feature_columns),
@@ -710,8 +760,8 @@ def load_numerical_classification_data(
         raise ValueError(msg)
 
     validate_target_classes(frame["result"], context="full dataset")
-    validate_matchday_splits(frame)
-    validate_chronological_order(frame)
+    validate_matchday_splits(frame, context="Numerical feature table")
+    validate_chronological_order(frame, context="Numerical feature table")
 
     numeric_features = frame.loc[:, NUMERICAL_FEATURE_COLUMNS].apply(
         pd.to_numeric,
@@ -763,7 +813,10 @@ def load_numerical_classification_data(
     )
 
 
-def validate_matchday_splits(frame: pd.DataFrame) -> None:
+def validate_matchday_splits(
+    frame: pd.DataFrame,
+    context: str = "Numerical feature table",
+) -> None:
     """Ensure each row belongs to its fixed matchday-based split."""
     matchdays = pd.to_numeric(frame["matchday"], errors="raise")
     expected_splits = matchdays.map(get_expected_split)
@@ -772,7 +825,7 @@ def validate_matchday_splits(frame: pd.DataFrame) -> None:
     if invalid_mask.any():
         invalid_ids = frame.loc[invalid_mask, "match_id"].astype(int).tolist()
         msg = (
-            "Numerical feature rows have invalid dataset_split values for "
+            f"{context} rows have invalid dataset_split values for "
             f"match IDs {invalid_ids}."
         )
         raise ValueError(msg)
@@ -788,13 +841,16 @@ def validate_matchday_splits(frame: pd.DataFrame) -> None:
     missing_matchdays = sorted(expected_matchdays.difference(actual_matchdays))
     if invalid_matchdays or missing_matchdays:
         msg = (
-            "Numerical feature table must contain nine matches per matchday. "
+            f"{context} must contain nine matches per matchday. "
             f"Invalid counts: {invalid_matchdays}; missing: {missing_matchdays}."
         )
         raise ValueError(msg)
 
 
-def validate_chronological_order(frame: pd.DataFrame) -> None:
+def validate_chronological_order(
+    frame: pd.DataFrame,
+    context: str = "Numerical feature table",
+) -> None:
     """Ensure every training kickoff is earlier than every test kickoff."""
     try:
         kickoffs = [
@@ -802,11 +858,11 @@ def validate_chronological_order(frame: pd.DataFrame) -> None:
             for value in frame["kickoff"]
         ]
     except ValueError as exc:
-        msg = "Numerical feature table contains an invalid kickoff timestamp."
+        msg = f"{context} contains an invalid kickoff timestamp."
         raise ValueError(msg) from exc
 
     if any(kickoff.tzinfo is None for kickoff in kickoffs):
-        msg = "Every numerical feature kickoff needs a timezone offset."
+        msg = f"Every kickoff in {context.lower()} needs a timezone offset."
         raise ValueError(msg)
 
     train_kickoffs = [

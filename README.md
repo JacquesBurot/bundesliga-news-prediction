@@ -19,6 +19,7 @@ beyond numerical pre-match data alone.
 - [Final Numerical Logistic Regression](#final-numerical-logistic-regression)
 - [News Pipeline](#news-pipeline)
 - [News Feature Aggregation](#news-feature-aggregation)
+- [Combined Numerical and News Logistic Regression](#combined-numerical-and-news-logistic-regression)
 - [Planned Next Stages](#planned-next-stages)
 
 ## Current Scope
@@ -49,9 +50,11 @@ The implemented pipeline currently supports:
    feature sets with training-only expanding-window validation
 17. evaluating the frozen training-selected numerical logistic model on the
     fixed test split without overwriting the original baseline
+18. evaluating that same frozen logistic configuration with the selected 31
+    numerical features plus all 16 fixed news features
 
-Joining numerical and news features and the final numerical-versus-news model
-comparison are the next planned stages.
+Both main experiment variants are now evaluated on the same fixed test matches.
+Annotation-bias and robustness analysis remain separate follow-up stages.
 
 ## Experiment Design
 
@@ -80,14 +83,14 @@ No random split is used. A `DummyClassifier` reference and multinomial logistic
 regression are implemented. Evaluation uses Log Loss, Accuracy, Macro-F1,
 multiclass Brier Score, and a Confusion Matrix.
 
-The local LLM will act as a feature extractor, not as the match predictor:
+The local LLM acts as a feature extractor, not as the match predictor:
 
 ```text
 news article -> local LLM -> structured article annotation
              -> aggregated pre-match news features
 ```
 
-Both logistic-regression variants will use the same preprocessing, target,
+Both logistic-regression variants use the same preprocessing, target,
 training rows, test rows, and evaluation code. Only the feature columns differ.
 Hyperparameter and feature-set selection is performed inside matchdays 1-27;
 matchdays 28-34 are excluded from fitting, scaling, scoring, and selection.
@@ -218,6 +221,7 @@ bundesliga-news-prediction/
 │       │   ├── normalization.py
 │       │   └── openligadb.py
 │       ├── modeling/
+│       │   ├── combined.py
 │       │   ├── evaluation.py
 │       │   └── selection.py
 │       └── news/
@@ -599,7 +603,7 @@ reorders its probability columns, calculates the fixed metrics and Confusion
 Matrix, and builds the per-match prediction rows. The dummy-specific wrapper
 only configures `DummyClassifier(strategy="prior")` and adds its model metadata
 to the shared report structure. The logistic regression already reuses this
-evaluation path, and the news-extended model will do the same.
+evaluation path, and the news-extended model uses it unchanged.
 
 The multiclass Brier Score uses its original unscaled definition:
 
@@ -611,8 +615,8 @@ mean over matches(
 )
 ```
 
-Its range is 0 to 2, and lower values are better. This definition will be
-reused unchanged for the logistic-regression and news-extended models.
+Its range is 0 to 2, and lower values are better. This definition is reused
+unchanged for the logistic-regression and news-extended models.
 
 ## Numerical Logistic Reference
 
@@ -817,11 +821,15 @@ Current fixed-test results are:
 | Prior dummy | 1.095512 | 0.666028 | 0.380952 | 0.183908 |
 | Original full-feature logistic, `C=1.0` | 1.388468 | 0.813405 | 0.333333 | 0.285714 |
 | Selected 31-feature logistic, `C=0.01` | 1.061313 | 0.636447 | 0.492063 | 0.366667 |
+| Combined 47-feature logistic, `C=0.01` | 1.053403 | 0.630042 | 0.476190 | 0.359597 |
 
-The selected model improves all four reported metrics over both the original
-logistic baseline and the prior dummy. It predicts 46 home wins, no draws, and
-17 away wins on the test set; this class behavior remains visible in the stored
-Confusion Matrix and must be considered when interpreting the aggregate
+The selected numerical model improves all four reported metrics over both the
+original logistic baseline and the prior dummy. It predicts 46 home wins, no
+draws, and 17 away wins on the test set. The combined model slightly improves
+Log Loss and multiclass Brier Score over the selected numerical model, while
+its Accuracy and Macro-F1 are slightly lower. It predicts 43 home wins, no
+draws, and 20 away wins. This class behavior remains visible in the stored
+Confusion Matrices and must be considered when interpreting the aggregate
 metrics.
 
 The `evaluate-numerical-logistic-reference` command remains fixed at the full
@@ -1331,9 +1339,79 @@ The only incomplete context is the Bayer 04 Leverkusen home request for match
 `77374`, where 77 of 78 tasks are successful. Its coverage is documented in the
 quality report while its 77 valid annotations form the feature values.
 
+## Combined Numerical and News Logistic Regression
+
+```console
+uv run python -m buli_news.main evaluate-combined-logistic-final --season 2025
+```
+
+The console-script equivalent is:
+
+```console
+uv run buli-news evaluate-combined-logistic-final --season 2025
+```
+
+Inputs:
+
+```text
+data/processed/numerical_features_2025.csv
+data/processed/news_features_2025.csv
+data/processed/news_features_2025_quality.json
+outputs/modeling/2025/numerical/logistic_regression/selection/report.json
+```
+
+Outputs:
+
+```text
+outputs/modeling/2025/combined/logistic_regression/final/evaluation.json
+outputs/modeling/2025/combined/logistic_regression/final/test_predictions.csv
+```
+
+The combined model transfers the frozen configuration selected using numerical
+training data only. It uses the same 31 numerical columns, appends all 16 fixed
+news columns, and therefore fits 47 features in this exact order. No feature,
+regularization, or hyperparameter selection is repeated for the combined model:
+
+```text
+StandardScaler()
+-> LogisticRegression(
+       solver="lbfgs",
+       C=0.01,
+       l1_ratio=0.0,
+       class_weight=None,
+       max_iter=1000,
+       tol=0.0001,
+   )
+```
+
+The command validates both feature schemas and performs a one-to-one join by
+`match_id`. It rejects missing, additional, or duplicate matches and requires
+all ten match and split metadata fields to agree. The target is read only from
+the numerical table; the news table contains no result. News quality fields
+remain outside the model matrix, while their separate report supplies the
+annotation configuration, model digest, coverage, and incomplete-context
+provenance stored in the evaluation report.
+
+The shared scaler is fitted on all 47 columns from the same 243 training rows
+and then applied unchanged to the same 63 test rows. Class ordering, probability
+validation, metrics, Confusion Matrix orientation, and prediction CSV schema
+are identical to the numerical model. The combined evaluation converged after
+13 iterations and produced:
+
+```text
+Log Loss:                1.053403
+Multiclass Brier Score:  0.630042
+Accuracy:                0.476190
+Macro-F1:                0.359597
+```
+
+Compared with the selected numerical model, the news extension improves both
+probability-quality metrics slightly but does not improve Accuracy or Macro-F1.
+The result therefore provides mixed rather than uniformly positive evidence for
+additional predictive value from the news features.
+
 ## Planned Next Stages
 
-1. join the frozen news features to the unchanged numerical feature rows
-2. train the frozen selected model once with numerical features only and once
-   with the identical numerical features plus news features
-3. evaluate and compare both variants on the same 63 fixed test matches
+1. investigate and document annotation and coverage bias using the separate
+   news-feature quality report
+2. perform robustness and error analysis of both fixed-test model variants
