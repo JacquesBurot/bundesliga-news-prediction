@@ -1,0 +1,289 @@
+{
+  "experiment": "news_only_logistic_diagnostic",
+  "season": 2025,
+  "input_paths": {
+    "numerical_target_and_metadata_source": "data/processed/numerical_features_2025.csv",
+    "news_features": "data/processed/news_features_2025.csv",
+    "news_features_quality": "data/processed/news_features_2025_quality.json",
+    "numerical_selection_report": "outputs/modeling/2025/numerical/logistic_regression/selection/report.json"
+  },
+  "model": {
+    "estimator": "sklearn.pipeline.Pipeline",
+    "scikit_learn_version": "1.9.0",
+    "uses_feature_values": true,
+    "steps": [
+      "sklearn.preprocessing.StandardScaler",
+      "sklearn.linear_model.LogisticRegression"
+    ],
+    "standard_scaler": {
+      "with_mean": true,
+      "with_std": true,
+      "training_sample_count": 243
+    },
+    "logistic_regression": {
+      "loss": "multinomial",
+      "solver": "lbfgs",
+      "C": 0.01,
+      "l1_ratio": 0.0,
+      "class_weight": null,
+      "fit_intercept": true,
+      "max_iter": 1000,
+      "tol": 0.0001,
+      "iterations": [
+        8
+      ]
+    }
+  },
+  "target_classes": [
+    "H",
+    "D",
+    "A"
+  ],
+  "feature_columns": [
+    "home_news_sporting_form_mean_rating",
+    "home_news_sporting_form_mention_share",
+    "home_news_personnel_situation_mean_rating",
+    "home_news_personnel_situation_mention_share",
+    "home_news_physical_readiness_mean_rating",
+    "home_news_physical_readiness_mention_share",
+    "home_news_confidence_and_motivation_mean_rating",
+    "home_news_confidence_and_motivation_mention_share",
+    "away_news_sporting_form_mean_rating",
+    "away_news_sporting_form_mention_share",
+    "away_news_personnel_situation_mean_rating",
+    "away_news_personnel_situation_mention_share",
+    "away_news_physical_readiness_mean_rating",
+    "away_news_physical_readiness_mention_share",
+    "away_news_confidence_and_motivation_mean_rating",
+    "away_news_confidence_and_motivation_mention_share"
+  ],
+  "split": {
+    "type": "fixed_chronological_matchday",
+    "train_matchdays": [
+      1,
+      27
+    ],
+    "test_matchdays": [
+      28,
+      34
+    ],
+    "train_row_count": 243,
+    "test_row_count": 63,
+    "train_class_counts": {
+      "H": 110,
+      "D": 59,
+      "A": 74
+    },
+    "test_class_counts": {
+      "H": 24,
+      "D": 16,
+      "A": 23
+    }
+  },
+  "metrics": {
+    "log_loss": 1.0798112745605069,
+    "accuracy": 0.3968253968253968,
+    "macro_f1": 0.25,
+    "multiclass_brier_score": 0.6597436416620254
+  },
+  "confusion_matrix": {
+    "labels": [
+      "H",
+      "D",
+      "A"
+    ],
+    "orientation": "rows=true classes, columns=predicted classes",
+    "values": [
+      [
+        22,
+        0,
+        2
+      ],
+      [
+        14,
+        0,
+        2
+      ],
+      [
+        20,
+        0,
+        3
+      ]
+    ]
+  },
+  "coefficients": {
+    "class_order": [
+      "H",
+      "D",
+      "A"
+    ],
+    "feature_columns": [
+      "home_news_sporting_form_mean_rating",
+      "home_news_sporting_form_mention_share",
+      "home_news_personnel_situation_mean_rating",
+      "home_news_personnel_situation_mention_share",
+      "home_news_physical_readiness_mean_rating",
+      "home_news_physical_readiness_mention_share",
+      "home_news_confidence_and_motivation_mean_rating",
+      "home_news_confidence_and_motivation_mention_share",
+      "away_news_sporting_form_mean_rating",
+      "away_news_sporting_form_mention_share",
+      "away_news_personnel_situation_mean_rating",
+      "away_news_personnel_situation_mention_share",
+      "away_news_physical_readiness_mean_rating",
+      "away_news_physical_readiness_mention_share",
+      "away_news_confidence_and_motivation_mean_rating",
+      "away_news_confidence_and_motivation_mention_share"
+    ],
+    "orientation": "rows=target classes, columns=standardized feature columns",
+    "values": [
+      [
+        0.10653887545957637,
+        0.02063337585664567,
+        0.016914513920693493,
+        -0.03453830236856913,
+        0.05848477615494328,
+        0.03655643175192694,
+        -0.02203600303709785,
+        0.002129623267251202,
+        -0.0801889973827168,
+        0.01532363676659125,
+        -0.00802121527857345,
+        -0.05937019030132816,
+        0.025240791258751175,
+        -0.047632384861676445,
+        0.025988823362640478,
+        0.01313188110479286
+      ],
+      [
+        -0.024136205174180858,
+        -0.022961336047446528,
+        0.04376791055948574,
+        0.048780739680540176,
+        0.01086431761139371,
+        -0.014095279652740388,
+        -0.014424203808151802,
+        -0.02345322140500126,
+        0.013354767292976213,
+        0.049199997780958106,
+        0.042824147585148103,
+        0.03779008867960673,
+        0.024625375293657038,
+        0.01922203105999625,
+        -0.0835351048728265,
+        0.038423102488025614
+      ],
+      [
+        -0.08240267028539547,
+        0.0023279601908008578,
+        -0.06068242448017923,
+        -0.014242437311971017,
+        -0.06934909376633701,
+        -0.022461152099186515,
+        0.036460206845249636,
+        0.021323598137750033,
+        0.06683423008974058,
+        -0.06452363454754934,
+        -0.034802932306574615,
+        0.021580101621721373,
+        -0.04986616655240823,
+        0.028410353801680166,
+        0.0575462815101859,
+        -0.05155498359281849
+      ]
+    ],
+    "intercepts": {
+      "H": 0.3446867456919269,
+      "D": -0.28138751475020957,
+      "A": -0.06329923094171722
+    }
+  },
+  "selection_provenance": {
+    "method": "fixed_transfer_from_numerical_training_only_selection",
+    "transferred_from": "numerical_logistic_configuration_selection",
+    "transferred_parameter": "C",
+    "selection_report_path": "outputs/modeling/2025/numerical/logistic_regression/selection/report.json",
+    "news_feature_set": "all_fixed_news_features",
+    "news_hyperparameters_reselected": false,
+    "outer_test_used_for_selection": false
+  },
+  "analysis_role": {
+    "type": "post_hoc_diagnostic_feature_source_baseline",
+    "primary_experiment_variant": false,
+    "purpose": "Measure standalone predictive signal in the fixed news features without changing the primary numerical-versus-combined experiment."
+  },
+  "feature_sources": {
+    "news": {
+      "role": "predictors",
+      "feature_count": 16,
+      "feature_columns": [
+        "home_news_sporting_form_mean_rating",
+        "home_news_sporting_form_mention_share",
+        "home_news_personnel_situation_mean_rating",
+        "home_news_personnel_situation_mention_share",
+        "home_news_physical_readiness_mean_rating",
+        "home_news_physical_readiness_mention_share",
+        "home_news_confidence_and_motivation_mean_rating",
+        "home_news_confidence_and_motivation_mention_share",
+        "away_news_sporting_form_mean_rating",
+        "away_news_sporting_form_mention_share",
+        "away_news_personnel_situation_mean_rating",
+        "away_news_personnel_situation_mention_share",
+        "away_news_physical_readiness_mean_rating",
+        "away_news_physical_readiness_mention_share",
+        "away_news_confidence_and_motivation_mean_rating",
+        "away_news_confidence_and_motivation_mention_share"
+      ]
+    },
+    "numerical": {
+      "role": "target_and_metadata_only",
+      "feature_count": 0,
+      "feature_columns": []
+    },
+    "model_feature_count": 16,
+    "numerical_features_used_as_predictors": false
+  },
+  "join_validation": {
+    "key": "match_id",
+    "relationship": "one_to_one",
+    "match_count": 306,
+    "metadata_columns": [
+      "match_id",
+      "season",
+      "league",
+      "matchday",
+      "kickoff",
+      "home_team_id",
+      "home_team",
+      "away_team_id",
+      "away_team",
+      "dataset_split"
+    ],
+    "metadata_match_count": 306,
+    "news_input_row_order_matches_numerical": true,
+    "output_row_order": "numerical feature table",
+    "target_source": "numerical feature table only",
+    "predictor_source": "news feature table only",
+    "numerical_predictor_count": 0
+  },
+  "news_feature_provenance": {
+    "quality_report_path": "data/processed/news_features_2025_quality.json",
+    "feature_schema_version": 1,
+    "annotation_provenance": {
+      "annotation_output_schema_version": 3,
+      "annotation_schema_version": 3,
+      "prompt_version": 3,
+      "annotation_schema_id": "bundesliga_news_team_indicators_v3",
+      "annotation_config_sha256": "9445c7bd6bc90b2b05a2e56d4d9bd411a4adc43ea63a6b2621e6339da09dc875",
+      "model": "gemma4:12b-it-qat",
+      "model_digest": "38044be4f923e5a55264ed7df4eaac2676651a905f735197c504045140c02bd3"
+    },
+    "annotation_coverage": 0.999979,
+    "missing_annotation_count": 1,
+    "incomplete_context_count": 1,
+    "context_without_successful_annotation_count": 0
+  },
+  "metric_definitions": {
+    "multiclass_brier_score": "Mean over test matches of the sum across H, D, and A of (observed_one_hot - predicted_probability) squared; unscaled range 0 to 2, lower is better."
+  }
+}

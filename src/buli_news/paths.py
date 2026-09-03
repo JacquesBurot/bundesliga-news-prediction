@@ -171,6 +171,10 @@ class SeasonPaths:
         root = MODELING_OUTPUT_ROOT / str(self.season) / "numerical"
         return root.joinpath(*parts)
 
+    def news_model_output(self, *parts: str) -> Path:
+        root = MODELING_OUTPUT_ROOT / str(self.season) / "news"
+        return root.joinpath(*parts)
+
     def combined_model_output(self, *parts: str) -> Path:
         root = MODELING_OUTPUT_ROOT / str(self.season) / "combined"
         return root.joinpath(*parts)

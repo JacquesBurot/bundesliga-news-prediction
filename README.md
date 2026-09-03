@@ -19,6 +19,7 @@ beyond numerical pre-match data alone.
 - [Final Numerical Logistic Regression](#final-numerical-logistic-regression)
 - [News Pipeline](#news-pipeline)
 - [News Feature Aggregation](#news-feature-aggregation)
+- [News-Only Diagnostic Logistic Regression](#news-only-diagnostic-logistic-regression)
 - [Combined Numerical and News Logistic Regression](#combined-numerical-and-news-logistic-regression)
 - [Planned Next Stages](#planned-next-stages)
 
@@ -52,9 +53,13 @@ The implemented pipeline currently supports:
     fixed test split without overwriting the original baseline
 18. evaluating that same frozen logistic configuration with the selected 31
     numerical features plus all 16 fixed news features
+19. evaluating a supplementary diagnostic model using only the 16 fixed news
+    features and the transferred logistic configuration
 
 Both main experiment variants are now evaluated on the same fixed test matches.
-Annotation-bias and robustness analysis remain separate follow-up stages.
+The news-only model supplements that primary comparison by isolating the
+standalone predictive signal in the extracted news features. Annotation-bias
+and robustness analysis remain separate follow-up stages.
 
 ## Experiment Design
 
@@ -90,10 +95,13 @@ news article -> local LLM -> structured article annotation
              -> aggregated pre-match news features
 ```
 
-Both logistic-regression variants use the same preprocessing, target,
+Both primary logistic-regression variants use the same preprocessing, target,
 training rows, test rows, and evaluation code. Only the feature columns differ.
-Hyperparameter and feature-set selection is performed inside matchdays 1-27;
-matchdays 28-34 are excluded from fitting, scaling, scoring, and selection.
+The supplementary news-only model uses the same evaluation setup without any
+numerical predictors. Numerical hyperparameter and feature-set selection is
+performed inside matchdays 1-27. The selected `C=0.01` is transferred unchanged
+to the combined and news-only models; it is not independently selected for
+either model. Matchdays 28-34 are excluded from fitting, scaling, and selection.
 
 ## Data Flow
 
@@ -117,6 +125,7 @@ NewsAPI.ai raw -----> source-review XLSX -----> source policy
 
 numerical features -------------------------> model A
 numerical features + news features ---------> model B
+news features ------------------------------> diagnostic news-only model
 ```
 
 The data directories represent processing stages:
@@ -223,6 +232,7 @@ bundesliga-news-prediction/
 │       ├── modeling/
 │       │   ├── combined.py
 │       │   ├── evaluation.py
+│       │   ├── news_only.py
 │       │   └── selection.py
 │       └── news/
 │           ├── articles.py
@@ -549,13 +559,13 @@ The current implementation uses Bundesliga fixtures only. Therefore
 ## Numerical Dummy Baseline
 
 ```console
-uv run python -m buli_news.main evaluate-numerical-dummy --season 2025
+uv run python -m buli_news.main evaluate-numerical-model-dummy --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news evaluate-numerical-dummy --season 2025
+uv run buli-news evaluate-numerical-model-dummy --season 2025
 ```
 
 Input:
@@ -602,8 +612,8 @@ Classifier-independent evaluation code fits an estimator, validates and
 reorders its probability columns, calculates the fixed metrics and Confusion
 Matrix, and builds the per-match prediction rows. The dummy-specific wrapper
 only configures `DummyClassifier(strategy="prior")` and adds its model metadata
-to the shared report structure. The logistic regression already reuses this
-evaluation path, and the news-extended model uses it unchanged.
+to the shared report structure. All numerical, news-only, and combined logistic
+models reuse this evaluation path unchanged.
 
 The multiclass Brier Score uses its original unscaled definition:
 
@@ -616,18 +626,18 @@ mean over matches(
 ```
 
 Its range is 0 to 2, and lower values are better. This definition is reused
-unchanged for the logistic-regression and news-extended models.
+unchanged for every logistic-regression model.
 
 ## Numerical Logistic Reference
 
 ```console
-uv run python -m buli_news.main evaluate-numerical-logistic-reference --season 2025
+uv run python -m buli_news.main evaluate-numerical-model-reference --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news evaluate-numerical-logistic-reference --season 2025
+uv run buli-news evaluate-numerical-model-reference --season 2025
 ```
 
 Input:
@@ -681,13 +691,13 @@ report or predictions.
 ## Training-Only Numerical Logistic Configuration Selection
 
 ```console
-uv run python -m buli_news.main select-numerical-logistic-configuration --season 2025
+uv run python -m buli_news.main select-numerical-model-configuration --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news select-numerical-logistic-configuration --season 2025
+uv run buli-news select-numerical-model-configuration --season 2025
 ```
 
 Input:
@@ -768,13 +778,13 @@ does not evaluate matchdays 28-34.
 ## Final Numerical Logistic Regression
 
 ```console
-uv run python -m buli_news.main evaluate-numerical-logistic-final --season 2025
+uv run python -m buli_news.main evaluate-numerical-model-final --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news evaluate-numerical-logistic-final --season 2025
+uv run buli-news evaluate-numerical-model-final --season 2025
 ```
 
 Inputs:
@@ -821,18 +831,21 @@ Current fixed-test results are:
 | Prior dummy | 1.095512 | 0.666028 | 0.380952 | 0.183908 |
 | Original full-feature logistic, `C=1.0` | 1.388468 | 0.813405 | 0.333333 | 0.285714 |
 | Selected 31-feature logistic, `C=0.01` | 1.061313 | 0.636447 | 0.492063 | 0.366667 |
+| News-only 16-feature logistic, `C=0.01` (diagnostic) | 1.079811 | 0.659744 | 0.396825 | 0.250000 |
 | Combined 47-feature logistic, `C=0.01` | 1.053403 | 0.630042 | 0.476190 | 0.359597 |
 
 The selected numerical model improves all four reported metrics over both the
 original logistic baseline and the prior dummy. It predicts 46 home wins, no
-draws, and 17 away wins on the test set. The combined model slightly improves
-Log Loss and multiclass Brier Score over the selected numerical model, while
-its Accuracy and Macro-F1 are slightly lower. It predicts 43 home wins, no
-draws, and 20 away wins. This class behavior remains visible in the stored
-Confusion Matrices and must be considered when interpreting the aggregate
-metrics.
+draws, and 17 away wins on the test set. The diagnostic news-only model modestly
+improves all four metrics over the prior dummy but remains clearly behind the
+selected numerical model. It predicts 56 home wins, no draws, and 7 away wins.
+The combined model slightly improves Log Loss and multiclass Brier Score over
+the selected numerical model, while its Accuracy and Macro-F1 are slightly
+lower. It predicts 43 home wins, no draws, and 20 away wins. This class behavior
+remains visible in the stored Confusion Matrices and must be considered when
+interpreting the aggregate metrics.
 
-The `evaluate-numerical-logistic-reference` command remains fixed at the full
+The `evaluate-numerical-model-reference` command remains fixed at the full
 35-feature schema and `C=1.0`. Its reports are retained as an auditable original
 reference and are not overwritten by the final-model command.
 
@@ -1339,16 +1352,74 @@ The only incomplete context is the Bayer 04 Leverkusen home request for match
 `77374`, where 77 of 78 tasks are successful. Its coverage is documented in the
 quality report while its 77 valid annotations form the feature values.
 
-## Combined Numerical and News Logistic Regression
+## News-Only Diagnostic Logistic Regression
 
 ```console
-uv run python -m buli_news.main evaluate-combined-logistic-final --season 2025
+uv run python -m buli_news.main evaluate-news-only-model --season 2025
 ```
 
 The console-script equivalent is:
 
 ```console
-uv run buli-news evaluate-combined-logistic-final --season 2025
+uv run buli-news evaluate-news-only-model --season 2025
+```
+
+Inputs:
+
+```text
+data/processed/numerical_features_2025.csv
+data/processed/news_features_2025.csv
+data/processed/news_features_2025_quality.json
+outputs/modeling/2025/numerical/logistic_regression/selection/report.json
+```
+
+Outputs:
+
+```text
+outputs/modeling/2025/news/logistic_regression/diagnostic/evaluation.json
+outputs/modeling/2025/news/logistic_regression/diagnostic/test_predictions.csv
+```
+
+This supplementary model is a post-hoc diagnostic feature-source baseline, not
+a third primary experiment variant. It measures how much standalone predictive
+signal is present in the 16 fixed news features. The numerical feature table
+supplies only the canonical target and match metadata needed for the aligned
+evaluation; no numerical feature enters the model matrix.
+
+The command transfers `C=0.01` from the numerical training-only selection and
+does not select a separate regularization value or news-feature subset. It fits
+the same `StandardScaler` and multinomial `LogisticRegression` pipeline on the
+243 training matches and evaluates the unchanged 63 test matches. The report
+explicitly records the diagnostic analysis role, zero numerical predictors,
+the exact news-feature schema, join validation, transferred configuration, and
+news-feature provenance.
+
+The diagnostic model converged after 8 iterations and produced:
+
+```text
+Log Loss:                1.079811
+Multiclass Brier Score:  0.659744
+Accuracy:                0.396825
+Macro-F1:                0.250000
+```
+
+It modestly improves all four metrics over the prior dummy but remains clearly
+behind the selected numerical model. It predicts 56 home wins, no draws, and 7
+away wins. This indicates limited standalone news signal under the transferred
+configuration. It does not test the incremental value of news conditional on
+the numerical predictors; that question remains the purpose of the primary
+numerical-versus-combined comparison.
+
+## Combined Numerical and News Logistic Regression
+
+```console
+uv run python -m buli_news.main evaluate-combined-model --season 2025
+```
+
+The console-script equivalent is:
+
+```console
+uv run buli-news evaluate-combined-model --season 2025
 ```
 
 Inputs:
@@ -1414,4 +1485,5 @@ additional predictive value from the news features.
 
 1. investigate and document annotation and coverage bias using the separate
    news-feature quality report
-2. perform robustness and error analysis of both fixed-test model variants
+2. perform robustness and error analysis of both primary fixed-test variants
+   and the supplementary news-only diagnostic

@@ -1,4 +1,4 @@
-"""CLI commands for numerical model selection and evaluation."""
+"""CLI commands for model selection and evaluation."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from buli_news.modeling.evaluation import (
     evaluate_numerical_logistic_final,
     evaluate_numerical_logistic_reference,
 )
+from buli_news.modeling.news_only import evaluate_news_logistic_diagnostic
 from buli_news.modeling.selection import (
     MODEL_SELECTION_PREDICTION_OUTPUT_COLUMNS,
     select_numerical_logistic_configuration,
@@ -22,7 +23,7 @@ from buli_news.storage import write_csv, write_json
 
 def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     evaluate_numerical_dummy_parser = subparsers.add_parser(
-        "evaluate-numerical-dummy",
+        "evaluate-numerical-model-dummy",
         help="Evaluate a prior-based dummy classifier on the fixed split.",
     )
     add_season_argument(evaluate_numerical_dummy_parser)
@@ -31,7 +32,7 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     )
 
     evaluate_numerical_logistic_reference_parser = subparsers.add_parser(
-        "evaluate-numerical-logistic-reference",
+        "evaluate-numerical-model-reference",
         help=(
             "Evaluate the fixed full-feature C=1 numerical logistic "
             "reference on the test split."
@@ -43,7 +44,7 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     )
 
     select_numerical_logistic_configuration_parser = subparsers.add_parser(
-        "select-numerical-logistic-configuration",
+        "select-numerical-model-configuration",
         help=(
             "Select numerical logistic features and C with training-only "
             "expanding-window validation."
@@ -55,7 +56,7 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     )
 
     evaluate_numerical_logistic_final_parser = subparsers.add_parser(
-        "evaluate-numerical-logistic-final",
+        "evaluate-numerical-model-final",
         help=(
             "Evaluate the frozen training-selected numerical logistic model "
             "on the fixed test split."
@@ -66,8 +67,20 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
         command_handler=evaluate_numerical_logistic_final_command,
     )
 
+    evaluate_news_logistic_diagnostic_parser = subparsers.add_parser(
+        "evaluate-news-only-model",
+        help=(
+            "Evaluate the diagnostic logistic model with only the fixed news "
+            "features on the test split."
+        ),
+    )
+    add_season_argument(evaluate_news_logistic_diagnostic_parser)
+    evaluate_news_logistic_diagnostic_parser.set_defaults(
+        command_handler=evaluate_news_logistic_diagnostic_command,
+    )
+
     evaluate_combined_logistic_final_parser = subparsers.add_parser(
-        "evaluate-combined-logistic-final",
+        "evaluate-combined-model",
         help=(
             "Evaluate the frozen logistic model with selected numerical and "
             "news features on the fixed test split."
@@ -246,6 +259,59 @@ def evaluate_numerical_logistic_final_command(
         f"feature_set={provenance['feature_set']}, C={logistic['C']:g}"
     )
     print(f"Feature count: {len(result['feature_columns'])}")
+    print(f"Solver iterations: {logistic['iterations']}")
+    print(f"Log Loss: {metrics['log_loss']:.6f}")
+    print(f"Accuracy: {metrics['accuracy']:.6f}")
+    print(f"Macro-F1: {metrics['macro_f1']:.6f}")
+    print(
+        "Multiclass Brier Score: "
+        f"{metrics['multiclass_brier_score']:.6f}"
+    )
+
+
+def evaluate_news_logistic_diagnostic_command(
+    args: argparse.Namespace,
+) -> None:
+    paths = SeasonPaths(args.season)
+    selection_report_path = paths.numerical_model_output(
+        "logistic_regression",
+        "selection",
+        "report.json",
+    )
+    evaluation = evaluate_news_logistic_diagnostic(
+        numerical_features_path=paths.numerical_features,
+        news_features_path=paths.news_features,
+        news_features_quality_path=paths.news_features_quality,
+        season=args.season,
+        selection_report_path=selection_report_path,
+    )
+    result_path = paths.news_model_output(
+        "logistic_regression",
+        "diagnostic",
+        "evaluation.json",
+    )
+    predictions_path = paths.news_model_output(
+        "logistic_regression",
+        "diagnostic",
+        "test_predictions.csv",
+    )
+    write_json(evaluation.report, result_path)
+    write_csv(
+        records=evaluation.prediction_rows,
+        fieldnames=CLASSIFICATION_PREDICTION_OUTPUT_COLUMNS,
+        path=predictions_path,
+    )
+
+    result = evaluation.report
+    metrics = result["metrics"]
+    logistic = result["model"]["logistic_regression"]
+    print(f"Saved diagnostic news-only results to {result_path}")
+    print(f"Saved diagnostic news-only predictions to {predictions_path}")
+    print(
+        "Frozen diagnostic configuration: "
+        f"news={len(result['feature_columns'])}, numerical=0, "
+        f"C={logistic['C']:g}"
+    )
     print(f"Solver iterations: {logistic['iterations']}")
     print(f"Log Loss: {metrics['log_loss']:.6f}")
     print(f"Accuracy: {metrics['accuracy']:.6f}")
