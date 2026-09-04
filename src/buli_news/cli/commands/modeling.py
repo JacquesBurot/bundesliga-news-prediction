@@ -24,7 +24,7 @@ from buli_news.storage import write_csv, write_json
 def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     evaluate_numerical_dummy_parser = subparsers.add_parser(
         "evaluate-numerical-model-dummy",
-        help="Evaluate a prior-based dummy classifier on the fixed split.",
+        help="Evaluate the prior-based ZeroR baseline on the fixed split.",
     )
     add_season_argument(evaluate_numerical_dummy_parser)
     evaluate_numerical_dummy_parser.set_defaults(
@@ -34,8 +34,8 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     evaluate_numerical_logistic_reference_parser = subparsers.add_parser(
         "evaluate-numerical-model-reference",
         help=(
-            "Evaluate the fixed full-feature C=1 numerical logistic "
-            "reference on the test split."
+            "Evaluate the Full-feature numerical reference with C=1 "
+            "on the fixed test split."
         ),
     )
     add_season_argument(evaluate_numerical_logistic_reference_parser)
@@ -58,7 +58,7 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     evaluate_numerical_logistic_final_parser = subparsers.add_parser(
         "evaluate-numerical-model-final",
         help=(
-            "Evaluate the frozen training-selected numerical logistic model "
+            "Evaluate the frozen Selected numerical model "
             "on the fixed test split."
         ),
     )
@@ -70,8 +70,7 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     evaluate_news_logistic_diagnostic_parser = subparsers.add_parser(
         "evaluate-news-only-model",
         help=(
-            "Evaluate the diagnostic logistic model with only the fixed news "
-            "features on the test split."
+            "Evaluate the News-only diagnostic model on the fixed test split."
         ),
     )
     add_season_argument(evaluate_news_logistic_diagnostic_parser)
@@ -82,8 +81,7 @@ def register_modeling_commands(subparsers: argparse._SubParsersAction) -> None:
     evaluate_combined_logistic_final_parser = subparsers.add_parser(
         "evaluate-combined-model",
         help=(
-            "Evaluate the frozen logistic model with selected numerical and "
-            "news features on the fixed test split."
+            "Evaluate the Combined model on the fixed test split."
         ),
     )
     add_season_argument(evaluate_combined_logistic_final_parser)
@@ -116,8 +114,8 @@ def evaluate_numerical_dummy_command(args: argparse.Namespace) -> None:
 
     result = evaluation.report
     metrics = result["metrics"]
-    print(f"Saved numerical dummy baseline results to {result_path}")
-    print(f"Saved numerical dummy predictions to {predictions_path}")
+    print(f"Saved ZeroR baseline results to {result_path}")
+    print(f"Saved ZeroR baseline predictions to {predictions_path}")
     print(f"Predicted class: {result['model']['predicted_class']}")
     print(f"Log Loss: {metrics['log_loss']:.6f}")
     print(f"Accuracy: {metrics['accuracy']:.6f}")
@@ -157,9 +155,9 @@ def evaluate_numerical_logistic_reference_command(
     result = evaluation.report
     metrics = result["metrics"]
     iterations = result["model"]["logistic_regression"]["iterations"]
-    print(f"Saved numerical logistic reference results to {result_path}")
+    print(f"Saved Full-feature numerical reference results to {result_path}")
     print(
-        "Saved numerical logistic reference predictions to "
+        "Saved Full-feature numerical reference predictions to "
         f"{predictions_path}"
     )
     print(f"Solver iterations: {iterations}")
@@ -252,8 +250,8 @@ def evaluate_numerical_logistic_final_command(
     metrics = result["metrics"]
     logistic = result["model"]["logistic_regression"]
     provenance = result["selection_provenance"]
-    print(f"Saved final numerical logistic results to {result_path}")
-    print(f"Saved final numerical logistic predictions to {predictions_path}")
+    print(f"Saved Selected numerical model results to {result_path}")
+    print(f"Saved Selected numerical model predictions to {predictions_path}")
     print(
         "Frozen configuration: "
         f"feature_set={provenance['feature_set']}, C={logistic['C']:g}"
@@ -305,8 +303,8 @@ def evaluate_news_logistic_diagnostic_command(
     result = evaluation.report
     metrics = result["metrics"]
     logistic = result["model"]["logistic_regression"]
-    print(f"Saved diagnostic news-only results to {result_path}")
-    print(f"Saved diagnostic news-only predictions to {predictions_path}")
+    print(f"Saved News-only diagnostic model results to {result_path}")
+    print(f"Saved News-only diagnostic model predictions to {predictions_path}")
     print(
         "Frozen diagnostic configuration: "
         f"news={len(result['feature_columns'])}, numerical=0, "
@@ -359,8 +357,8 @@ def evaluate_combined_logistic_final_command(
     metrics = result["metrics"]
     logistic = result["model"]["logistic_regression"]
     feature_sources = result["feature_sources"]
-    print(f"Saved final combined logistic results to {result_path}")
-    print(f"Saved final combined logistic predictions to {predictions_path}")
+    print(f"Saved Combined model results to {result_path}")
+    print(f"Saved Combined model predictions to {predictions_path}")
     print(
         "Frozen configuration: "
         f"numerical={feature_sources['numerical']['feature_count']}, "

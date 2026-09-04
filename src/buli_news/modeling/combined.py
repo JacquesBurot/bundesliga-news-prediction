@@ -1,4 +1,4 @@
-"""Evaluate the frozen logistic model with numerical and news features."""
+"""Evaluate the Combined model with numerical and news features."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def evaluate_combined_logistic_final(
     season: int,
     selection_report_path: Path,
 ) -> ModelEvaluationArtifacts:
-    """Evaluate 31 frozen numerical plus all 16 fixed news features."""
+    """Evaluate the Combined model with its 31+16 frozen features."""
     validate_numerical_logistic_selection_report(
         selection_report_path=selection_report_path,
         season=season,
@@ -121,7 +121,7 @@ def evaluate_combined_logistic_final(
             "join_validation": combined.join_validation,
             "news_feature_provenance": news_provenance,
         },
-        convergence_context="Combined numerical-and-news logistic regression",
+        convergence_context="Combined model",
     )
 
 

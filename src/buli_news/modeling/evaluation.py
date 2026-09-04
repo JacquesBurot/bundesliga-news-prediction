@@ -117,7 +117,7 @@ def evaluate_numerical_dummy(
     features_path: Path,
     season: int,
 ) -> ModelEvaluationArtifacts:
-    """Fit and evaluate a prior-based dummy classifier on the fixed split."""
+    """Fit and evaluate the prior-based ZeroR baseline on the fixed split."""
     data = load_numerical_classification_data(
         features_path=features_path,
         season=season,
@@ -166,7 +166,7 @@ def evaluate_numerical_logistic_reference(
     features_path: Path,
     season: int,
 ) -> ModelEvaluationArtifacts:
-    """Evaluate the fixed full-feature C=1 numerical logistic reference."""
+    """Evaluate the fixed Full-feature numerical reference with C=1."""
     return evaluate_numerical_logistic_configuration(
         features_path=features_path,
         season=season,
@@ -181,7 +181,7 @@ def evaluate_numerical_logistic_final(
     season: int,
     selection_report_path: Path,
 ) -> ModelEvaluationArtifacts:
-    """Evaluate the frozen training-selected numerical logistic model."""
+    """Evaluate the frozen Selected numerical model."""
     validate_numerical_logistic_selection_report(
         selection_report_path=selection_report_path,
         season=season,

@@ -1,4 +1,4 @@
-"""Evaluate a diagnostic logistic model using only news features."""
+"""Evaluate the News-only diagnostic model."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def evaluate_news_logistic_diagnostic(
     season: int,
     selection_report_path: Path,
 ) -> ModelEvaluationArtifacts:
-    """Evaluate all 16 news features with the frozen logistic settings."""
+    """Evaluate the News-only diagnostic model with its 16 features."""
     validate_numerical_logistic_selection_report(
         selection_report_path=selection_report_path,
         season=season,
@@ -99,7 +99,7 @@ def evaluate_news_logistic_diagnostic(
             "join_validation": news_only.join_validation,
             "news_feature_provenance": news_provenance,
         },
-        convergence_context="News-only diagnostic logistic regression",
+        convergence_context="News-only diagnostic model",
     )
 
 
