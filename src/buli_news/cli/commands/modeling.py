@@ -205,12 +205,6 @@ def select_numerical_logistic_configuration_command(
         f"feature_set={selected['feature_set']}, C={selected['C']:g}"
     )
     print(f"Pooled validation Log Loss: {metrics['log_loss']:.6f}")
-    print(
-        "Pooled validation Multiclass Brier Score: "
-        f"{metrics['multiclass_brier_score']:.6f}"
-    )
-    print(f"Pooled validation Accuracy: {metrics['accuracy']:.6f}")
-    print(f"Pooled validation Macro-F1: {metrics['macro_f1']:.6f}")
     print("Outer test matches used for model selection: 0")
 
 

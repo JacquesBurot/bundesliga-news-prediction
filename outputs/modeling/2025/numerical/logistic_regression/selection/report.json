@@ -324,15 +324,14 @@
     "best_log_loss_model_id": "logistic__full__C_0.01",
     "minimum_pooled_log_loss": 0.9869548461013361,
     "standard_error_source": "Sample standard deviation of the best-log-loss candidate's three fold Log Loss values divided by sqrt(3).",
-    "best_log_loss_standard_error": 0.020598934400356737,
-    "eligible_log_loss_threshold_inclusive": 1.0075537805016928,
+    "best_log_loss_standard_error": 0.020598934400356768,
+    "eligible_log_loss_threshold_inclusive": 1.007553780501693,
     "eligible_model_ids": [
       "logistic__without_match_counts__C_0.01",
       "logistic__full__C_0.01"
     ],
     "preference_order_within_threshold": [
       "lowest feature_count",
-      "lowest pooled multiclass_brier_score",
       "lowest C",
       "lowest pooled log_loss"
     ],
@@ -1074,7 +1073,7 @@
             "log_loss": 0.9469794428241338,
             "accuracy": 0.5555555555555556,
             "macro_f1": 0.37765634486945965,
-            "multiclass_brier_score": 0.5580261890916877
+            "multiclass_brier_score": 0.5580261890916878
           },
           "confusion_matrix": {
             "labels": [
@@ -1134,10 +1133,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 0.9983156337546595,
+            "log_loss": 0.9983156337546598,
             "accuracy": 0.4888888888888889,
             "macro_f1": 0.3407396857047904,
-            "multiclass_brier_score": 0.5970228161398888
+            "multiclass_brier_score": 0.5970228161398891
           },
           "confusion_matrix": {
             "labels": [
@@ -1172,10 +1171,10 @@
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 0.9869548461013361,
-          "population_standard_deviation": 0.029131292399418196,
-          "sample_standard_deviation": 0.03567840096319621,
-          "standard_error": 0.020598934400356737
+          "mean": 0.9869548461013362,
+          "population_standard_deviation": 0.029131292399418238,
+          "sample_standard_deviation": 0.035678400963196265,
+          "standard_error": 0.020598934400356768
         },
         "accuracy": {
           "mean": 0.5111111111111111,
@@ -1190,10 +1189,10 @@
           "standard_error": 0.010901158282679117
         },
         "multiclass_brier_score": {
-          "mean": 0.5877831905380109,
-          "population_standard_deviation": 0.021539208650594926,
-          "sample_standard_deviation": 0.026380035328649482,
-          "standard_error": 0.015230520498227618
+          "mean": 0.587783190538011,
+          "population_standard_deviation": 0.021539208650594905,
+          "sample_standard_deviation": 0.026380035328649458,
+          "standard_error": 0.015230520498227602
         }
       },
       "pooled_metrics": {
@@ -1304,10 +1303,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.0696440868690429,
+            "log_loss": 1.0696440868690407,
             "accuracy": 0.5111111111111111,
             "macro_f1": 0.4841491841491841,
-            "multiclass_brier_score": 0.6187065979327332
+            "multiclass_brier_score": 0.6187065979327306
           },
           "confusion_matrix": {
             "labels": [
@@ -1369,10 +1368,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 0.9612108509836056,
+            "log_loss": 0.9612108509836058,
             "accuracy": 0.6,
             "macro_f1": 0.5036041083099906,
-            "multiclass_brier_score": 0.5482723336840524
+            "multiclass_brier_score": 0.5482723336840526
           },
           "confusion_matrix": {
             "labels": [
@@ -1432,10 +1431,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 1.0015025327451794,
+            "log_loss": 1.0015025327451796,
             "accuracy": 0.4666666666666667,
             "macro_f1": 0.38088235294117645,
-            "multiclass_brier_score": 0.6039923392155824
+            "multiclass_brier_score": 0.6039923392155823
           },
           "confusion_matrix": {
             "labels": [
@@ -1470,10 +1469,10 @@
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 1.0107858235326093,
-          "population_standard_deviation": 0.04475173201139599,
-          "sample_standard_deviation": 0.054809454266848044,
-          "standard_error": 0.0316442531751012
+          "mean": 1.0107858235326086,
+          "population_standard_deviation": 0.04475173201139492,
+          "sample_standard_deviation": 0.05480945426684673,
+          "standard_error": 0.031644253175100445
         },
         "accuracy": {
           "mean": 0.5259259259259259,
@@ -1488,17 +1487,17 @@
           "standard_error": 0.038081171888078566
         },
         "multiclass_brier_score": {
-          "mean": 0.5903237569441226,
-          "population_standard_deviation": 0.03033555670657781,
-          "sample_standard_deviation": 0.03715331749718989,
-          "standard_error": 0.02145047785829022
+          "mean": 0.5903237569441219,
+          "population_standard_deviation": 0.030335556706576894,
+          "sample_standard_deviation": 0.037153317497188774,
+          "standard_error": 0.021450477858289574
         }
       },
       "pooled_metrics": {
-        "log_loss": 1.0107858235326093,
+        "log_loss": 1.0107858235326086,
         "accuracy": 0.5259259259259259,
         "macro_f1": 0.4597402941056192,
-        "multiclass_brier_score": 0.5903237569441226
+        "multiclass_brier_score": 0.5903237569441219
       },
       "pooled_confusion_matrix": {
         "labels": [
@@ -1601,10 +1600,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.076514916456848,
+            "log_loss": 1.0765149164568475,
             "accuracy": 0.4888888888888889,
             "macro_f1": 0.45079365079365075,
-            "multiclass_brier_score": 0.630445584410617
+            "multiclass_brier_score": 0.6304455844106169
           },
           "confusion_matrix": {
             "labels": [
@@ -1666,10 +1665,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 0.9768025743206695,
+            "log_loss": 0.9768025743206699,
             "accuracy": 0.6444444444444445,
             "macro_f1": 0.5866666666666667,
-            "multiclass_brier_score": 0.5623068577315913
+            "multiclass_brier_score": 0.5623068577315914
           },
           "confusion_matrix": {
             "labels": [
@@ -1729,10 +1728,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 1.019892947920483,
+            "log_loss": 1.0198929479204828,
             "accuracy": 0.4222222222222222,
             "macro_f1": 0.30883190883190886,
-            "multiclass_brier_score": 0.61091769149065
+            "multiclass_brier_score": 0.6109176914906499
           },
           "confusion_matrix": {
             "labels": [
@@ -1767,10 +1766,10 @@
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 1.0244034795660002,
-          "population_standard_deviation": 0.04083214799937654,
-          "sample_standard_deviation": 0.05000896385013875,
-          "standard_error": 0.02887268874077187
+          "mean": 1.024403479566,
+          "population_standard_deviation": 0.04083214799937623,
+          "sample_standard_deviation": 0.050008963850138366,
+          "standard_error": 0.02887268874077165
         },
         "accuracy": {
           "mean": 0.5185185185185185,
@@ -1785,10 +1784,10 @@
           "standard_error": 0.08021040569940605
         },
         "multiclass_brier_score": {
-          "mean": 0.6012233778776195,
-          "population_standard_deviation": 0.02864968069258465,
-          "sample_standard_deviation": 0.03508854949524968,
-          "standard_error": 0.02025838349655591
+          "mean": 0.6012233778776194,
+          "population_standard_deviation": 0.02864968069258455,
+          "sample_standard_deviation": 0.03508854949524956,
+          "standard_error": 0.020258383496555843
         }
       },
       "pooled_metrics": {
@@ -1899,10 +1898,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.4025684943573065,
+            "log_loss": 1.4025684943573324,
             "accuracy": 0.4666666666666667,
             "macro_f1": 0.4402597402597402,
-            "multiclass_brier_score": 0.7319043157621736
+            "multiclass_brier_score": 0.7319043157621814
           },
           "confusion_matrix": {
             "labels": [
@@ -1964,10 +1963,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.1146102666843645,
+            "log_loss": 1.1146102666843816,
             "accuracy": 0.5777777777777777,
             "macro_f1": 0.514957264957265,
-            "multiclass_brier_score": 0.5967082330649867
+            "multiclass_brier_score": 0.5967082330650058
           },
           "confusion_matrix": {
             "labels": [
@@ -2027,10 +2026,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 1.085232291640465,
+            "log_loss": 1.085232291640475,
             "accuracy": 0.4888888888888889,
             "macro_f1": 0.42183028493218866,
-            "multiclass_brier_score": 0.6449983227929421
+            "multiclass_brier_score": 0.6449983227929493
           },
           "confusion_matrix": {
             "labels": [
@@ -2065,10 +2064,10 @@
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 1.2008036842273786,
-          "population_standard_deviation": 0.14317249575132404,
-          "sample_standard_deviation": 0.1753497798957682,
-          "standard_error": 0.1012382426251634
+          "mean": 1.2008036842273964,
+          "population_standard_deviation": 0.14317249575133012,
+          "sample_standard_deviation": 0.17534977989577566,
+          "standard_error": 0.10123824262516772
         },
         "accuracy": {
           "mean": 0.5111111111111111,
@@ -2083,17 +2082,17 @@
           "standard_error": 0.028472208114228126
         },
         "multiclass_brier_score": {
-          "mean": 0.6578702905400341,
-          "population_standard_deviation": 0.05593901953274826,
-          "sample_standard_deviation": 0.06851102728340736,
-          "standard_error": 0.039554860044533034
+          "mean": 0.6578702905400455,
+          "population_standard_deviation": 0.055939019532744175,
+          "sample_standard_deviation": 0.06851102728340236,
+          "standard_error": 0.03955486004453015
         }
       },
       "pooled_metrics": {
-        "log_loss": 1.2008036842273786,
+        "log_loss": 1.2008036842273961,
         "accuracy": 0.5111111111111111,
         "macro_f1": 0.4619929453262787,
-        "multiclass_brier_score": 0.6578702905400341
+        "multiclass_brier_score": 0.6578702905400454
       },
       "pooled_confusion_matrix": {
         "labels": [
@@ -2196,10 +2195,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.4250801701763496,
+            "log_loss": 1.4250801701761349,
             "accuracy": 0.4666666666666667,
             "macro_f1": 0.44835164835164837,
-            "multiclass_brier_score": 0.7507657671252744
+            "multiclass_brier_score": 0.750765767125169
           },
           "confusion_matrix": {
             "labels": [
@@ -2261,10 +2260,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.1013800880961238,
+            "log_loss": 1.1013800880961708,
             "accuracy": 0.6,
             "macro_f1": 0.54,
-            "multiclass_brier_score": 0.5839470842085068
+            "multiclass_brier_score": 0.583947084208538
           },
           "confusion_matrix": {
             "labels": [
@@ -2324,10 +2323,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 1.1333067797941778,
+            "log_loss": 1.133306779794181,
             "accuracy": 0.5111111111111111,
             "macro_f1": 0.42653061224489797,
-            "multiclass_brier_score": 0.6534040903410593
+            "multiclass_brier_score": 0.6534040903410596
           },
           "confusion_matrix": {
             "labels": [
@@ -2362,10 +2361,10 @@
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 1.219922346022217,
-          "population_standard_deviation": 0.1456528475964662,
-          "sample_standard_deviation": 0.17838757809735273,
-          "standard_error": 0.102992116234592
+          "mean": 1.2199223460221622,
+          "population_standard_deviation": 0.14565284759635203,
+          "sample_standard_deviation": 0.17838757809721287,
+          "standard_error": 0.10299211623451124
         },
         "accuracy": {
           "mean": 0.5259259259259259,
@@ -2380,17 +2379,17 @@
           "standard_error": 0.03476179251079947
         },
         "multiclass_brier_score": {
-          "mean": 0.6627056472249468,
-          "population_standard_deviation": 0.06842030625903107,
-          "sample_standard_deviation": 0.08379741918979014,
-          "standard_error": 0.04838046252662125
+          "mean": 0.6627056472249222,
+          "population_standard_deviation": 0.06842030625897384,
+          "sample_standard_deviation": 0.08379741918972004,
+          "standard_error": 0.04838046252658078
         }
       },
       "pooled_metrics": {
-        "log_loss": 1.219922346022217,
+        "log_loss": 1.219922346022162,
         "accuracy": 0.5259259259259259,
         "macro_f1": 0.47389620051822773,
-        "multiclass_brier_score": 0.662705647224947
+        "multiclass_brier_score": 0.6627056472249221
       },
       "pooled_confusion_matrix": {
         "labels": [
@@ -2494,10 +2493,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 2.2944994878147225,
+            "log_loss": 2.294499487827615,
             "accuracy": 0.4444444444444444,
             "macro_f1": 0.4318420985087652,
-            "multiclass_brier_score": 0.8482663418830143
+            "multiclass_brier_score": 0.8482663418870092
           },
           "confusion_matrix": {
             "labels": [
@@ -2559,10 +2558,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.242448888106466,
+            "log_loss": 1.2424488881076061,
             "accuracy": 0.6222222222222222,
             "macro_f1": 0.5649442755825734,
-            "multiclass_brier_score": 0.6215641359102514
+            "multiclass_brier_score": 0.6215641359103271
           },
           "confusion_matrix": {
             "labels": [
@@ -2622,10 +2621,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 1.1295050753454214,
+            "log_loss": 1.1295050753454061,
             "accuracy": 0.5111111111111111,
             "macro_f1": 0.4360146820953092,
-            "multiclass_brier_score": 0.657921086965308
+            "multiclass_brier_score": 0.6579210869652515
           },
           "confusion_matrix": {
             "labels": [
@@ -2660,10 +2659,10 @@
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 1.5554844837555366,
-          "population_standard_deviation": 0.5245928315552291,
-          "sample_standard_deviation": 0.6424923800160585,
-          "standard_error": 0.3709431485545547
+          "mean": 1.555484483760209,
+          "population_standard_deviation": 0.5245928315610604,
+          "sample_standard_deviation": 0.6424923800232004,
+          "standard_error": 0.3709431485586781
         },
         "accuracy": {
           "mean": 0.5259259259259259,
@@ -2678,17 +2677,17 @@
           "standard_error": 0.04368856961645009
         },
         "multiclass_brier_score": {
-          "mean": 0.7092505215861913,
-          "population_standard_deviation": 0.09941329787677267,
-          "sample_standard_deviation": 0.12175592672270166,
-          "standard_error": 0.07029581706878416
+          "mean": 0.7092505215875293,
+          "population_standard_deviation": 0.09941329787862224,
+          "sample_standard_deviation": 0.12175592672496693,
+          "standard_error": 0.07029581707009201
         }
       },
       "pooled_metrics": {
-        "log_loss": 1.5554844837555364,
+        "log_loss": 1.555484483760209,
         "accuracy": 0.5259259259259259,
         "macro_f1": 0.4819652878719329,
-        "multiclass_brier_score": 0.7092505215861913
+        "multiclass_brier_score": 0.7092505215875294
       },
       "pooled_confusion_matrix": {
         "labels": [
@@ -2791,10 +2790,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 2.5178220816671444,
+            "log_loss": 2.5178223550561447,
             "accuracy": 0.4,
             "macro_f1": 0.3986515276837858,
-            "multiclass_brier_score": 0.9397726187838954
+            "multiclass_brier_score": 0.9397732314049342
           },
           "confusion_matrix": {
             "labels": [
@@ -2856,10 +2855,10 @@
             "A": 12
           },
           "metrics": {
-            "log_loss": 1.2269609487136948,
+            "log_loss": 1.2269609661573488,
             "accuracy": 0.6222222222222222,
             "macro_f1": 0.562108262108262,
-            "multiclass_brier_score": 0.5956870288665448
+            "multiclass_brier_score": 0.5956870374577529
           },
           "confusion_matrix": {
             "labels": [
@@ -2919,10 +2918,10 @@
             "A": 13
           },
           "metrics": {
-            "log_loss": 1.2570430923472253,
+            "log_loss": 1.2571794822946654,
             "accuracy": 0.5111111111111111,
             "macro_f1": 0.45598779557589636,
-            "multiclass_brier_score": 0.686618830702658
+            "multiclass_brier_score": 0.6867114038543366
           },
           "confusion_matrix": {
             "labels": [
@@ -2951,16 +2950,16 @@
           },
           "scaler_training_sample_count": 197,
           "solver_iterations": [
-            138
+            135
           ]
         }
       ],
       "fold_metric_summary": {
         "log_loss": {
-          "mean": 1.6672753742426882,
-          "population_standard_deviation": 0.6015527186508454,
-          "sample_standard_deviation": 0.7367486070392903,
-          "standard_error": 0.42536200659921614
+          "mean": 1.6673209345027196,
+          "population_standard_deviation": 0.6015218419153932,
+          "sample_standard_deviation": 0.7367107909159,
+          "standard_error": 0.425340173450197
         },
         "accuracy": {
           "mean": 0.5111111111111111,
@@ -2975,17 +2974,17 @@
           "standard_error": 0.04788127972249962
         },
         "multiclass_brier_score": {
-          "mean": 0.7406928261176994,
-          "population_standard_deviation": 0.14558324315731358,
-          "sample_standard_deviation": 0.17830233041747445,
-          "standard_error": 0.10294289846366649
+          "mean": 0.7407238909056746,
+          "population_standard_deviation": 0.1455720641340399,
+          "sample_standard_deviation": 0.17828863896605282,
+          "standard_error": 0.1029349937005026
         }
       },
       "pooled_metrics": {
-        "log_loss": 1.667275374242688,
+        "log_loss": 1.66732093450272,
         "accuracy": 0.5111111111111111,
         "macro_f1": 0.47738845953250203,
-        "multiclass_brier_score": 0.7406928261176994
+        "multiclass_brier_score": 0.7407238909056745
       },
       "pooled_confusion_matrix": {
         "labels": [
@@ -3116,7 +3115,7 @@
     "matches_selected_configuration": true
   },
   "metric_definitions": {
-    "pooled_metrics": "Calculated once across all 135 disjoint validation predictions so every validation match has equal weight.",
+    "pooled_metrics": "Calculated once across all 135 disjoint validation predictions so every validation match has equal weight. Only Log Loss affects model selection.",
     "multiclass_brier_score": "Mean over validation matches of the sum across H, D, and A of (observed_one_hot - predicted_probability) squared; unscaled range 0 to 2, lower is better.",
     "fold_metric_population_standard_deviation": "Population standard deviation across the three fold metrics.",
     "fold_metric_sample_standard_deviation": "Sample standard deviation across the three fold metrics.",

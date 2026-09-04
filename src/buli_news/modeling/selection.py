@@ -144,7 +144,6 @@ def select_numerical_logistic_configuration(
         candidate_reports,
         key=lambda candidate: (
             candidate["pooled_metrics"]["log_loss"],
-            candidate["pooled_metrics"]["multiclass_brier_score"],
             candidate["feature_count"],
             candidate["C"],
         ),
@@ -175,7 +174,6 @@ def select_numerical_logistic_configuration(
         eligible_candidates,
         key=lambda candidate: (
             candidate["feature_count"],
-            candidate["pooled_metrics"]["multiclass_brier_score"],
             candidate["C"],
             candidate["pooled_metrics"]["log_loss"],
         ),
@@ -212,7 +210,7 @@ def select_numerical_logistic_configuration(
     report = {
         "experiment": "numerical_logistic_configuration_selection",
         "season": season,
-        "input_path": str(features_path),
+        "input_path": features_path.as_posix(),
         "scikit_learn_version": sklearn.__version__,
         "target_classes": list(TARGET_CLASSES),
         "selection_scope": {
@@ -260,7 +258,6 @@ def select_numerical_logistic_configuration(
             ],
             "preference_order_within_threshold": [
                 "lowest feature_count",
-                "lowest pooled multiclass_brier_score",
                 "lowest C",
                 "lowest pooled log_loss",
             ],
@@ -294,7 +291,8 @@ def select_numerical_logistic_configuration(
         "metric_definitions": {
             "pooled_metrics": (
                 "Calculated once across all 135 disjoint validation predictions "
-                "so every validation match has equal weight."
+                "so every validation match has equal weight. Only Log Loss "
+                "affects model selection."
             ),
             "multiclass_brier_score": (
                 "Mean over validation matches of the sum across H, D, and A of "
