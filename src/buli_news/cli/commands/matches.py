@@ -15,8 +15,8 @@ from buli_news.matches.football_data import (
     build_bundesliga_filename,
     fetch_bundesliga_csv,
 )
-from buli_news.matches.history import build_numerical_matches
 from buli_news.matches.normalization import normalize_openligadb_matches
+from buli_news.matches.numerical_matches import build_numerical_matches
 from buli_news.matches.openligadb import fetch_matchdata
 from buli_news.paths import SeasonPaths
 from buli_news.storage import (
