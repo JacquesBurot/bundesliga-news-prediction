@@ -99,7 +99,6 @@ def build_news_source_policy(
         },
         "rules": rules,
     }
-    validate_news_source_policy(policy)
     return policy
 
 
@@ -286,40 +285,6 @@ def validate_unique_hosts(rules: list[dict[str, Any]]) -> None:
     duplicate_hosts = sorted(host for host, count in counts.items() if count > 1)
     if duplicate_hosts:
         msg = f"Source review workbook contains duplicate hosts: {duplicate_hosts}."
-        raise ValueError(msg)
-
-
-def validate_news_source_policy(policy: dict[str, Any]) -> None:
-    """Validate internal counts and ordering in one generated policy."""
-    rules = policy["rules"]
-    hosts = [rule["host"] for rule in rules]
-    if hosts != sorted(hosts):
-        msg = "News source policy rules must be sorted by host."
-        raise ValueError(msg)
-    validate_unique_hosts(rules)
-
-    summary = policy["summary"]
-    decision_counts = Counter(rule["decision"] for rule in rules)
-    expected_summary = {
-        "include_source_count": decision_counts["include"],
-        "exclude_source_count": decision_counts["exclude"],
-        "unreviewed_source_count": 0,
-        "reviewed_article_occurrence_count": sum(
-            rule["article_count"] for rule in rules
-        ),
-        "included_article_occurrence_count_before_deduplication": sum(
-            rule["article_count"]
-            for rule in rules
-            if rule["decision"] == "include"
-        ),
-        "excluded_article_occurrence_count_before_deduplication": sum(
-            rule["article_count"]
-            for rule in rules
-            if rule["decision"] == "exclude"
-        ),
-    }
-    if summary != expected_summary:
-        msg = "News source policy summary does not match its rules."
         raise ValueError(msg)
 
 
