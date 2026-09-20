@@ -4,7 +4,7 @@
   "purpose": "Control which collected news sources may enter local-LLM feature extraction and downstream match-outcome modeling.",
   "source_review": {
     "workbook_path": "data/review/2025/news_sources.xlsx",
-    "workbook_sha256": "0956456f1fdc212026dfdcbb455f1b7d067acadef1f73c29c72b516a5228580d",
+    "workbook_sha256": "14cb39e7a79b412cf93f1ac17768ce9a1a9ef35904153ca342206eaac0dd6de4",
     "worksheet": "sources",
     "reviewed_source_count": 333,
     "review_date_min": "2026-07-17",

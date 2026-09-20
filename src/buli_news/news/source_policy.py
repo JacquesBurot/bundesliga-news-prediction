@@ -207,7 +207,11 @@ def find_worksheet_path(
         target = relationship.attrib.get("Target")
         if not target:
             break
-        worksheet_path = posixpath.normpath(posixpath.join("xl", target))
+        worksheet_path = posixpath.normpath(
+            target.lstrip("/")
+            if target.startswith("/")
+            else posixpath.join("xl", target)
+        )
         if not worksheet_path.startswith("xl/"):
             msg = f"Worksheet path escapes the XLSX archive: {target!r}."
             raise ValueError(msg)

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
-import zipfile
 from collections import Counter
-from html import escape
 from pathlib import Path
 from urllib.parse import urlsplit
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
 SOURCE_REVIEW_WORKSHEET = "sources"
@@ -18,7 +20,6 @@ SOURCE_REVIEW_COLUMNS = (
     "review_status",
     "review_date",
 )
-FIXED_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 
 
 def export_news_source_review(
@@ -141,185 +142,33 @@ def write_source_review_workbook(
         msg = "Cannot write a source-review workbook without source rows."
         raise ValueError(msg)
 
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = SOURCE_REVIEW_WORKSHEET
+    worksheet.append(SOURCE_REVIEW_COLUMNS)
+    for homepage_url, article_count in homepage_counts:
+        worksheet.append((homepage_url, article_count))
+        worksheet.cell(worksheet.max_row, 1).alignment = Alignment(vertical="top")
+        worksheet.cell(worksheet.max_row, 2).alignment = Alignment(horizontal="right")
+
+    worksheet.freeze_panes = "A2"
+    worksheet.row_dimensions[1].height = 22
+    for column, width in zip("ABCDE", (34, 14, 70, 32, 14)):
+        worksheet.column_dimensions[column].width = width
+    for cell in worksheet[1]:
+        cell.font = Font(name="Calibri", size=11, bold=True, color="FFFFFFFF")
+        cell.fill = PatternFill(fill_type="solid", fgColor="FF1F4E78")
+        cell.alignment = Alignment(vertical="center")
+
+    table = Table(displayName="SourceReview", ref=f"A1:E{worksheet.max_row}")
+    table.tableStyleInfo = TableStyleInfo(
+        name="TableStyleMedium2",
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False,
+    )
+    worksheet.add_table(table)
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    row_count = len(homepage_counts) + 1
-    parts = {
-        "[Content_Types].xml": content_types_xml(),
-        "_rels/.rels": root_relationships_xml(),
-        "xl/workbook.xml": workbook_xml(),
-        "xl/_rels/workbook.xml.rels": workbook_relationships_xml(),
-        "xl/worksheets/sheet1.xml": worksheet_xml(homepage_counts),
-        "xl/worksheets/_rels/sheet1.xml.rels": worksheet_relationships_xml(),
-        "xl/tables/table1.xml": table_xml(row_count),
-        "xl/styles.xml": styles_xml(),
-    }
-    with zipfile.ZipFile(
-        output_path,
-        mode="w",
-        compression=zipfile.ZIP_DEFLATED,
-    ) as workbook:
-        for part_name, content in parts.items():
-            part = zipfile.ZipInfo(part_name, date_time=FIXED_ZIP_TIMESTAMP)
-            part.compress_type = zipfile.ZIP_DEFLATED
-            workbook.writestr(part, content)
-
-
-def worksheet_xml(homepage_counts: list[tuple[str, int]]) -> str:
-    """Build the single review worksheet with typed article counts."""
-    rows = [build_header_row()]
-    for row_number, (homepage_url, article_count) in enumerate(
-        homepage_counts,
-        start=2,
-    ):
-        rows.append(
-            f'<row r="{row_number}">'
-            f'{inline_string_cell(f"A{row_number}", homepage_url, style=1)}'
-            f'<c r="B{row_number}" s="2"><v>{article_count}</v></c>'
-            "</row>"
-        )
-    final_row = len(homepage_counts) + 1
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        f'<dimension ref="A1:E{final_row}"/>'
-        '<sheetViews><sheetView workbookViewId="0">'
-        '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>'
-        '</sheetView></sheetViews>'
-        '<sheetFormatPr defaultRowHeight="15"/>'
-        '<cols>'
-        '<col min="1" max="1" width="34" customWidth="1"/>'
-        '<col min="2" max="2" width="14" customWidth="1"/>'
-        '<col min="3" max="3" width="70" customWidth="1"/>'
-        '<col min="4" max="4" width="32" customWidth="1"/>'
-        '<col min="5" max="5" width="14" customWidth="1"/>'
-        '</cols>'
-        f'<sheetData>{"".join(rows)}</sheetData>'
-        '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" '
-        'header="0.3" footer="0.3"/>'
-        '<tableParts count="1"><tablePart r:id="rId1"/></tableParts>'
-        '</worksheet>'
-    )
-
-
-def build_header_row() -> str:
-    cells = "".join(
-        inline_string_cell(f"{column_name(index)}1", value, style=3)
-        for index, value in enumerate(SOURCE_REVIEW_COLUMNS, start=1)
-    )
-    return f'<row r="1" ht="22" customHeight="1">{cells}</row>'
-
-
-def inline_string_cell(reference: str, value: str, *, style: int) -> str:
-    return (
-        f'<c r="{reference}" s="{style}" t="inlineStr">'
-        f'<is><t>{escape(value)}</t></is></c>'
-    )
-
-
-def column_name(index: int) -> str:
-    name = ""
-    while index:
-        index, remainder = divmod(index - 1, 26)
-        name = chr(65 + remainder) + name
-    return name
-
-
-def content_types_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-        '<Default Extension="xml" ContentType="application/xml"/>'
-        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-        '<Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>'
-        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-        '</Types>'
-    )
-
-
-def root_relationships_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
-        '</Relationships>'
-    )
-
-
-def workbook_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        '<sheets><sheet name="sources" sheetId="1" r:id="rId1"/></sheets>'
-        '</workbook>'
-    )
-
-
-def workbook_relationships_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-        '</Relationships>'
-    )
-
-
-def worksheet_relationships_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/>'
-        '</Relationships>'
-    )
-
-
-def table_xml(final_row: int) -> str:
-    columns = "".join(
-        f'<tableColumn id="{index}" name="{escape(name)}"/>'
-        for index, name in enumerate(SOURCE_REVIEW_COLUMNS, start=1)
-    )
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        f'id="1" name="SourceReview" displayName="SourceReview" ref="A1:E{final_row}" '
-        'headerRowCount="1">'
-        f'<autoFilter ref="A1:E{final_row}"/>'
-        f'<tableColumns count="{len(SOURCE_REVIEW_COLUMNS)}">{columns}</tableColumns>'
-        '<tableStyleInfo name="TableStyleMedium2" showFirstColumn="0" '
-        'showLastColumn="0" showRowStripes="1" showColumnStripes="0"/>'
-        '</table>'
-    )
-
-
-def styles_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        '<fonts count="2">'
-        '<font><sz val="11"/><name val="Calibri"/><family val="2"/></font>'
-        '<font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font>'
-        '</fonts>'
-        '<fills count="3">'
-        '<fill><patternFill patternType="none"/></fill>'
-        '<fill><patternFill patternType="gray125"/></fill>'
-        '<fill><patternFill patternType="solid"><fgColor rgb="FF1F4E78"/>'
-        '<bgColor indexed="64"/></patternFill></fill>'
-        '</fills>'
-        '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
-        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-        '<cellXfs count="4">'
-        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
-        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" '
-        'applyAlignment="1"><alignment vertical="top"/></xf>'
-        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" '
-        'applyAlignment="1"><alignment horizontal="right"/></xf>'
-        '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" '
-        'applyAlignment="1"><alignment vertical="center"/></xf>'
-        '</cellXfs>'
-        '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
-        '</styleSheet>'
-    )
+    workbook.save(output_path)
