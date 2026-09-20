@@ -47,23 +47,13 @@ class FootballDataCsvValidation:
     row_count: int
 
 
-def fetch_bundesliga_csv(
-    season: int,
-    client: httpx.Client | None = None,
-) -> FootballDataCsv:
+def fetch_bundesliga_csv(season: int) -> FootballDataCsv:
     """Fetch and validate one Bundesliga season CSV without changing its bytes."""
     source_url = build_bundesliga_url(season)
-    owns_client = client is None
-    if client is None:
-        client = httpx.Client(timeout=60.0, follow_redirects=True)
-
-    try:
+    with httpx.Client(timeout=60.0, follow_redirects=True) as client:
         response = client.get(source_url)
         response.raise_for_status()
         validation = validate_football_data_csv(response.content)
-    finally:
-        if owns_client:
-            client.close()
 
     return FootballDataCsv(
         content=response.content,
