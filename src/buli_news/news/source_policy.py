@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import hashlib
-import posixpath
 import re
 import zipfile
 from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
-from xml.etree import ElementTree
+
+from openpyxl import load_workbook
 
 from buli_news.news.source_review import (
     SOURCE_REVIEW_COLUMNS,
@@ -19,19 +19,11 @@ from buli_news.news.source_review import (
 )
 
 
-MAIN_NAMESPACE = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-OFFICE_RELATIONSHIP_NAMESPACE = (
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-)
-PACKAGE_RELATIONSHIP_NAMESPACE = (
-    "http://schemas.openxmlformats.org/package/2006/relationships"
-)
 REVIEW_STATUS_DECISIONS = {
     "complete_no_ml_clause": "include",
     "complete_explicit_ml_clause": "exclude",
 }
 URL_PATTERN = re.compile(r"https?://[^\s<>]+")
-CELL_REFERENCE_PATTERN = re.compile(r"([A-Z]+)[1-9][0-9]*")
 EXCEL_DATE_EPOCH = datetime(1899, 12, 30)
 
 
@@ -114,19 +106,13 @@ def build_news_source_policy(
 def read_source_review_workbook(
     workbook_path: Path,
 ) -> list[tuple[int, dict[str, str]]]:
-    """Read and validate the fixed source-review worksheet from an XLSX file."""
+    """Read and validate the fixed source-review worksheet with openpyxl."""
     try:
-        with zipfile.ZipFile(workbook_path) as archive:
-            worksheet_path = find_worksheet_path(
-                archive,
-                worksheet_name=SOURCE_REVIEW_WORKSHEET,
-            )
-            shared_strings = read_shared_strings(archive)
-            raw_rows = read_worksheet_rows(
-                archive,
-                worksheet_path=worksheet_path,
-                shared_strings=shared_strings,
-            )
+        workbook = load_workbook(
+            workbook_path,
+            read_only=True,
+            data_only=True,
+        )
     except zipfile.BadZipFile as exc:
         msg = f"Source review workbook is not a valid XLSX file: {workbook_path}."
         raise ValueError(msg) from exc
@@ -134,158 +120,59 @@ def read_source_review_workbook(
         msg = f"Source review workbook is missing required XLSX content: {exc}."
         raise ValueError(msg) from exc
 
-    if not raw_rows:
-        msg = "Source review worksheet is empty."
-        raise ValueError(msg)
-
-    header_row_number, header_values = raw_rows[0]
-    headers = tuple(header_values.get(index, "").strip() for index in range(1, 6))
-    if header_row_number != 1 or headers != SOURCE_REVIEW_COLUMNS:
-        msg = (
-            "Source review worksheet must have the exact columns "
-            f"{list(SOURCE_REVIEW_COLUMNS)} in row 1, got {list(headers)}."
-        )
-        raise ValueError(msg)
-    extra_header_columns = [
-        value
-        for index, value in sorted(header_values.items())
-        if index > len(SOURCE_REVIEW_COLUMNS) and value.strip()
-    ]
-    if extra_header_columns:
-        msg = f"Source review worksheet has unexpected columns: {extra_header_columns}."
-        raise ValueError(msg)
-
-    records = []
-    for row_number, values in raw_rows[1:]:
-        if not any(value.strip() for value in values.values()):
-            continue
-        extra_values = [
-            value
-            for index, value in sorted(values.items())
-            if index > len(SOURCE_REVIEW_COLUMNS) and value.strip()
-        ]
-        if extra_values:
-            msg = f"Source review row {row_number} has values outside columns A-E."
-            raise ValueError(msg)
-        record = {
-            column: values.get(index, "").strip()
-            for index, column in enumerate(SOURCE_REVIEW_COLUMNS, start=1)
-        }
-        records.append((row_number, record))
-
-    if not records:
-        msg = "Source review worksheet contains no source rows."
-        raise ValueError(msg)
-    return records
-
-
-def find_worksheet_path(
-    archive: zipfile.ZipFile,
-    worksheet_name: str,
-) -> str:
-    """Resolve a worksheet name through the XLSX relationship files."""
-    workbook = ElementTree.fromstring(archive.read("xl/workbook.xml"))
-    relationship_id = None
-    for sheet in workbook.findall(f".//{{{MAIN_NAMESPACE}}}sheet"):
-        if sheet.attrib.get("name") == worksheet_name:
-            relationship_id = sheet.attrib.get(
-                f"{{{OFFICE_RELATIONSHIP_NAMESPACE}}}id"
-            )
-            break
-    if relationship_id is None:
-        msg = f"Source review workbook has no worksheet {worksheet_name!r}."
-        raise ValueError(msg)
-
-    relationships = ElementTree.fromstring(
-        archive.read("xl/_rels/workbook.xml.rels")
-    )
-    for relationship in relationships.findall(
-        f"{{{PACKAGE_RELATIONSHIP_NAMESPACE}}}Relationship"
-    ):
-        if relationship.attrib.get("Id") != relationship_id:
-            continue
-        target = relationship.attrib.get("Target")
-        if not target:
-            break
-        worksheet_path = posixpath.normpath(
-            target.lstrip("/")
-            if target.startswith("/")
-            else posixpath.join("xl", target)
-        )
-        if not worksheet_path.startswith("xl/"):
-            msg = f"Worksheet path escapes the XLSX archive: {target!r}."
-            raise ValueError(msg)
-        return worksheet_path
-
-    msg = f"Worksheet relationship {relationship_id!r} cannot be resolved."
-    raise ValueError(msg)
-
-
-def read_shared_strings(archive: zipfile.ZipFile) -> list[str]:
-    """Read the optional XLSX shared-string table."""
     try:
-        content = archive.read("xl/sharedStrings.xml")
-    except KeyError:
-        return []
-
-    root = ElementTree.fromstring(content)
-    return [
-        "".join(text.text or "" for text in item.iter(f"{{{MAIN_NAMESPACE}}}t"))
-        for item in root.findall(f"{{{MAIN_NAMESPACE}}}si")
-    ]
-
-
-def read_worksheet_rows(
-    archive: zipfile.ZipFile,
-    worksheet_path: str,
-    shared_strings: list[str],
-) -> list[tuple[int, dict[int, str]]]:
-    """Read sparse XLSX worksheet cells into row and column indices."""
-    root = ElementTree.fromstring(archive.read(worksheet_path))
-    rows = []
-    for row in root.findall(f".//{{{MAIN_NAMESPACE}}}row"):
-        row_number = int(row.attrib["r"])
-        values = {}
-        for cell in row.findall(f"{{{MAIN_NAMESPACE}}}c"):
-            reference = cell.attrib.get("r", "")
-            match = CELL_REFERENCE_PATTERN.fullmatch(reference)
-            if match is None:
-                msg = f"Invalid XLSX cell reference {reference!r}."
-                raise ValueError(msg)
-            column_index = excel_column_index(match.group(1))
-            values[column_index] = read_cell_value(cell, shared_strings)
-        rows.append((row_number, values))
-    return rows
-
-
-def read_cell_value(cell: ElementTree.Element, shared_strings: list[str]) -> str:
-    """Return one XLSX cell's cached scalar value as text."""
-    cell_type = cell.attrib.get("t")
-    if cell_type == "inlineStr":
-        return "".join(
-            text.text or ""
-            for text in cell.iter(f"{{{MAIN_NAMESPACE}}}t")
+        if SOURCE_REVIEW_WORKSHEET not in workbook.sheetnames:
+            msg = f"Source review workbook has no worksheet {SOURCE_REVIEW_WORKSHEET!r}."
+            raise ValueError(msg)
+        worksheet = workbook[SOURCE_REVIEW_WORKSHEET]
+        rows = worksheet.iter_rows(
+            min_row=1,
+            max_col=max(len(SOURCE_REVIEW_COLUMNS), worksheet.max_column or 0),
+            values_only=True,
         )
+        header_values = tuple(review_cell_text(value) for value in next(rows, ()))
+        headers = header_values[:len(SOURCE_REVIEW_COLUMNS)]
+        if headers != SOURCE_REVIEW_COLUMNS:
+            msg = (
+                "Source review worksheet must have the exact columns "
+                f"{list(SOURCE_REVIEW_COLUMNS)} in row 1, got {list(headers)}."
+            )
+            raise ValueError(msg)
+        extra_headers = [
+            value
+            for value in header_values[len(SOURCE_REVIEW_COLUMNS):]
+            if value
+        ]
+        if extra_headers:
+            msg = f"Source review worksheet has unexpected columns: {extra_headers}."
+            raise ValueError(msg)
 
-    value_node = cell.find(f"{{{MAIN_NAMESPACE}}}v")
-    if value_node is None or value_node.text is None:
+        records = []
+        for row_number, row in enumerate(rows, start=2):
+            values = tuple(review_cell_text(value) for value in row)
+            if not any(values):
+                continue
+            if any(values[len(SOURCE_REVIEW_COLUMNS):]):
+                msg = f"Source review row {row_number} has values outside columns A-E."
+                raise ValueError(msg)
+            record = dict(zip(SOURCE_REVIEW_COLUMNS, values))
+            records.append((row_number, record))
+
+        if not records:
+            msg = "Source review worksheet contains no source rows."
+            raise ValueError(msg)
+        return records
+    finally:
+        workbook.close()
+
+
+def review_cell_text(value: object) -> str:
+    """Normalize empty cells and Excel dates for the review-field validators."""
+    if value is None:
         return ""
-    raw_value = value_node.text
-    if cell_type == "s":
-        try:
-            return shared_strings[int(raw_value)]
-        except (IndexError, ValueError) as exc:
-            msg = f"Invalid XLSX shared-string index {raw_value!r}."
-            raise ValueError(msg) from exc
-    return raw_value
-
-
-def excel_column_index(column_name: str) -> int:
-    """Convert an Excel column name such as A or AA to a one-based index."""
-    index = 0
-    for character in column_name:
-        index = index * 26 + ord(character) - ord("A") + 1
-    return index
+    if isinstance(value, datetime) and value.time() == time():
+        value = value.date()
+    return str(value).strip()
 
 
 def build_policy_rule(row: dict[str, str], row_number: int) -> dict[str, Any]:
