@@ -224,6 +224,9 @@ data/interim/*/news/contents/contents.jsonl
 data/interim/*/news/annotations/**/*.jsonl
 data/interim/*/news/annotations/**/*.jsonl.lock
 
+# Manual annotation workbooks and supporting files contain article texts.
+notebooks/helpers/human_annotations/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
