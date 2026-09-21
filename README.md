@@ -1,27 +1,45 @@
 # bundesliga-news-prediction
 
-Python pipeline for a master's thesis investigating whether structured
-pre-match sports-news features improve Bundesliga match-outcome predictions
-beyond numerical pre-match data alone.
+Python pipeline for a master's thesis investigating whether pre-match sports
+news contains predictive information about Bundesliga match outcomes, whether
+structured news features improve predictions beyond numerical pre-match data
+alone, and how suitable local large language models (LLMs) are for extracting
+this information.
 
 ## Contents
 
 - [Current Scope](#current-scope)
 - [Experiment Design](#experiment-design)
 - [Data Flow](#data-flow)
-- [Leakage Rules](#leakage-rules)
-- [Project Structure](#project-structure)
 - [Setup](#setup)
 - [Numerical Data Pipeline](#numerical-data-pipeline)
-- [Numerical Dummy Baseline](#numerical-dummy-baseline)
-- [Numerical Logistic Reference](#numerical-logistic-reference)
-- [Training-Only Numerical Logistic Configuration Selection](#training-only-numerical-logistic-configuration-selection)
-- [Final Numerical Logistic Regression](#final-numerical-logistic-regression)
+  - [1. Fetch OpenLigaDB Match Data](#1-fetch-openligadb-match-data)
+  - [2. Fetch Football-Data Match Statistics](#2-fetch-football-data-match-statistics)
+  - [3. Build Normalized OpenLigaDB Matches](#3-build-normalized-openligadb-matches)
+  - [4. Build Numerical Match History](#4-build-numerical-match-history)
+  - [5. Build Numerical Features](#5-build-numerical-features)
 - [News Pipeline](#news-pipeline)
-- [News Feature Aggregation](#news-feature-aggregation)
-- [News-Only Diagnostic Logistic Regression](#news-only-diagnostic-logistic-regression)
-- [Combined Numerical and News Logistic Regression](#combined-numerical-and-news-logistic-regression)
-- [Planned Next Stages](#planned-next-stages)
+  - [6. Build Planned News Requests](#6-build-planned-news-requests)
+  - [7. Fetch News Responses](#7-fetch-news-responses)
+  - [8. Export Sources for Manual Legal Review](#8-export-sources-for-manual-legal-review)
+  - [9. Build Reviewed News Source Policy](#9-build-reviewed-news-source-policy)
+  - [10. Build Policy-Filtered News Articles](#10-build-policy-filtered-news-articles)
+  - [11. Build News Contents](#11-build-news-contents)
+  - [12. Build Team-Specific LLM Annotation Tasks](#12-build-team-specific-llm-annotation-tasks)
+  - [13. Annotate News Through Local Ollama](#13-annotate-news-through-local-ollama)
+  - [14. Build News Features](#14-build-news-features)
+- [Modelling](#modelling)
+  - [15. Evaluate ZeroR Baseline](#15-evaluate-zeror-baseline)
+  - [16. Evaluate Full-Feature Numerical Reference](#16-evaluate-full-feature-numerical-reference)
+  - [17. Select Numerical Model Configuration](#17-select-numerical-model-configuration)
+  - [18. Evaluate Selected Numerical Model](#18-evaluate-selected-numerical-model)
+  - [19. Evaluate News-Only Model](#19-evaluate-news-only-model)
+  - [20. Evaluate Combined Model](#20-evaluate-combined-model)
+- [Analysis Notebooks](#analysis-notebooks)
+  - [Model Comparison Notebook](#model-comparison-notebook)
+  - [Annotation Reproducibility Notebook](#annotation-reproducibility-notebook)
+  - [Annotation Bias Notebook](#annotation-bias-notebook)
+  - [News Feature Ablation Notebook](#news-feature-ablation-notebook)
 
 ## Current Scope
 
@@ -30,43 +48,51 @@ The implemented pipeline currently supports:
 1. downloading raw Bundesliga match metadata from OpenLigaDB
 2. downloading raw match statistics from Football-Data.co.uk
 3. normalizing OpenLigaDB match metadata
-4. joining both match sources into a canonical numerical match history
-5. calculating leakage-safe numerical pre-match features
-6. planning and fetching German pre-match news from Event Registry / NewsAPI.ai
-7. exporting collected source homepages into a workbook for manual legal review
-8. converting the reviewed news-source XLSX into a versioned JSON policy
-9. applying the source policy and building canonical articles with
-   request-bound match and team-side links
-10. grouping text-identical publications under stable content IDs while
-    retaining every article and request association
-11. building request-bound, team-specific local-LLM annotation tasks
-12. extracting four structured news indicators through a local Ollama server
+4. joining both match sources into a numerical match history
+5. calculating numerical pre-match features
+6. planning German pre-match news requests for Event Registry / NewsAPI.ai
+7. fetching the planned news requests
+8. exporting collected source homepages into a workbook for manual legal review
+9. converting the reviewed news-source XLSX into a JSON policy
+10. applying the source policy and building articles
+11. grouping text-identical publications under stable content IDs
+12. building request-bound, team-specific local-LLM annotation tasks
+13. extracting four structured news indicators through a local Ollama server
     with a versioned system prompt and strict JSON output
-13. aggregating the validated annotations into 16 match-level home/away news
-    features with a separate quality report
-14. evaluating a prior-based numerical `DummyClassifier` reference
-15. evaluating standardized multinomial logistic regression on the numerical
-   features
-16. selecting numerical logistic-regression regularization and one of two fixed
-   feature sets with training-only expanding-window validation
-17. evaluating the frozen training-selected numerical logistic model on the
+14. aggregating the validated annotations into 16 match-level home/away news
+    features
+15. evaluating the **ZeroR baseline** with a `DummyClassifier`
+16. evaluating standardized multinomial logistic regression on the numerical
+    features
+17. selecting numerical logistic-regression regularization and one of two fixed
+    feature sets with training-only expanding-window validation
+18. evaluating the **Selected numerical model** on the
     fixed test split without overwriting the original baseline
-18. evaluating that same frozen logistic configuration with the selected 31
-    numerical features plus all 16 fixed news features
-19. evaluating a supplementary diagnostic model using only the 16 fixed news
-    features and the transferred logistic configuration
+19. evaluating the supplementary **News-only model** using only the
+    16 fixed news features
+20. evaluating the **Combined model** with that same
+    configuration, the selected 31 numerical features, and all 16 fixed news
+    features
 
-Both main experiment variants are now evaluated on the same fixed test matches.
-The news-only model supplements that primary comparison by isolating the
-standalone predictive signal in the extracted news features. Annotation-bias
-and robustness analysis remain separate follow-up stages.
+All experiment variants are evaluated on the same fixed test matches.
+
+Four notebooks provide additional analyses:
+
+1. **Model comparison** compares the predictive performance of the four models
+   on the same test matches.
+2. **Annotation reproducibility** examines how consistently the local LLM
+   annotates the same news in two runs.
+3. **Annotation bias** explores possible bias in the LLM annotations through
+   indicator and team comparisons and comparison with human annotations.
+4. **News-feature ablation** examines how different groups of news features
+   contribute to predictive performance when added to the numerical model.
 
 ## Experiment Design
 
 The main experiment compares two variants on exactly the same matches:
 
 1. numerical pre-match features only
-2. the same numerical features plus structured news features extracted by a
+2. the same numerical features plus aggregated news features extracted by a
    local LLM
 
 The target classes are:
@@ -77,213 +103,83 @@ D = draw
 A = away win
 ```
 
-The fixed chronological split for season 2025/26 is:
+The fixed split for season 2025/26 is:
 
 ```text
 Training: matchdays 1-27 (243 matches)
 Test:     matchdays 28-34 (63 matches)
 ```
 
-No random split is used. A `DummyClassifier` reference and multinomial logistic
-regression are implemented. Evaluation uses Log Loss, Accuracy, Macro-F1,
-multiclass Brier Score, and a Confusion Matrix.
+The **ZeroR baseline** is implemented with
+`DummyClassifier(strategy="prior")`, the other models use multinomial logistic
+regression. Evaluation uses Log Loss, Accuracy, Macro-F1, Brier
+Score, and a Confusion Matrix.
 
 The local LLM acts as a feature extractor, not as the match predictor:
 
-```text
-news article -> local LLM -> structured article annotation
-             -> aggregated pre-match news features
+```mermaid
+flowchart TD
+    A[News article] --> L[Local LLM]
+    L --> S[Structured article annotation]
+    S --> F[Aggregated pre-match news features]
 ```
-
-Both primary logistic-regression variants use the same preprocessing, target,
-training rows, test rows, and evaluation code. Only the feature columns differ.
-The supplementary news-only model uses the same evaluation setup without any
-numerical predictors. Numerical hyperparameter and feature-set selection is
-performed inside matchdays 1-27. The selected `C=0.01` is transferred unchanged
-to the combined and news-only models; it is not independently selected for
-either model. Matchdays 28-34 are excluded from fitting, scaling, and selection.
 
 ## Data Flow
 
-```text
-OpenLigaDB raw --------> normalized match metadata --+
-                                                     +--> numerical match history
-Football-Data raw -----> non-betting match stats ----+             |
-                                                                   v
-                                               numerical pre-match features
+### Numerical Data
 
-NewsAPI.ai raw -----> source-review XLSX -----> source policy
-       |                                          |
-       +------------------------------------------+
-                                                  v
-                      canonical articles + request-bound links
-                                                  |
-                                                  v
-                                     content IDs -> team-specific tasks
-                                                   -> local Ollama annotations
-                                                   -> news features
-
-numerical features -------------------------> model A
-numerical features + news features ---------> model B
-news features ------------------------------> diagnostic news-only model
+```mermaid
+flowchart TD
+    O[OpenLigaDB raw data] --> M[Normalized match metadata]
+    M --> H[Numerical match history]
+    F[Football-Data raw data] --> H
+    H --> N[Numerical features]
 ```
 
-The data directories represent processing stages:
+### News
 
-- `data/raw`: unchanged responses from external sources
-- `data/interim/{season}/matches`: normalized and joined match data
-- `data/interim/{season}/news/collection`: planned requests and fetch ledger
-- `data/interim/{season}/news/articles`: canonical articles and request links
-- `data/interim/{season}/news/contents`: exact-content groups and article links
-- `data/interim/{season}/news/annotations`: local-LLM tasks, results, and failures
-- `data/review/{season}`: manually maintained review workbooks
-- `data/processed`: model-ready pre-match feature tables
-- `outputs/modeling`: generated model reports and prediction tables
-
-Numerical source data, derived match data, processed features, news metadata,
-review workbooks, and model outputs may be versioned for reproducibility. Among
-project data, Git ignores only copyright-sensitive news content: raw NewsAPI.ai
-responses, canonical article rows, grouped article contents, and annotation
-JSONL files containing article text or evidence excerpts. Their `.gitkeep`
-files preserve the excluded directory structure in the repository.
-
-All standard season-specific locations are defined centrally in
-`buli_news.paths.SeasonPaths`. Pipeline commands must use these path definitions
-instead of reconstructing interim, review, processed, or modeling paths locally.
-
-## Leakage Rules
-
-Every prediction row must contain only information available before that
-fixture. Numerical features are created in chronological order:
-
-```text
-1. read both teams' existing histories
-2. create the current match's pre-match features
-3. store the current result as the target
-4. update both histories with the completed match
+```mermaid
+flowchart TD
+    R[NewsAPI.ai raw data] --> X[Source-review XLSX]
+    X --> P[Source policy]
+    R --> A[articles]
+    P --> A
+    A --> C[contents]
+    C --> T[Team-specific tasks]
+    T --> L[Local Ollama annotations]
+    L --> N[News features]
 ```
 
-Current-match goals, shots, cards, and the result never enter that match's
-predictors. They are retained in the interim history only to calculate features
-for later fixtures.
+### Models
 
-For test matchdays, earlier completed test matches may inform later test
-fixtures, because those results would be known at the later kickoff. The model
-itself is not retrained on test rows.
-
-News articles must be published inside their pre-match windows. Results,
-post-match articles, and other information unavailable at prediction time must
-never be passed to the local LLM or the prediction model.
-
-## Project Structure
-
-```text
-bundesliga-news-prediction/
-├── config/
-│   ├── news_annotation_schema_v1.json
-│   ├── news_annotation_schema_v2.json
-│   ├── news_annotation_schema_v3.json
-│   ├── news_source_policy.json
-│   └── teams.json
-├── data/
-│   ├── raw/
-│   │   ├── football_data/
-│   │   ├── openligadb/
-│   │   └── newsapi/
-│   ├── interim/
-│   │   └── {season}/
-│   │       ├── matches/
-│   │       └── news/
-│   │           ├── collection/
-│   │           ├── articles/
-│   │           ├── contents/
-│   │           └── annotations/
-│   │               └── pilots/
-│   │                   └── v{schema_version}/
-│   ├── review/
-│   │   └── {season}/
-│   └── processed/
-├── outputs/
-│   └── modeling/
-├── src/
-│   └── buli_news/
-│       ├── __init__.py
-│       ├── main.py
-│       ├── paths.py
-│       ├── storage.py
-│       ├── cli/
-│       │   ├── application.py
-│       │   ├── arguments.py
-│       │   ├── errors.py
-│       │   ├── parser.py
-│       │   └── commands/
-│       │       ├── annotations.py
-│       │       ├── matches.py
-│       │       ├── modeling.py
-│       │       ├── news_collection.py
-│       │       ├── news_features.py
-│       │       └── news_processing.py
-│       ├── matches/
-│       │   ├── features.py
-│       │   ├── football_data.py
-│       │   ├── history.py
-│       │   ├── normalization.py
-│       │   └── openligadb.py
-│       ├── modeling/
-│       │   ├── combined.py
-│       │   ├── evaluation.py
-│       │   ├── news_only.py
-│       │   └── selection.py
-│       └── news/
-│           ├── articles.py
-│           ├── contents.py
-│           ├── fetch.py
-│           ├── features.py
-│           ├── requests.py
-│           ├── source_policy.py
-│           ├── source_review.py
-│           └── annotations/
-│               ├── _validation.py
-│               ├── config.py
-│               ├── ollama.py
-│               ├── results.py
-│               ├── runner.py
-│               ├── selection.py
-│               └── tasks.py
-├── .env.example
-├── .gitattributes
-├── .gitignore
-├── .python-version
-├── pyproject.toml
-├── README.md
-└── uv.lock
+```mermaid
+flowchart TD
+    N[Numerical features] --> S[Selected numerical model]
+    N --> C[Combined model]
+    W[News features] --> C
+    W --> D[News-only model]
 ```
 
-The source tree follows the pipeline domains. `matches` owns match acquisition
-and numerical feature construction, `news` owns collection and article
-processing, and `modeling` owns model selection and evaluation. `cli` contains
-command registration, top-level artifact orchestration, console output, and the
-shared error boundary; domain modules never import it. Format-bound and
-resume-sensitive I/O remains with the responsible domain stage, including raw
-response persistence, source-review XLSX handling, and locked append-only
-annotation outputs. The small top-level `main.py` keeps both
-`python -m buli_news.main` and the `buli-news` console script stable.
+Data and results are organized into five directories:
 
-The annotation package separates deterministic configuration and task
-construction from Ollama communication, append-only result handling, and
-concurrent run orchestration. This keeps schema- and ID-defining code isolated
-from infrastructure concerns while preserving the existing artifact formats.
+- `data/raw`: unchanged match and news data from external sources
+- `data/interim`: intermediate data, including prepared match data, news
+  requests, processed articles, and LLM annotations
+- `data/processed`: numerical and news feature tables for modeling
+- `data/review`: workbook for manual review of news sources
+- `outputs`: model evaluation reports and prediction tables
 
 ## Setup
 
-The project uses `uv` and Python 3.13:
+The project uses `uv` and Python 3.13. Install `uv` before running the following
+commands. From the repository root, install the project dependencies:
 
 ```console
 uv sync --locked
 ```
 
-Run all commands from the repository root. Commands are available in module
-form:
+Run all terminal commands from the repository root. Pipeline commands are
+available in module form:
 
 ```console
 uv run python -m buli_news.main ...
@@ -295,9 +191,21 @@ or through the console script:
 uv run buli-news ...
 ```
 
-The project currently has no automated test suite. Pipeline stages perform
-their own input and output validation; dedicated tests may be added during a
-later cleanup phase.
+To include the optional analysis dependencies for the Jupyter notebooks, use
+the following command instead. It installs both the project and analysis
+dependencies into the same `.venv` environment:
+
+```console
+uv sync --locked --group analysis
+```
+
+Open the notebook in an IDE and select the repository's `.venv` Python
+interpreter as its kernel. Run notebooks with `notebooks/` as their working
+directory, since their input paths are relative to that directory.
+
+Fetching news requires `NEWSAPI_KEY` in the environment or a local `.env` file.
+Running LLM annotations
+requires a running Ollama server with the selected model installed.
 
 ## Numerical Data Pipeline
 
@@ -319,8 +227,6 @@ Output:
 data/raw/openligadb/bl1_2025.json
 ```
 
-OpenLigaDB uses the season start year: `2025` represents season 2025/26.
-
 ### 2. Fetch Football-Data Match Statistics
 
 ```console
@@ -338,15 +244,6 @@ Output:
 ```text
 data/raw/football_data/D1_2526.csv
 ```
-
-The response bytes are stored unchanged. Download validation is deliberately
-structural: the response must be a non-empty UTF-8 or Windows-1252 CSV with a
-valid header, at least one data row, unique column names, and the required core
-columns.
-
-The raw CSV also contains betting odds. They remain in the unchanged raw file
-for provenance but are excluded from every derived numerical table through
-explicit column lists.
 
 ### 3. Build Normalized OpenLigaDB Matches
 
@@ -366,7 +263,7 @@ Output:
 data/interim/2025/matches/normalized.jsonl
 ```
 
-This table contains match IDs, matchdays, local kickoff timestamps, canonical
+This table contains match IDs, matchdays, local kickoff timestamps,
 team names, team IDs, results, and news-window metadata.
 
 The pre-match news window is:
@@ -404,27 +301,20 @@ data/interim/2025/matches/numerical_quality.json
 Team mappings connect exact Football-Data names to OpenLigaDB team IDs. The
 sources must match one-to-one by local date, home team, and away team.
 
-During numerical-history parsing, Football-Data goals and match statistics
-must be non-negative integers, the result class must agree with the full-time
-goals, and shots on target must not exceed total shots for either team.
-
 Source responsibilities:
 
-- OpenLigaDB: match ID, matchday, kickoff, canonical team names, and team IDs
+- OpenLigaDB: match ID, matchday, kickoff, team names, and team IDs
 - Football-Data: target, goals, shots, shots on target, fouls, corners, and
   cards
 
-Football-Data is the canonical result source. Differences from OpenLigaDB are
+Football-Data is the result source. Differences from OpenLigaDB are
 recorded in the quality report rather than silently hidden. In the current
 2025/26 data, OpenLigaDB reports match ID `77546` as 0-1, while Football-Data
-and the
-[official Bundesliga result](https://www.bundesliga.com/de/bundesliga/news/1-fsv-mainz-05-1-fc-union-berlin-spieltag-33-spielbericht-highlights-37326)
+and 
+[the official Bundesliga match report](https://www.bundesliga.com/de/bundesliga/news/1-fsv-mainz-05-1-fc-union-berlin-spieltag-33-spielbericht-highlights-37326)
 are 1-3.
 
-The interim statistics describe completed matches. They are historical
-observations, not direct model inputs for the same fixture.
-
-### 5. Build Numerical Pre-Match Features
+### 5. Build Numerical Features
 
 ```console
 uv run python -m buli_news.main build-numerical-features --season 2025
@@ -455,403 +345,13 @@ Feature-name conventions:
 - `avg` divides by the number of available prior matches, not always by five.
 - `per_game` uses all prior Bundesliga matches in the current season.
 
-### Numerical Feature Catalog
-
-| Feature columns | Meaning and calculation |
-| --- | --- |
-| `home_matches_played`, `away_matches_played` | Number of completed season matches before the current fixture. |
-| `home_points_per_game`, `away_points_per_game` | All prior season points divided by prior matches, using 3 points for a win, 1 for a draw, and 0 for a loss. |
-| `home_form_points_last_5`, `away_form_points_last_5` | Sum of points from up to five most recent matches. After five matches, the range is 0 to 15. |
-| `home_goals_for_last_5_avg`, `away_goals_for_last_5_avg` | Average goals scored by the team over its last five matches. |
-| `home_goals_against_last_5_avg`, `away_goals_against_last_5_avg` | Average goals scored by the opponents over the team's last five matches. |
-| `home_shots_for_last_5_avg`, `away_shots_for_last_5_avg` | Average total shots taken by the team over its last five matches. |
-| `home_shots_against_last_5_avg`, `away_shots_against_last_5_avg` | Average total shots allowed to opponents over the team's last five matches. |
-| `home_shots_on_target_for_last_5_avg`, `away_shots_on_target_for_last_5_avg` | Average shots on target by the team over its last five matches. |
-| `home_shots_on_target_against_last_5_avg`, `away_shots_on_target_against_last_5_avg` | Average opponent shots on target over the team's last five matches. |
-| `home_corners_for_last_5_avg`, `away_corners_for_last_5_avg` | Average corners won by the team over its last five matches. |
-| `home_corners_against_last_5_avg`, `away_corners_against_last_5_avg` | Average corners won by opponents over the team's last five matches. |
-| `home_fouls_committed_last_5_avg`, `away_fouls_committed_last_5_avg` | Average fouls committed by the team over its last five matches. |
-| `home_yellow_cards_last_5_avg`, `away_yellow_cards_last_5_avg` | Average yellow cards received by the team over its last five matches. |
-| `home_red_cards_per_game`, `away_red_cards_per_game` | All prior red cards in the current season divided by prior matches. A season-to-date rate is used because red cards are rare. |
-| `home_venue_matches_played`, `away_venue_matches_played` | Prior home matches of the current home team and prior away matches of the current away team. |
-| `home_venue_points_per_game`, `away_venue_points_per_game` | Prior home points divided by home matches for the current home team, and prior away points divided by away matches for the current away team. |
-| `home_days_since_last_match`, `away_days_since_last_match` | Calendar-date difference between the current fixture and the team's previous Bundesliga match. Cup and international matches are not included. |
-| `elo_difference_before` | Home-team Elo minus away-team Elo immediately before kickoff. The detailed update is described below. |
-
-Only the explicitly defined numerical feature columns will later form `X`.
-Match IDs, team IDs, team names, kickoff, matchday, `dataset_split`, and
-`result` are retained for assignment and auditing but are not predictors.
-
-All rolling averages are rounded to six decimal places. When no prior
-observation exists, the affected history value is `0`; the accompanying match
-count is also `0`.
-
-### Elo Calculation
-
-The implementation uses the `ELO-Goals` variant evaluated by
-[Wunderlich and Memmert (2018)](https://doi.org/10.1371/journal.pone.0198668).
-It adopts their published update parameters and starting value. The project
-uses only Bundesliga matches from 2025/26, so unlike the study it has no
-multi-season rating warm-up or parameter-calibration period.
-
-Every team starts the season with the same Elo rating. The constants are fixed
-from the literature before model evaluation and are not tuned against the test
-set:
-
-```text
-initial rating:            1000
-base K-factor:             4
-goal-difference exponent:  1.6
-home advantage:            80 rating points
-rating scale:              400
-actual score:              1.0 home win, 0.5 draw, 0.0 away win
-```
-
-Before a match, the expected home-team score is:
-
-```text
-expected_home =
-    1 / (1 + 10 ** (-((home_elo + 80 - away_elo) / 400)))
-```
-
-The home advantage of 80 rating points is used only in this expectation. The
-actual home-team score is `1.0` for a home win, `0.5` for a draw, and `0.0` for
-an away win. The absolute goal difference determines the match-specific
-K-factor:
-
-```text
-goal_difference = abs(home_goals - away_goals)
-match_k_factor = 4 * (1 + goal_difference) ** 1.6
-rating_change = match_k_factor * (actual_home - expected_home)
-
-new_home_elo = home_elo + rating_change
-new_away_elo = away_elo - rating_change
-```
-
-A larger goal difference increases the match-specific K-factor. The final
-rating change also depends on how strongly the actual result differs from the
-expected result. The update remains zero-sum: one team gains exactly the rating
-points lost by the other.
-
-The feature row stores:
-
-```text
-elo_difference_before = home_elo - away_elo
-```
-
-This value is created before the current match update. A positive value means
-that the home team has the higher pre-match rating, while a negative value means
-that the away team has the higher rating. The 80-point home advantage is not
-added to the stored difference.
-
-Both team ratings are updated only after all current pre-match features have
-been stored. The current result can therefore affect future fixtures but never
-its own feature row. Absolute Elo ratings are omitted because their difference
-already represents relative team strength and avoids redundant model columns.
-
-The first match for every team uses deterministic zero values and a
-`matches_played` value of zero. This makes unavailable early-season history
-explicit without learning an imputation value from future matches.
-
-The current implementation uses Bundesliga fixtures only. Therefore
-`days_since_last_match` does not yet account for cup or international matches.
-
-## Numerical Dummy Baseline
-
-```console
-uv run python -m buli_news.main evaluate-numerical-model-dummy --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news evaluate-numerical-model-dummy --season 2025
-```
-
-Input:
-
-```text
-data/processed/numerical_features_2025.csv
-```
-
-Outputs:
-
-```text
-outputs/modeling/2025/numerical/dummy/evaluation.json
-outputs/modeling/2025/numerical/dummy/test_predictions.csv
-```
-
-The command validates the exact feature schema, all 306 unique match IDs, nine
-matches per matchday, the fixed 243/63 chronological split, finite numerical
-values, and the presence of all three target classes in both splits.
-
-The reference model is:
-
-```text
-DummyClassifier(strategy="prior")
-```
-
-It learns only the H/D/A class proportions from matchdays 1-27. It always
-predicts the most frequent training class, while its predicted probabilities
-equal the training class proportions. The numerical feature values are passed
-through the common model-data interface but deliberately ignored by the dummy
-estimator. Standardization is therefore neither needed nor applied at this
-stage.
-
-The result JSON records the input, explicit feature list, model configuration,
-class counts, learned class probabilities, Log Loss, Accuracy, Macro-F1,
-multiclass Brier Score, and the Confusion Matrix. Reports use the fixed class
-order `H`, `D`, `A`.
-
-The prediction CSV retains one row per test match with match metadata, the
-actual and predicted result, and the predicted H/D/A probabilities. This makes
-later model comparisons auditable per `match_id`, while the test labels remain
-excluded from model fitting and are attached only for evaluation.
-
-Classifier-independent evaluation code fits an estimator, validates and
-reorders its probability columns, calculates the fixed metrics and Confusion
-Matrix, and builds the per-match prediction rows. The dummy-specific wrapper
-only configures `DummyClassifier(strategy="prior")` and adds its model metadata
-to the shared report structure. All numerical, news-only, and combined logistic
-models reuse this evaluation path unchanged.
-
-The multiclass Brier Score uses its original unscaled definition:
-
-```text
-mean over matches(
-    sum over H, D, A(
-        observed_one_hot - predicted_probability
-    ) ** 2
-)
-```
-
-Its range is 0 to 2, and lower values are better. This definition is reused
-unchanged for every logistic-regression model.
-
-## Numerical Logistic Reference
-
-```console
-uv run python -m buli_news.main evaluate-numerical-model-reference --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news evaluate-numerical-model-reference --season 2025
-```
-
-Input:
-
-```text
-data/processed/numerical_features_2025.csv
-```
-
-Outputs:
-
-```text
-outputs/modeling/2025/numerical/logistic_regression/reference/evaluation.json
-outputs/modeling/2025/numerical/logistic_regression/reference/test_predictions.csv
-```
-
-The numerical model is a scikit-learn pipeline:
-
-```text
-StandardScaler()
--> LogisticRegression(
-       solver="lbfgs",
-       C=1.0,
-       l1_ratio=0.0,
-       class_weight=None,
-       max_iter=1000,
-       tol=0.0001,
-   )
-```
-
-With scikit-learn 1.9, `l1_ratio=0.0` specifies L2 regularization. For the three
-H/D/A classes, `lbfgs` optimizes the multinomial loss directly. The
-configuration is fixed before test evaluation: no feature selection,
-regularization search, scaling decision, or other model choice uses matchdays
-28-34.
-
-Because the scaler is inside the pipeline, `fit` calculates its mean and scale
-from the 243 training rows only. The fitted scaler is then used unchanged to
-transform the 63 test rows. The command rejects convergence warnings and
-verifies that the scaler saw exactly the training-row count.
-
-The result JSON uses the same split, metrics, target order, and Confusion Matrix
-definition as the dummy report. It additionally records the fixed pipeline
-configuration, solver iterations, scaler training-row count, standardized
-class coefficients, and intercepts. The prediction CSV uses the same per-match
-schema as the dummy predictions so both outputs can be joined by `match_id`.
-
-This fixed `C=1.0` evaluation remains the original numerical test baseline. The
-separate training-only model-selection stage below does not overwrite its
-report or predictions.
-
-## Training-Only Numerical Logistic Configuration Selection
-
-```console
-uv run python -m buli_news.main select-numerical-model-configuration --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news select-numerical-model-configuration --season 2025
-```
-
-Input:
-
-```text
-data/processed/numerical_features_2025.csv
-```
-
-Outputs:
-
-```text
-outputs/modeling/2025/numerical/logistic_regression/selection/report.json
-outputs/modeling/2025/numerical/logistic_regression/selection/validation_predictions.csv
-```
-
-The command evaluates two predefined numerical feature sets:
-
-- `full`: all 35 numerical features
-- `without_match_counts`: 31 features after excluding
-  `home_matches_played`, `away_matches_played`,
-  `home_venue_matches_played`, and `away_venue_matches_played`
-
-Each feature set is evaluated with:
-
-```text
-C = 0.01, 0.1, 1.0, 10.0
-```
-
-This produces eight logistic candidates. A fold-specific
-`DummyClassifier(strategy="prior")` is evaluated on the same validation matches
-as a reference but cannot be selected. Every logistic fit uses a new
-`StandardScaler` and estimator. The scaler is fitted only on that fold's fit
-rows.
-
-The expanding-window design uses these nominal matchday ranges:
-
-| Fold | Nominal fit matchdays | Validation matchdays | Actual fit rows | Validation rows |
-| --- | --- | --- | ---: | ---: |
-| 1 | 1-12 | 13-17 | 108 | 45 |
-| 2 | 1-17 | 18-22 | 150 | 45 |
-| 3 | 1-22 | 23-27 | 197 | 45 |
-
-Actual kickoff timestamps take precedence over nominal matchday numbers. For
-each fold, the earliest validation kickoff is an exclusive fit cutoff. This
-excludes three postponed nominal fit matches from fold 2 (`77395`, `77399`,
-`77409`) and one from fold 3 (`77409`). Without this cutoff, later-played
-matches from earlier numbered matchdays would leak future information into the
-validation fit. The report records the cutoff, exclusions, match IDs, row
-counts, and scaler sample count for every fold.
-
-The 45 validation predictions from each fold are disjoint and are pooled into
-135 predictions per candidate. Selection uses a one-standard-error rule:
-
-1. identify the candidate with the lowest pooled Log Loss
-2. calculate that candidate's Log-Loss standard error as the sample standard
-   deviation across its three fold values divided by the square root of three
-3. retain every candidate whose pooled Log Loss is no greater than the minimum
-   plus that standard error
-4. prefer fewer features inside this eligible set, followed by lower pooled
-   multiclass Brier Score, lower `C`, and lower pooled Log Loss
-
-The complete feature set at `C=0.01` has the minimum pooled Log Loss of
-`0.986955`. Its fold-based standard error is `0.020599`, producing an inclusive
-eligibility threshold of `1.007554`. Both `full/C=0.01` and
-`without_match_counts/C=0.01` fall inside that range. The parsimony rule selects
-`without_match_counts` with `C=0.01` because it uses 31 instead of 35 features.
-Its pooled validation metrics are Log Loss `0.988059`, multiclass Brier Score
-`0.585754`, Accuracy `0.548148`, and Macro-F1 `0.394554`. The pooled dummy
-reference has Log Loss `1.072735` and multiclass Brier Score `0.647433`.
-
-The prediction CSV contains the eight logistic candidates plus the dummy
-reference for all 135 validation matches. The JSON contains fold metrics,
-pooled metrics, confusion matrices, population and sample dispersion, standard
-errors, strict Log-Loss ranks, selection ranks, the eligibility threshold, and
-the selected configuration. This command does not refit the selected model and
-does not evaluate matchdays 28-34.
-
-## Final Numerical Logistic Regression
-
-```console
-uv run python -m buli_news.main evaluate-numerical-model-final --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news evaluate-numerical-model-final --season 2025
-```
-
-Inputs:
-
-```text
-data/processed/numerical_features_2025.csv
-outputs/modeling/2025/numerical/logistic_regression/selection/report.json
-```
-
-Outputs:
-
-```text
-outputs/modeling/2025/numerical/logistic_regression/final/evaluation.json
-outputs/modeling/2025/numerical/logistic_regression/final/test_predictions.csv
-```
-
-This command freezes the result of the training-only model-selection stage:
-
-```text
-feature set = without_match_counts
-feature count = 31
-excluded features = home_matches_played, away_matches_played,
-                    home_venue_matches_played,
-                    away_venue_matches_played
-C = 0.01
-```
-
-Before fitting, the command loads the training-only selection report and
-validates its season, selected feature set, retained and excluded columns, and
-`C` against this frozen source configuration. A missing, stale, or mismatching
-selection report is rejected; the report is provenance input and never causes
-the outer test split to participate in model selection.
-
-The pipeline fits a new `StandardScaler` and logistic regression on all 243
-matches from matchdays 1-27, then transforms and predicts the unchanged 63
-matches from matchdays 28-34. The report records the frozen feature list,
-selection provenance, scaler training-row count, model configuration,
-coefficients, predictions, and evaluation metrics.
-
-Current fixed-test results are:
-
-| Model | Log Loss | Multiclass Brier Score | Accuracy | Macro-F1 |
-| --- | ---: | ---: | ---: | ---: |
-| Prior dummy | 1.095512 | 0.666028 | 0.380952 | 0.183908 |
-| Original full-feature logistic, `C=1.0` | 1.388468 | 0.813405 | 0.333333 | 0.285714 |
-| Selected 31-feature logistic, `C=0.01` | 1.061313 | 0.636447 | 0.492063 | 0.366667 |
-| News-only 16-feature logistic, `C=0.01` (diagnostic) | 1.079811 | 0.659744 | 0.396825 | 0.250000 |
-| Combined 47-feature logistic, `C=0.01` | 1.053403 | 0.630042 | 0.476190 | 0.359597 |
-
-The selected numerical model improves all four reported metrics over both the
-original logistic baseline and the prior dummy. It predicts 46 home wins, no
-draws, and 17 away wins on the test set. The diagnostic news-only model modestly
-improves all four metrics over the prior dummy but remains clearly behind the
-selected numerical model. It predicts 56 home wins, no draws, and 7 away wins.
-The combined model slightly improves Log Loss and multiclass Brier Score over
-the selected numerical model, while its Accuracy and Macro-F1 are slightly
-lower. It predicts 43 home wins, no draws, and 20 away wins. This class behavior
-remains visible in the stored Confusion Matrices and must be considered when
-interpreting the aggregate metrics.
-
-The `evaluate-numerical-model-reference` command remains fixed at the full
-35-feature schema and `C=1.0`. Its reports are retained as an auditable original
-reference and are not overwritten by the final-model command.
+The numerical features summarize prior results, goals, match statistics,
+home/away performance, days since the previous match, and the pre-match Elo
+difference. They use only earlier Bundesliga matches from the same season.
 
 ## News Pipeline
 
-### Build Planned News Requests
+### 6. Build Planned News Requests
 
 ```console
 uv run python -m buli_news.main build-news-requests --season 2025
@@ -875,7 +375,7 @@ Most teams use Event Registry concept URIs. `1. FSV Mainz 05` uses the keyword
 strategy `mainz 05` because its concept URI returned no articles in initial API
 tests.
 
-### Fetch News Responses
+### 7. Fetch News Responses
 
 Fetch one planned request:
 
@@ -886,7 +386,7 @@ uv run python -m buli_news.main fetch-news --season 2025 --request-id bl1_2025_7
 Fetch a limited number:
 
 ```console
-uv run python -m buli_news.main fetch-news --season 2025 --limit 1
+uv run python -m buli_news.main fetch-news --season 2025 --limit 10
 ```
 
 Fetch all planned requests:
@@ -901,6 +401,12 @@ Optional request delay:
 --delay-seconds 1.0
 ```
 
+Input:
+
+```text
+data/interim/2025/news/collection/requests.jsonl
+```
+
 Outputs:
 
 ```text
@@ -908,33 +414,16 @@ data/raw/newsapi/2025/{request_id}.json
 data/interim/2025/news/collection/fetch_results.jsonl
 ```
 
-Fetch behavior:
+Existing successful responses are skipped. Each request fetches only the first
+page with up to 100 articles. Responses are validated and stored unchanged.
 
-- successful existing raw responses are skipped
-- failed responses can be retried
-- each new response must first pass its HTTP-status and expected article-result
-  structure checks
-- a structurally valid empty `articles.results` list is stored as a successful
-  zero-result response with `article_count = 0`
-- after validation, the exact `response.content` bytes are stored unchanged
-- successful fetch metadata is appended immediately
-- HTTP 429 responses are retried up to three times with a 10-second wait
-- only page 1 with up to 100 articles is fetched per planned request
+`fetch_results.jsonl` records the HTTP status and metadata of newly completed
+successful requests, including the article count and raw-response file path.
+It contains no article content.
 
-`fetch_results.jsonl` is an append-only observation ledger, not an inventory of
-all raw files. A row records only the request and HTTP metadata observed when
-that fetch was actually performed. The current 612 legacy raw response files
-remain valid pipeline input even where no historical ledger row exists, because
-their stored article-result structure is validated directly. The pipeline must
-not invent retrospective ledger rows for those files or present reconstructed
-metadata as a historical fetch observation.
+The API key is read from `NEWSAPI_KEY` in the environment or `.env`.
 
-The API key is read from `NEWSAPI_KEY` in the environment or `.env`. It must
-never be hardcoded, logged, or committed.
-
-### Export Sources for Manual Legal Review
-
-After fetching the raw responses, create the review workbook:
+### 8. Export Sources for Manual Legal Review
 
 ```console
 uv run python -m buli_news.main export-news-source-review --season 2025
@@ -952,25 +441,11 @@ Output:
 data/review/2025/news_sources.xlsx
 ```
 
-The command normalizes every article or source URI to an HTTPS homepage,
-counts its occurrences before article deduplication, and sorts sources by
-descending count and then URL. It creates the `sources` worksheet with the
-complete review schema:
+The workbook lists source homepages and article counts. `review_status`,
+`review_date`, and, where required, `legal_text` must be filled manually before step 9.
+Existing workbooks are protected and `--overwrite` replaces any manual review.
 
-```text
-website_url, article_count, legal_text, review_status, review_date
-```
-
-Only `website_url` and `article_count` are filled automatically. The three
-remaining columns are reserved for the manual legal review. To protect that
-work, the command refuses to replace an existing output file. The explicit
-`--overwrite` option should only be used when all existing manual review data
-may be discarded.
-
-### Build Reviewed News Source Policy
-
-After reviewing the exported source workbook, convert it reproducibly into the
-versioned JSON policy:
+### 9. Build Reviewed News Source Policy
 
 ```console
 uv run python -m buli_news.main build-news-source-policy --season 2025
@@ -988,26 +463,12 @@ Output:
 config/news_source_policy.json
 ```
 
-The `sources` worksheet must contain exactly these columns in row 1:
+The reviewed workbook determines which sources may enter article processing:
+`complete_no_ml_clause` includes a source and `complete_explicit_ml_clause` excludes
+it. Excluded sources require legal text with an evidence URL and included sources
+must leave `legal_text` empty. Articles from sources not listed in the policy are excluded by default.
 
-```text
-website_url, article_count, legal_text, review_status, review_date
-```
-
-The converter maps `complete_no_ml_clause` to `include` and
-`complete_explicit_ml_clause` to `exclude`. Every excluded source needs legal
-text containing at least one evidence URL. Homepage URLs are normalized to
-lowercase hosts with one leading `www.` label removed, matching is exact, and
-unknown hosts are excluded by default. The generated policy records the source
-workbook's SHA-256 and is sorted by host for deterministic diffs.
-
-The current workbook contains 333 reviewed sources: 282 included and 51
-excluded. Raw Event Registry responses remain unchanged.
-
-### Build Policy-Filtered News Articles
-
-After generating the reviewed source policy, normalize and de-duplicate the
-collected articles:
+### 10. Build Policy-Filtered News Articles
 
 ```console
 uv run python -m buli_news.main build-news-articles --season 2025
@@ -1029,35 +490,12 @@ data/interim/2025/news/articles/request_links.jsonl
 data/interim/2025/news/articles/quality.json
 ```
 
-`articles.jsonl` contains each policy-approved canonical article once. The
-Event Registry article URI is the primary de-duplication key; a SHA-256 of the
-normalized article URL is the deterministic fallback. Article text from
-excluded or unknown hosts never enters this output.
+Creates one record per article from approved sources. Request links
+retain the associated match, team, and home/away side, and only include articles
+published within the request's pre-match window. The quality report summarizes
+filtering and coverage.
 
-`request_links.jsonl` preserves the exact request occurrence that created each
-association. An article returned by a home-team request is linked only to that
-request's `match_id`, `side`, and `team_id`. It is not assigned to another
-match or side based on its content. If the same canonical article occurs in a
-second raw response, it receives a separate link to that second request while
-its text remains stored only once.
-
-The stage requires exactly one home and one away request per match and exactly
-one raw response per planned request. It validates the Event Registry query
-date and converts `dateTimePub` to `Europe/Berlin`; only occurrences whose
-actual publication date is inside that request's pre-match window receive a
-link. The quality report records policy decisions, rejected occurrences,
-de-duplication, request coverage, and requests without usable links.
-
-For the current 2025/26 collection, the stage produces 24,509 canonical
-articles and 49,286 request-bound links. It excludes 10,907 occurrences by
-policy and rejects another 338 included-source occurrences whose publication
-timestamp lies outside the associated request window. All 612 requests and all
-306 matches retain at least one valid link.
-
-### Build Stable News Content IDs
-
-Group publications with identical normalized article bodies without changing
-their source or request provenance:
+### 11. Build News Contents
 
 ```console
 uv run python -m buli_news.main build-news-contents --season 2025
@@ -1077,27 +515,9 @@ data/interim/2025/news/contents/article_links.jsonl
 data/interim/2025/news/contents/quality.json
 ```
 
-The stage normalizes each article body with Unicode NFKC normalization, Unicode
-case folding, collapsed whitespace, and stripped outer whitespace. It hashes
-that normalized UTF-8 text with SHA-256 to form a stable `content_id`. It does
-not group similar or semantically related text.
+Groups identical normalized article bodies under stable content IDs. Similar but non-identical texts remain separate.
 
-`contents.jsonl` stores one representative original body for every distinct
-normalized text. `contents/article_links.jsonl` maps every `article_id` to
-exactly one `content_id`. The original article rows, titles, URLs, sources, and
-request-bound match and side links remain unchanged. Content grouping therefore
-cannot assign an article to another request, match, side, or team.
-
-For the current collection, 24,509 canonical publications map to 23,738
-contents. The 771 collapsed publication rows belong to 543 duplicate groups;
-443 of those groups contain publications from more than one source host. The
-largest group contains 30 publications. These groups are descriptive inputs
-for the local-LLM stage. The request-bound annotation-task stage decides where
-an identical content needs to be interpreted.
-
-### Build Team-Specific LLM Annotation Tasks
-
-Create one deterministic task per `request_id` and `content_id`:
+### 12. Build Team-Specific LLM Annotation Tasks
 
 ```console
 uv run python -m buli_news.main build-news-annotation-tasks --season 2025
@@ -1121,173 +541,53 @@ data/interim/2025/news/annotations/tasks.jsonl
 data/interim/2025/news/annotations/tasks_quality.json
 ```
 
-A task keeps the exact request, fixture, home/away side, and target team through
-which its article was collected. Content de-duplication therefore never moves
-an article to the other team or another fixture. If the same normalized content
-appears through several sites inside the same request, those article links form
-one LLM task. If it appears in a different home- or away-team request, it forms
-a separate task with that request's target-team context.
+Creates one task per request and content ID, retaining the request's target
+team. Repeated content within one request is annotated once. The same content
+in another request remains a separate task.
 
-Every stored task contains the full request and fixture provenance needed for
-later feature aggregation. Ollama receives only the target team, its configured
-aliases, the article title, and the article body. When several publication rows
-share the same content inside one request, the title and body are selected together
-from the article with the lowest response position and then the lowest
-`article_id`. The quality report records this deterministic selection and the
-number of collapsed within-request links.
+### 13. Annotate News Through Local Ollama
 
-For the current collection, 49,286 request-bound article links produce 48,466
-team-specific annotation tasks. The difference consists of 820 additional
-publication links whose normalized content already occurs in the same request.
-All 612 home/away requests and all 306 fixtures remain represented.
-
-### Annotate News Through Local Ollama
-
-Start Ollama and install the selected model once:
+Install Ollama then install the model once:
 
 ```console
-ollama serve
 ollama pull gemma4:12b-it-qat
 ```
 
-Run a small pilot before processing the complete task file:
+Ensure Ollama is running at `http://localhost:11434`. If needed, start
+`ollama serve` in a separate terminal, then run:
 
 ```console
-uv run python -m buli_news.main annotate-news \
-  --season 2025 \
-  --model gemma4:12b-it-qat \
-  --pilot-size 200 \
-  --pilot-seed 42 \
-  --workers 2
+uv run python -m buli_news.main annotate-news --season 2025 --model gemma4:12b-it-qat
 ```
 
-The default server is `http://localhost:11434`, and the default Ollama context
-window is `40960` tokens. `--base-url`, `--model`, `--num-ctx`,
-`--timeout-seconds`, `--workers`, `--output`, and `--failure-output` can be set
-explicitly. Use `--task-id` for one exact task.
-`--pilot-size` selects a deterministic pilot balanced across matchdays, target
-teams, home/away sides, source hosts, unique contents, and article-length
-quartiles. The selected task manifest is stored beside the annotation outputs
-below
-`data/interim/2025/news/annotations/pilots/v{schema_version}/` as
-`tasks_selection_v{selection_version}_{size}_seed_{seed}.jsonl`,
-`results_selection_v{selection_version}_{size}_seed_{seed}.jsonl`, and
-`failures_selection_v{selection_version}_{size}_seed_{seed}.jsonl`. Explicit
-`--output` and `--failure-output` paths still take precedence. `--limit`
-remains available for a simple prefix of untouched tasks but is not a
-stratified pilot.
-
-A full run without `--pilot-size`, `--output`, or `--failure-output` keeps the
-canonical append-only destinations
-`data/interim/2025/news/annotations/results.jsonl` and
-`data/interim/2025/news/annotations/failures.jsonl`. A rerun skips only
-annotations with the same task, annotation configuration, and local Ollama
-model digest. Concurrent requests are processed by worker threads, but all
-successful and failed JSONL rows are appended by the main thread so writes
-cannot interleave. An OS-level lock on the selected result path also rejects a
-second annotation process before it can append duplicate rows; resume a stopped
-run only after its previous process has actually exited. Use one worker unless
-the local Ollama hardware has been benchmarked; two workers improved throughput
-on the development machine.
-
-To inspect the complete article set for one fixture without touching the full
-run outputs, select its exact match ID:
-
-```console
-uv run python -m buli_news.main annotate-news \
-  --season 2025 \
-  --model gemma4:12b-it-qat \
-  --match-id 77393 \
-  --workers 2
-```
-
-This writes `tasks.jsonl`, `results.jsonl`, and, only when needed,
-`failures.jsonl` below
-`annotations/pilots/v{schema_version}/matches/{match_id}/`. `--match-id`
-cannot be combined with `--pilot-size`, `--task-id`, `--limit`, or
-`--retry-failures-only`.
-The default context size is 40,960 tokens because the current collection also
-contains a small number of unusually long article bodies. Each response may use
-up to 8,192 generated tokens so Thinking can finish before Ollama emits the four
-ratings and their evidence arrays. The larger context leaves additional input
-headroom beyond the longest prompts observed in the 100-task pilot. The output
-limit is only an upper bound; Ollama stops normally as soon as the complete
-structured JSON response is finished.
-
-Each selected task receives at most two semantic response attempts per command
-execution. If both responses fail JSON, schema, rating, or evidence-presence
-validation, one failure event and the last model response are appended to
-`data/interim/2025/news/annotations/failures.jsonl`. The command then continues
-with the next untouched task. Normal later runs defer these known failures so
-they cannot repeatedly block progress. Retry only unresolved failures for the
-same annotation configuration and model digest with:
-
-```console
-uv run python -m buli_news.main annotate-news \
-  --season 2025 \
-  --model gemma4:12b-it-qat \
-  --retry-failures-only
-```
-
-Each explicit `--retry-failures-only` execution may make a new pair of semantic
-attempts. If that pair also fails, it appends another failure event rather than
-overwriting the earlier event. A later valid result is appended to
-`annotations/results.jsonl`; all previous failure rows remain as an auditable
-history. HTTP and Ollama-server failures still stop the command because they
-indicate an infrastructure problem rather than one bad article response.
-
-The default `config/news_annotation_schema_v3.json` is the complete annotation
-configuration: system prompt, response JSON Schema, target-team aliases, and
-numeric rating mapping. It does not inherit from or append text to another
-configuration. The v1 and v2 files remain only so earlier pilot rows stay
-interpretable; the active annotation code accepts the complete v3 structure.
-Each request sends two chat messages:
-
-1. a fixed system prompt defining the extraction task, all indicator meanings,
-   the evidence rules, and the prohibition on external knowledge
-2. a user message containing only the target team, its aliases, article title,
-   and complete article body as untrusted JSON data
-
-Ollama receives the full response JSON Schema through its structured-output
-`format` field, with thinking enabled, temperature `0`, and a fixed seed. Each
-indicator directly contains its rating and one or two supporting quotes. Python
-does not rewrite, discard, or reclassify the model's semantic decisions. It
-only checks the exact JSON fields and allowed ratings. Evidence is always an
-array: it must be empty for `not_mentioned` and contain one or two non-empty
-strings for every assessed rating. Python does not compare those strings
-against the article text. Within one execution, an invalid response is retried
-once and is then recorded as one failure event.
-Article scope, target-team attribution, opponent separation, and indicator
-meaning are owned by the system prompt and remain visible in the model output.
-
-The four extracted indicators are:
+Inputs:
 
 ```text
-sporting_form
-personnel_situation
-physical_readiness
-confidence_and_motivation
+data/interim/2025/news/annotations/tasks.jsonl
+config/news_annotation_schema_v3.json
 ```
 
-Ratings map to `-2`, `-1`, `0`, `1`, and `2`. `not_mentioned` remains a missing
-value rather than being treated as neutral. Relevance is implicit: an article
-contains an extracted signal when at least one indicator is not `not_mentioned`.
-This stage persists article-level, team-contextual annotations. The next stage
-aggregates them without retaining article text or evidence excerpts.
+Outputs:
 
-## News Feature Aggregation
+```text
+data/interim/2025/news/annotations/results.jsonl
+data/interim/2025/news/annotations/failures.jsonl
+```
 
-Aggregate the successful request-bound annotations into one feature row per
-match:
+Extracts four indicators: Sportliche Form, Personalsituation, Physische
+Einsatzbereitschaft, and Selbstvertrauen und Motivation. Rating categories are
+mapped to values from `-2` to `2`. `not_mentioned` is distinct from a neutral rating.
+
+Add `--limit 20` for a small initial run. Repeating the command resumes unfinished
+work for the same configuration and model digest. Tasks with invalid responses
+are recorded in `failures.jsonl` when needed. Add
+`--retry-failures-only` to retry them. Additional options are available through
+`annotate-news --help`.
+
+### 14. Build News Features
 
 ```console
 uv run python -m buli_news.main build-news-features --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news build-news-features --season 2025
 ```
 
 Inputs:
@@ -1307,61 +607,120 @@ data/processed/news_features_2025.csv
 data/processed/news_features_2025_quality.json
 ```
 
-Every task already represents one exact normalized content inside one request
-and target-team context. The feature builder therefore gives every successful
-task equal weight and groups only by `match_id`, home/away side, and the stable
-request. It validates that every normalized fixture has exactly one home and
-one away request context, that task ownership agrees with the fixture, and that
-all successful rows use one exact annotation configuration and model digest.
+Produces 16 features: a mean rating and mention share for each of four
+indicators, separately for the home and away team. Means use mentioned ratings and
+shares use all successful annotations in the request. `not_mentioned` is
+excluded from means, while neutral ratings count as zero.
 
-For each home/away side and each of the four indicators, the builder creates:
+Unresolved tasks are excluded from aggregation and recorded in the quality
+report. Each match side needs at least one successful annotation. The failure
+file is optional when no failures have been recorded.
 
-```text
-{side}_news_{indicator}_mean_rating
-{side}_news_{indicator}_mention_share
+## Modelling
+
+Fixed-test evaluations use the same 243 training and 63 test matches. Logistic
+models fit their scaler on training data only. Evaluation reports contain
+Log Loss, multiclass Brier Score, Accuracy, Macro-F1, and confusion matrices.
+Prediction tables contain per-match results and class probabilities.
+
+### 15. Evaluate ZeroR Baseline
+
+```console
+uv run python -m buli_news.main evaluate-numerical-model-dummy --season 2025
 ```
 
-This fixed Cartesian product produces 16 model features. `mean_rating` is the
-unweighted arithmetic mean of mapped ratings among annotations in which the
-indicator is mentioned. `mention_share` is the mentioned count divided by the
-number of successful annotations in that request. `not_mentioned` is excluded
-from the rating mean but remains in the mention-share denominator. A neutral
-rating is a real mention with numeric value zero. If an indicator is never
-mentioned in a request, both output values are zero; their combination keeps
-that case distinguishable from a neutral mean with a positive mention share.
-Means and shares are rounded to six decimal places, consistent with the
-numerical feature table.
+Input:
 
-An unresolved task is not interpreted as `not_mentioned` and is not imputed.
-It is excluded from both aggregation denominators and retained in the separate
-quality report. Every match side must still have at least one successful
-annotation. Absolute task counts, coverage, failure history, per-indicator
-mention counts, and rating distributions are quality information and never
-appear as model columns in the feature CSV.
+```text
+data/processed/numerical_features_2025.csv
+```
 
-The output CSV has the same ten match and split metadata columns used by the
-numerical feature table followed by the 16 news features. It contains no match
-target, article text, title, evidence, source field, or quality column. The
-quality JSON records the complete aggregation contract, annotation and model
-provenance, global and home/away indicator distributions, all 612 text-free
-match-side quality summaries, and unresolved-task metadata.
+Outputs:
 
-For the current season, 48,465 of 48,466 tasks contribute to 306 match rows.
-All 16 features are finite, and the fixed 243/63 train/test split is preserved.
-The only incomplete context is the Bayer 04 Leverkusen home request for match
-`77374`, where 77 of 78 tasks are successful. Its coverage is documented in the
-quality report while its 77 valid annotations form the feature values.
+```text
+outputs/modeling/2025/numerical/dummy/evaluation.json
+outputs/modeling/2025/numerical/dummy/test_predictions.csv
+```
 
-## News-Only Diagnostic Logistic Regression
+Uses `DummyClassifier(strategy="prior")` to predict the most frequent training
+class and assign the training class proportions as probabilities. It does not
+use the numerical feature values.
+
+### 16. Evaluate Full-Feature Numerical Reference
+
+```console
+uv run python -m buli_news.main evaluate-numerical-model-reference --season 2025
+```
+
+Input:
+
+```text
+data/processed/numerical_features_2025.csv
+```
+
+Outputs:
+
+```text
+outputs/modeling/2025/numerical/logistic_regression/reference/evaluation.json
+outputs/modeling/2025/numerical/logistic_regression/reference/test_predictions.csv
+```
+
+Evaluates standardized multinomial logistic regression with all 35 numerical
+features and fixed `C=1.0`. This reference is stored separately from the selected
+numerical model.
+
+### 17. Select Numerical Model Configuration
+
+```console
+uv run python -m buli_news.main select-numerical-model-configuration --season 2025
+```
+
+Input:
+
+```text
+data/processed/numerical_features_2025.csv
+```
+
+Outputs:
+
+```text
+outputs/modeling/2025/numerical/logistic_regression/selection/report.json
+outputs/modeling/2025/numerical/logistic_regression/selection/validation_predictions.csv
+```
+
+Compares the 35-feature set and a 31-feature set without match-count columns at
+`C = 0.01, 0.1, 1.0, 10.0`, using expanding-window validation within the training
+split. Selection uses Log Loss and a one-standard-error rule that favors fewer
+features, then lower `C`. The test split is not used for selection.
+
+### 18. Evaluate Selected Numerical Model
+
+```console
+uv run python -m buli_news.main evaluate-numerical-model-final --season 2025
+```
+
+Inputs:
+
+```text
+data/processed/numerical_features_2025.csv
+outputs/modeling/2025/numerical/logistic_regression/selection/report.json
+```
+
+Outputs:
+
+```text
+outputs/modeling/2025/numerical/logistic_regression/final/evaluation.json
+outputs/modeling/2025/numerical/logistic_regression/final/test_predictions.csv
+```
+
+Evaluates the frozen `without_match_counts` configuration with 31 numerical
+features and `C=0.01`. The selection report from step 17 must match this
+configuration before fitting.
+
+### 19. Evaluate News-Only Model
 
 ```console
 uv run python -m buli_news.main evaluate-news-only-model --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news evaluate-news-only-model --season 2025
 ```
 
 Inputs:
@@ -1380,46 +739,14 @@ outputs/modeling/2025/news/logistic_regression/diagnostic/evaluation.json
 outputs/modeling/2025/news/logistic_regression/diagnostic/test_predictions.csv
 ```
 
-This supplementary model is a post-hoc diagnostic feature-source baseline, not
-a third primary experiment variant. It measures how much standalone predictive
-signal is present in the 16 fixed news features. The numerical feature table
-supplies only the canonical target and match metadata needed for the aligned
-evaluation; no numerical feature enters the model matrix.
+Evaluates the 16 news features on their own, transferring `C=0.01` from the
+numerical selection without further tuning. The numerical table supplies only
+targets and match metadata. The selection report from step 17 is required.
 
-The command transfers `C=0.01` from the numerical training-only selection and
-does not select a separate regularization value or news-feature subset. It fits
-the same `StandardScaler` and multinomial `LogisticRegression` pipeline on the
-243 training matches and evaluates the unchanged 63 test matches. The report
-explicitly records the diagnostic analysis role, zero numerical predictors,
-the exact news-feature schema, join validation, transferred configuration, and
-news-feature provenance.
-
-The diagnostic model converged after 8 iterations and produced:
-
-```text
-Log Loss:                1.079811
-Multiclass Brier Score:  0.659744
-Accuracy:                0.396825
-Macro-F1:                0.250000
-```
-
-It modestly improves all four metrics over the prior dummy but remains clearly
-behind the selected numerical model. It predicts 56 home wins, no draws, and 7
-away wins. This indicates limited standalone news signal under the transferred
-configuration. It does not test the incremental value of news conditional on
-the numerical predictors; that question remains the purpose of the primary
-numerical-versus-combined comparison.
-
-## Combined Numerical and News Logistic Regression
+### 20. Evaluate Combined Model
 
 ```console
 uv run python -m buli_news.main evaluate-combined-model --season 2025
-```
-
-The console-script equivalent is:
-
-```console
-uv run buli-news evaluate-combined-model --season 2025
 ```
 
 Inputs:
@@ -1438,52 +765,53 @@ outputs/modeling/2025/combined/logistic_regression/final/evaluation.json
 outputs/modeling/2025/combined/logistic_regression/final/test_predictions.csv
 ```
 
-The combined model transfers the frozen configuration selected using numerical
-training data only. It uses the same 31 numerical columns, appends all 16 fixed
-news columns, and therefore fits 47 features in this exact order. No feature,
-regularization, or hyperparameter selection is repeated for the combined model:
+Evaluates the selected 31 numerical features together with all 16 news features
+(47 predictors). It transfers `C=0.01` without additional feature or parameter
+selection and requires the matching selection report from step 17.
 
-```text
-StandardScaler()
--> LogisticRegression(
-       solver="lbfgs",
-       C=0.01,
-       l1_ratio=0.0,
-       class_weight=None,
-       max_iter=1000,
-       tol=0.0001,
-   )
+## Analysis Notebooks
+
+Run the notebooks with the analysis environment and working directory described
+in [Setup](#setup). They use existing pipeline artifacts without overwriting
+them. Annotation data and the manual rating workbook are Git-ignored and must
+be available locally to rerun the corresponding analyses.
+
+### Model Comparison Notebook
+
+[01_model_comparison.ipynb](notebooks/01_model_comparison.ipynb) compares the
+stored test predictions of the ZeroR, selected numerical, news-only, and
+combined models. It includes performance metrics, confusion matrices, and
+paired statistical tests, without retraining or tuning.
+
+### Annotation Reproducibility Notebook
+
+[02_annotation_reproducibility.ipynb](notebooks/02_annotation_reproducibility.ipynb)
+compares productive annotations with a separately stored 200-task repeat run,
+paired by `task_id`. It examines agreement in indicator mentions and ratings.
+
+### Annotation Bias Notebook
+
+[03_annotation_bias.ipynb](notebooks/03_annotation_bias.ipynb) examines indicator
+and team differences and compares 200 paired LLM and human annotations.
+
+To create the workbook for manual annotation, run from the repository
+root:
+
+```console
+uv run --group analysis python notebooks/helpers/export_human_annotations.py
 ```
 
-The command validates both feature schemas and performs a one-to-one join by
-`match_id`. It rejects missing, additional, or duplicate matches and requires
-all ten match and split metadata fields to agree. The target is read only from
-the numerical table; the news table contains no result. News quality fields
-remain outside the model matrix, while their separate report supplies the
-annotation configuration, model digest, coverage, and incomplete-context
-provenance stored in the evaluation report.
+The default sample contains 200 tasks from season 2025 with seed 20260906.
+The workbook is written to
+`notebooks/helpers/human_annotations/human_annotations_2025_200_seed_20260906.xlsx`.
+Complete its ratings before running the human comparison. Existing workbooks
+are never overwritten. Keep the workbook in its Git-ignored directory because
+it contains article texts. 
 
-The shared scaler is fitted on all 47 columns from the same 243 training rows
-and then applied unchanged to the same 63 test rows. Class ordering, probability
-validation, metrics, Confusion Matrix orientation, and prediction CSV schema
-are identical to the numerical model. The combined evaluation converged after
-13 iterations and produced:
+### News Feature Ablation Notebook
 
-```text
-Log Loss:                1.053403
-Multiclass Brier Score:  0.630042
-Accuracy:                0.476190
-Macro-F1:                0.359597
-```
-
-Compared with the selected numerical model, the news extension improves both
-probability-quality metrics slightly but does not improve Accuracy or Macro-F1.
-The result therefore provides mixed rather than uniformly positive evidence for
-additional predictive value from the news features.
-
-## Planned Next Stages
-
-1. investigate and document annotation and coverage bias using the separate
-   news-feature quality report
-2. perform robustness and error analysis of both primary fixed-test variants
-   and the supplementary news-only diagnostic
+[04_news_feature_ablation.ipynb](notebooks/04_news_feature_ablation.ipynb)
+evaluates six predefined additions to the numerical model: rating means only,
+mention shares only, and each of the four indicators separately. It keeps the
+31 numerical features, `C=0.01`, and the fixed split unchanged, using the shared
+modeling functions.
